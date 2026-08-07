@@ -1,7 +1,7 @@
 [data-ui="visual-novel"] {
   min-height: 100svh;
   color: #fff;
-  background: #17202a;
+  background: #151326;
 }
 
 .vn-shell {
@@ -44,7 +44,9 @@
   min-height: 0;
   padding: 18px clamp(16px, 4vw, 36px);
   overflow-y: auto;
-  background: rgba(20, 24, 31, .94);
+  border-top: 1px solid rgb(255 236 176 / 18%);
+  background: linear-gradient(180deg, rgb(35 31 53 / 97%), rgb(21 19 38 / 99%));
+  box-shadow: 0 -18px 48px rgb(17 13 31 / 28%);
 }
 
 .vn-dialogue h1,
@@ -67,7 +69,9 @@
   width: fit-content;
   margin: 0 0 10px;
   padding: 5px 10px;
-  border-radius: 4px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 6px;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 16%), inset 0 1px rgb(255 255 255 / 18%);
   font-size: 14px;
   font-weight: 800;
   line-height: 1.3;
@@ -115,8 +119,9 @@
   max-width: 42rem;
   margin: 16px 0;
   padding: 11px 13px;
-  border-left: 4px solid #f6cc4c;
-  background: rgb(255 255 255 / 10%);
+  border: 1px solid rgb(246 204 76 / 20%);
+  border-radius: 7px;
+  background: rgb(255 245 204 / 8%);
   font-weight: 700;
   line-height: 1.55;
 }
@@ -139,11 +144,11 @@
 .vn-choice {
   min-height: 48px;
   padding: 11px 14px;
-  border: 1px solid rgb(255 255 255 / 38%);
-  border-radius: 6px;
+  border: 1px solid rgb(255 238 188 / 20%);
+  border-radius: 8px;
   color: #fff;
-  background: #31495d;
-  box-shadow: 0 3px 0 rgb(0 0 0 / 22%);
+  background: linear-gradient(180deg, #4d6580, #354a63);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 20%), inset 0 1px rgb(255 255 255 / 18%);
   font: inherit;
   font-weight: 800;
   line-height: 1.35;
@@ -154,13 +159,13 @@
 
 .vn-choice:focus-visible,
 .vn-vocabulary button:focus-visible {
-  outline: 3px solid #f6cc4c;
+  outline: 2px solid #ffe78f;
   outline-offset: 3px;
 }
 
 .vn-choice:active {
-  box-shadow: 0 1px 0 rgb(0 0 0 / 22%);
-  transform: translateY(2px);
+  box-shadow: 0 3px 8px rgb(0 0 0 / 22%);
+  transform: translateY(1px);
 }
 
 .vn-vocabulary {
@@ -187,10 +192,11 @@
 .vn-vocabulary button {
   min-height: 44px;
   padding: 8px 10px;
-  border: 1px solid rgb(255 255 255 / 35%);
-  border-radius: 4px;
+  border: 1px solid rgb(153 227 207 / 22%);
+  border-radius: 7px;
   color: #fff;
-  background: #2a4553;
+  background: #294b50;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 14%);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -207,14 +213,15 @@
 .vn-trail-card {
   width: 22px;
   height: 30px;
-  border: 1px solid rgb(255 255 255 / 48%);
-  border-radius: 3px;
-  background: rgb(255 255 255 / 12%);
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 5px;
+  background: rgb(255 255 255 / 8%);
 }
 
 .vn-trail-card.is-complete {
   border-color: #f6cc4c;
   background: #f6cc4c;
+  box-shadow: 0 3px 10px rgb(246 204 76 / 28%);
 }
 
 .vn-ending-progress {
@@ -255,6 +262,21 @@
   margin: 16px 0;
   padding: 0;
   border: 0;
+}
+
+[data-ui="visual-novel"] form[data-action="start"] {
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+  font-size: inherit;
+  font-weight: inherit;
+  cursor: default;
+  transform: none;
 }
 
 .vn-setup legend,
@@ -318,11 +340,11 @@
   max-width: 420px;
   margin-left: auto;
   padding: 18px;
-  border: 1px solid rgb(255 255 255 / 45%);
-  border-radius: 6px;
+  border: 1px solid rgb(255 238 188 / 20%);
+  border-radius: 8px;
   color: #fff;
-  background: #17202a;
-  box-shadow: 0 12px 30px rgb(0 0 0 / 32%);
+  background: #211e34;
+  box-shadow: 0 20px 50px rgb(0 0 0 / 36%);
 }
 
 .vn-vocabulary-panel h2,
@@ -341,14 +363,16 @@
     width: min(1280px, 100%);
     min-height: min(800px, calc(100svh - 40px));
     aspect-ratio: 16 / 10;
-    border: 1px solid rgb(255 255 255 / 30%);
+    border: 1px solid rgb(255 236 176 / 14%);
+    border-radius: 8px;
+    box-shadow: 0 28px 70px rgb(0 0 0 / 34%);
   }
 }
 
 @media (hover: hover) {
   .vn-choice:hover {
-    background: #3b5870;
-    box-shadow: 0 5px 0 rgb(0 0 0 / 22%);
+    background: linear-gradient(180deg, #5a7695, #3d5671);
+    box-shadow: 0 11px 22px rgb(0 0 0 / 24%), inset 0 1px rgb(255 255 255 / 22%);
     transform: translateY(-2px);
   }
 }

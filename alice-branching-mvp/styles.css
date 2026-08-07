@@ -698,6 +698,134 @@ button:active {
   }
 }
 
+/* Current UI: polished casual-fantasy game surface. */
+[data-ui="current"] {
+  --game-panel: rgb(255 253 248 / 96%);
+  --game-edge: rgb(61 52 81 / 12%);
+  --game-shadow: 0 18px 45px rgb(52 42 76 / 12%), 0 2px 8px rgb(52 42 76 / 8%);
+}
+
+[data-ui="current"] .story-screen > article,
+[data-ui="current"] .setup-screen form {
+  background: var(--game-panel);
+  box-shadow: -12px 0 36px rgb(48 38 69 / 9%);
+}
+
+[data-ui="current"] .story-screen h1 {
+  color: #332b49;
+  font-weight: 800;
+}
+
+[data-ui="current"] .scene-kicker {
+  color: #796d8a;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+[data-ui="current"] .choice-feedback,
+[data-ui="current"] .chip-answer,
+[data-ui="current"] .choice-recall,
+[data-ui="current"] .story-trait {
+  border: 1px solid rgb(201 54 79 / 14%);
+  border-radius: 8px;
+  background: #fff7dc;
+  box-shadow: 0 8px 24px rgb(91 65 35 / 8%);
+}
+
+[data-ui="current"] .choice,
+[data-ui="current"] .chip,
+[data-ui="current"] .primary-action,
+[data-ui="current"] [data-action="restart"],
+[data-ui="current"] [data-action="start"] {
+  border: 1px solid rgb(79 62 26 / 12%);
+  border-radius: 8px;
+  color: #3b2d16;
+  background: linear-gradient(180deg, #ffe487, #f6c94b);
+  box-shadow: 0 8px 18px rgb(112 77 20 / 16%), inset 0 1px rgb(255 255 255 / 58%);
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+}
+
+[data-ui="current"] .choice:nth-child(even),
+[data-ui="current"] .chip:nth-child(even) {
+  border-color: rgb(68 45 103 / 16%);
+  color: #fff;
+  background: linear-gradient(180deg, #8868b4, #6d4b9e);
+  box-shadow: 0 8px 18px rgb(64 42 96 / 18%), inset 0 1px rgb(255 255 255 / 24%);
+}
+
+@media (hover: hover) {
+  [data-ui="current"] button:hover {
+    filter: brightness(1.03) saturate(1.04);
+    transform: translateY(-2px);
+  }
+}
+
+[data-ui="current"] button:active {
+  box-shadow: 0 3px 8px rgb(52 42 76 / 14%);
+  transform: translateY(1px);
+}
+
+[data-ui="current"] button:focus-visible,
+[data-ui="current"] input:focus-visible,
+[data-ui="current"] a:focus-visible {
+  outline: 2px solid #1681a9;
+  outline-offset: 3px;
+}
+
+[data-ui="current"] .vocabulary {
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid rgb(73 63 86 / 12%);
+}
+
+[data-ui="current"] .vocab-word,
+[data-ui="current"] .vocabulary button {
+  border: 1px solid rgb(36 97 58 / 14%);
+  border-radius: 8px;
+  color: #24583a;
+  background: #e9f6e4;
+  box-shadow: 0 4px 12px rgb(36 97 58 / 8%);
+}
+
+[data-ui="current"] .vocabulary-panel,
+[data-ui="current"] .recovery-screen section {
+  border: 1px solid var(--game-edge);
+  border-radius: 8px;
+  background: var(--game-panel);
+  box-shadow: var(--game-shadow);
+}
+
+[data-ui="current"] .vocabulary-panel button {
+  border: 1px solid rgb(20 122 160 / 15%);
+  border-radius: 8px;
+  background: #dff3f8;
+}
+
+[data-ui="current"] .ending-progress {
+  border: 1px solid rgb(20 122 160 / 16%);
+  box-shadow: 0 8px 20px rgb(20 122 160 / 10%);
+}
+
+[data-ui="current"] .setup-screen input[type="text"],
+[data-ui="current"] .setup-screen fieldset label {
+  border: 1px solid rgb(73 63 86 / 18%);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgb(52 42 76 / 6%);
+}
+
+[data-ui="current"] .setup-screen fieldset label:has(input:checked) {
+  border-color: rgb(36 97 58 / 34%);
+  background: #e9f6e4;
+  box-shadow: 0 0 0 2px rgb(61 139 87 / 10%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="current"] button {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .story-screen > article {
     animation: scene-in 220ms ease-out both;
