@@ -164,6 +164,8 @@ test("미니멀 UI는 중간 beat에서 다음 표시만 보여준다", () => {
   );
 
   assert.match(html, /data-ui="minimal"/);
+  assert.match(html, /data-reader-action="next-beat"/);
+  assert.match(html, /class="minimal-beat"[^>]*data-focus-target[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(html, /data-action="next-beat"/);
   assert.doesNotMatch(html, /data-action="choose"/);
   assert.doesNotMatch(html, /낱말 살펴보기/);
@@ -185,6 +187,7 @@ test("미니멀 UI는 마지막 beat에서만 낱말과 선택지를 보여준�
   assert.equal(view.beatIndex, view.beats.length - 1);
   assert.equal(view.isLastBeat, true);
   assert.match(view.text, /지민 앞에는/);
+  assert.doesNotMatch(html, /data-reader-action="next-beat"/);
   assert.doesNotMatch(html, /data-action="next-beat"/);
   assert.match(html, /data-action="vocab"/);
   assert.match(html, /data-action="choose"/);

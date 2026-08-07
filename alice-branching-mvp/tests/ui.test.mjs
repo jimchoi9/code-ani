@@ -423,6 +423,133 @@ test("위임된 next-beat 클릭은 스토리 상태를 commit하지 않고 UI �
   assert.equal(commits, 0);
 });
 
+test("minimal 읽기 화면과 다음 버튼 click은 각각 beat를 한 번만 진행한다", async () => {
+  const { bindAppEvents } = await import("../src/app.js");
+  const listeners = {};
+  const app = {
+    addEventListener(type, listener) { listeners[type] = listener; },
+    contains() { return true; },
+    querySelector() { return null; },
+    querySelectorAll() { return []; },
+  };
+  let beatAdvances = 0;
+  bindAppEvents(
+    app,
+    beginStory,
+    () => {},
+    undefined,
+    {
+      onNextBeat: () => { beatAdvances += 1; },
+      getSelectionText: () => "",
+    },
+  );
+
+  const reader = {
+    dataset: { readerAction: "next-beat" },
+    closest(selector) {
+      if (selector === "[data-action]") return null;
+      if (selector === '[data-reader-action="next-beat"]') return this;
+      return null;
+    },
+  };
+  listeners.click({ target: reader });
+
+  const button = {
+    dataset: { action: "next-beat" },
+    closest(selector) {
+      if (selector === "[data-action]") return this;
+      if (selector === '[data-reader-action="next-beat"]') return reader;
+      return null;
+    },
+  };
+  listeners.click({ target: button });
+
+  assert.equal(beatAdvances, 2);
+});
+
+test("minimal 읽기 화면 click은 선택 중인 텍스트가 있으면 beat를 진행하지 않는다", async () => {
+  const { bindAppEvents } = await import("../src/app.js");
+  const listeners = {};
+  const reader = {
+    dataset: { readerAction: "next-beat" },
+    closest(selector) {
+      if (selector === "[data-action]") return null;
+      if (selector === '[data-reader-action="next-beat"]') return this;
+      return null;
+    },
+  };
+  const app = {
+    addEventListener(type, listener) { listeners[type] = listener; },
+    contains() { return true; },
+    querySelector() { return null; },
+    querySelectorAll() { return []; },
+  };
+  let beatAdvances = 0;
+  bindAppEvents(
+    app,
+    beginStory,
+    () => {},
+    undefined,
+    {
+      onNextBeat: () => { beatAdvances += 1; },
+      getSelectionText: () => "선택한 문장",
+    },
+  );
+
+  listeners.click({ target: reader });
+
+  assert.equal(beatAdvances, 0);
+});
+
+test("낱말 열기는 renderer class와 무관한 닫기 action에 초점을 둔다", async () => {
+  const { bindAppEvents } = await import("../src/app.js");
+  const listeners = {};
+  let state = beginStory();
+  let focused = 0;
+  const closeControl = { focus() { focused += 1; } };
+  const app = {
+    addEventListener(type, listener) { listeners[type] = listener; },
+    contains() { return true; },
+    querySelector(selector) {
+      return selector === '[data-action="close-vocabulary"]' ? closeControl : null;
+    },
+    querySelectorAll() { return []; },
+  };
+  bindAppEvents(app, () => state, nextState => { state = nextState; });
+  const control = {
+    dataset: { action: "vocab", word: "황급히" },
+    closest: () => control,
+  };
+
+  listeners.click({ target: control });
+
+  assert.equal(state.vocabulary?.word, "황급히");
+  assert.equal(focused, 1);
+});
+
+test("렌더 전환 focus는 명시적 target을 heading과 main보다 우선한다", async () => {
+  const { focusRenderedContent } = await import("../src/app.js");
+  const calls = [];
+  const target = {
+    setAttribute(name, value) { calls.push(["attribute", name, value]); },
+    focus(options) { calls.push(["focus", options]); },
+  };
+  const app = {
+    querySelector(selector) {
+      if (selector === "[data-focus-target]") return target;
+      throw new Error(`unexpected selector: ${selector}`);
+    },
+  };
+
+  focusRenderedContent(app, options => calls.push(["scroll", options]), true);
+
+  assert.deepEqual(calls, [
+    ["scroll", { top: 0, left: 0, behavior: "auto" }],
+    ["attribute", "tabindex", "-1"],
+    ["focus", { preventScroll: true }],
+  ]);
+});
+
 test("위임된 restart 클릭은 setup 전환 전에 minimal 상태를 지운다", async () => {
   const { bindAppEvents } = await import("../src/app.js");
   const listeners = {};

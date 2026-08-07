@@ -68,11 +68,12 @@ function renderReader(scene, session, minimalState, mode, finalContent) {
   const next = view.isLastBeat
     ? ""
     : '<button class="minimal-next" type="button" data-action="next-beat" aria-label="다음 문장">⌄</button>';
+  const readerAction = view.isLastBeat ? "" : ' data-reader-action="next-beat"';
 
-  return `<main class="minimal-shell" data-ui="minimal" data-scene-id="${escapeHtml(scene.id)}">
+  return `<main class="minimal-shell" data-ui="minimal" data-scene-id="${escapeHtml(scene.id)}"${readerAction}>
     <article class="minimal-reader">
       <p class="minimal-chapter">${escapeHtml(view.chapterLabel)}</p>
-      <p class="minimal-beat">${escapeHtml(view.text)}</p>
+      <p class="minimal-beat" data-focus-target role="status" aria-live="polite" aria-atomic="true">${escapeHtml(view.text)}</p>
       ${final}
       ${next}
     </article>

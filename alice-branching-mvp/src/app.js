@@ -212,6 +212,19 @@ export function resetTransitionView(scrollTo, focusTarget) {
   focusTarget.focus({ preventScroll: true });
 }
 
+export function focusRenderedContent(app, scrollTo, resetScroll = false) {
+  const target = app.querySelector("[data-focus-target]")
+    ?? app.querySelector("main h1")
+    ?? app.querySelector("main");
+  if (resetScroll) {
+    resetTransitionView(scrollTo, target);
+    return;
+  }
+  if (!target) return;
+  target.setAttribute("tabindex", "-1");
+  target.focus({ preventScroll: true });
+}
+
 const UI_LABELS = Object.freeze({
   current: "현재형",
   "visual-novel": "비주얼노벨",
@@ -233,7 +246,11 @@ export function bindAppEvents(
   getState,
   commit,
   readForm = form => Object.fromEntries(new FormData(form)),
-  { onNextBeat = () => {}, onRestart = () => {} } = {},
+  {
+    onNextBeat = () => {},
+    onRestart = () => {},
+    getSelectionText = () => globalThis.getSelection?.()?.toString() ?? "",
+  } = {},
 ) {
   app.addEventListener("submit", event => {
     const form = event.target.closest('form[data-action="start"]');
@@ -244,7 +261,12 @@ export function bindAppEvents(
 
   app.addEventListener("click", event => {
     const control = event.target.closest("[data-action]");
-    if (!control || !app.contains(control)) return;
+    if (!control) {
+      const reader = event.target.closest('[data-reader-action="next-beat"]');
+      if (reader && app.contains(reader) && !getSelectionText().trim()) onNextBeat();
+      return;
+    }
+    if (!app.contains(control)) return;
 
     const state = getState();
     const action = control.dataset.action;
@@ -264,7 +286,7 @@ export function bindAppEvents(
       onNextBeat();
     } else if (action === "vocab") {
       commit(openVocabulary(state, control.dataset.word), false);
-      app.querySelector(".vocabulary-panel button")?.focus();
+      app.querySelector('[data-action="close-vocabulary"]')?.focus();
     } else if (action === "close-vocabulary") {
       const word = state.vocabulary?.word;
       commit(closeVocabulary(state), false);
@@ -290,18 +312,25 @@ function getMinimalBeatContext(state) {
   };
 }
 
-function mountBrowserApp() {
-  const app = document.querySelector("#app");
+export function mountBrowserApp({
+  documentRef = globalThis.document,
+  windowRef = globalThis.window,
+  sessionStore: suppliedSessionStore = null,
+  minimalStore: suppliedMinimalStore = null,
+  getVariant = parseUiVariant,
+  getRenderer = getUiRenderer,
+} = {}) {
+  const app = documentRef?.querySelector("#app");
   if (!app) return;
 
-  const uiVariant = parseUiVariant(window.location.search);
-  const ui = getUiRenderer(uiVariant);
-  const minimalStore = createMinimalStateStore();
-  const store = createSessionStore();
+  const uiVariant = getVariant(windowRef.location.search);
+  const ui = getRenderer(uiVariant);
+  const minimalStore = suppliedMinimalStore ?? createMinimalStateStore();
+  const store = suppliedSessionStore ?? createSessionStore();
   let state = createAppState(store.load());
   let minimalState = null;
 
-  const compareMenu = renderCompareMenu(window.location.search, uiVariant);
+  const compareMenu = renderCompareMenu(windowRef.location.search, uiVariant);
   if (compareMenu) {
     app.insertAdjacentHTML("beforebegin", compareMenu);
     app.dataset.compare = "true";
@@ -325,7 +354,7 @@ function mountBrowserApp() {
       : ui[method](...args);
   }
 
-  function render(focusHeading = false) {
+  function render(focusContent = false, resetScroll = focusContent) {
     syncMinimalState();
     const scene = getScene(state.sceneId);
     let html;
@@ -340,10 +369,7 @@ function mountBrowserApp() {
       : "";
     app.innerHTML = html + panel;
 
-    if (focusHeading) {
-      const heading = app.querySelector("main h1");
-      resetTransitionView(options => window.scrollTo(options), heading);
-    }
+    if (focusContent) focusRenderedContent(app, options => windowRef.scrollTo(options), resetScroll);
   }
 
   function commit(nextState, focusHeading = true) {
@@ -360,15 +386,16 @@ function mountBrowserApp() {
       const next = advanceMinimalBeat(state, minimalState, context.beatCount);
       minimalState = next.minimalState;
       minimalStore.save(minimalState);
-      render();
+      render(true, false);
     },
     onRestart() {
       minimalStore.clear();
       minimalState = null;
     },
+    getSelectionText: () => windowRef.getSelection?.()?.toString() ?? "",
   });
 
-  window.__aliceStoryDebug = createDebugGetters(
+  windowRef.__aliceStoryDebug = createDebugGetters(
     () => state,
     () => uiVariant,
     () => minimalState,
