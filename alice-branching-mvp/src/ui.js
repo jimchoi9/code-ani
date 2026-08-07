@@ -31,7 +31,7 @@ function renderVocabularyWords(words = []) {
   if (!words.length) return "";
 
   return `<aside class="vocabulary" aria-label="낱말 살펴보기"><h2>낱말 살펴보기</h2><ul>${words
-    .map(word => `<li><button type="button" data-action="vocabulary" data-word="${escapeHtml(word)}">${escapeHtml(word)}</button></li>`)
+    .map(word => `<li><button type="button" data-action="vocab" data-word="${escapeHtml(word)}">${escapeHtml(word)}</button></li>`)
     .join("")}</ul></aside>`;
 }
 
@@ -55,7 +55,10 @@ function renderSceneActions(scene, slots) {
   }
 
   const choices = (scene.choices ?? []).map(choice => renderChoice(choice, slots)).join("");
-  return choices ? `<div class="actions" aria-label="다음 장면 고르기">${choices}</div>` : "";
+  if (choices) return `<div class="actions" aria-label="다음 장면 고르기">${choices}</div>`;
+  if (!scene.nextSceneId) return "";
+
+  return `<div class="actions" aria-label="다음 장면"><button class="choice" type="button" data-action="choose" data-next-scene="${escapeHtml(scene.nextSceneId)}">계속 읽기</button></div>`;
 }
 
 export function renderSetup(slots) {
@@ -108,7 +111,9 @@ export function renderRecovery() {
 }
 
 export function renderVocabularyPanel(word, definition) {
-  return `<section class="vocabulary-panel" role="dialog" aria-modal="true" aria-labelledby="vocabulary-word">
+  if (typeof definition !== "string" || definition.length === 0) return "";
+
+  return `<section class="vocabulary-panel" role="region" aria-labelledby="vocabulary-word">
     <h2 id="vocabulary-word">${escapeHtml(word)}</h2>
     <p>${escapeHtml(definition)}</p>
     <button type="button" data-action="close-vocabulary">닫기</button>

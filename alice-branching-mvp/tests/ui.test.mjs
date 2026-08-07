@@ -52,8 +52,36 @@ test("선택 장면은 개인화하고 prose 문단, 선택, 낱말을 안전하
   assert.match(html, /scene-rabbit-hole&quot; onclick=&quot;bad/);
   assert.match(html, /data-next-scene="Y&quot; onclick=&quot;bad"/);
   assert.match(html, /&lt;문 열기&gt;/);
-  assert.match(html, /data-action="vocabulary"[^>]*data-word="&lt;낱말&gt;"/);
   assert.match(html, /role="status">네가 고른 길: &lt;좋아&gt;/);
+});
+
+test("낱말 버튼은 앱의 vocab 동작 계약을 사용한다", () => {
+  const html = renderScene({
+    id: "X",
+    type: "story",
+    title: "낱말",
+    art: "book",
+    body: "본문",
+    vocab: ["<낱말>"],
+  }, session);
+
+  assert.match(html, /data-action="vocab"[^>]*data-word="&lt;낱말&gt;"/);
+  assert.doesNotMatch(html, /data-action="vocabulary"/);
+});
+
+test("nextSceneId만 있는 장면은 계속 읽기 동작을 제공한다", () => {
+  const html = renderScene({
+    id: "S02",
+    type: "story",
+    title: "다음",
+    art: "path",
+    body: "본문",
+    vocab: [],
+    nextSceneId: "B2",
+  }, session);
+
+  assert.match(html, /계속 읽기/);
+  assert.match(html, /data-action="choose"[^>]*data-next-scene="B2"/);
 });
 
 test("칩 장면은 레이블과 응답 계약을 이스케이프해 제공한다", () => {
@@ -82,10 +110,23 @@ test("복구와 낱말 패널은 상태를 설명하고 닫기와 재시작 동�
 
   assert.match(recovery, /role="alert"/);
   assert.match(recovery, /data-action="restart"/);
-  assert.match(vocabulary, /role="dialog"/);
   assert.match(vocabulary, /&lt;낱말&gt;/);
   assert.match(vocabulary, /&amp;뜻/);
   assert.match(vocabulary, /data-action="close-vocabulary"/);
+});
+
+test("정의가 없는 낱말 패널은 렌더링하지 않는다", () => {
+  assert.equal(renderVocabularyPanel("낱말", null), "");
+  assert.equal(renderVocabularyPanel("낱말", undefined), "");
+});
+
+test("낱말 패널은 비모달의 이름 있는 영역이다", () => {
+  const html = renderVocabularyPanel("낱말", "뜻");
+
+  assert.match(html, /role="region"/);
+  assert.match(html, /aria-labelledby="vocabulary-word"/);
+  assert.doesNotMatch(html, /role="dialog"/);
+  assert.doesNotMatch(html, /aria-modal/);
 });
 
 test("결말은 sourceSceneId의 칩만 회상하고 수집 상태와 재시작을 제공한다", () => {

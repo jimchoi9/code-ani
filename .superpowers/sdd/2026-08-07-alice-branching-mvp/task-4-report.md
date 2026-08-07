@@ -71,3 +71,56 @@ Result: exit code `0`, no whitespace errors.
 ## Concerns
 
 None within Task 4 scope. Wiring the declared `data-action` values to browser events is intentionally deferred to the app task; CSS, index, and app files were not modified.
+
+## Fix Round 1
+
+### Review fixes
+
+- Vocabulary word buttons now use the app contract `data-action="vocab"`.
+- Scenes with `nextSceneId` but no choices now render a `계속 읽기` choice action carrying `data-next-scene`.
+- `renderVocabularyPanel` returns an empty string for missing or empty definitions, so unknown definitions never show `null` or `undefined`.
+- Vocabulary details now use a labelled, non-modal `role="region"`; the unsupported modal lifecycle claim was removed.
+
+### RED Evidence
+
+Command:
+
+```sh
+cd alice-branching-mvp && node --test tests/ui.test.mjs
+```
+
+Result: exit code `1`, with the four new focused tests failing for the intended old behavior:
+
+```text
+✖ 낱말 버튼은 앱의 vocab 동작 계약을 사용한다
+✖ nextSceneId만 있는 장면은 계속 읽기 동작을 제공한다
+✖ 정의가 없는 낱말 패널은 렌더링하지 않는다
+✖ 낱말 패널은 비모달의 이름 있는 영역이다
+ℹ tests 10
+ℹ pass 6
+ℹ fail 4
+```
+
+### GREEN Evidence
+
+Focused command:
+
+```sh
+cd alice-branching-mvp && node --test tests/ui.test.mjs
+```
+
+Result: exit code `0`, `tests 10`, `pass 10`, `fail 0`.
+
+Full command:
+
+```sh
+cd alice-branching-mvp && npm test
+```
+
+Result: exit code `0`, `tests 29`, `pass 29`, `fail 0`.
+
+### Fix Round Self-review
+
+- The continuation destination is escaped in the same attribute context as ordinary choices.
+- A definition must be a non-empty string before the panel is rendered; missing values return no HTML.
+- The non-modal region retains a visible label and close action without claiming focus trapping or background inerting.
