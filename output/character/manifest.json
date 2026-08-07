@@ -1,0 +1,477 @@
+{
+  "version": 2,
+  "source": "character-sheet.png",
+  "background": {
+    "mode": "solid",
+    "color": "#FFFFFF",
+    "tolerance": 30
+  },
+  "canvas": {
+    "width": 2286,
+    "height": 1622
+  },
+  "parts": [
+    {
+      "id": "character-front",
+      "file": "character-front.png",
+      "sourceId": "part-001",
+      "bbox": {
+        "x": 323,
+        "y": 39,
+        "width": 305,
+        "height": 508
+      },
+      "crop": {
+        "x": 307,
+        "y": 23,
+        "width": 337,
+        "height": 540
+      },
+      "pivot": {
+        "x": 168,
+        "y": 270
+      },
+      "area": 99471
+    },
+    {
+      "id": "character-left-three-quarter",
+      "file": "character-left-three-quarter.png",
+      "sourceId": "part-002",
+      "bbox": {
+        "x": 695,
+        "y": 40,
+        "width": 324,
+        "height": 508
+      },
+      "crop": {
+        "x": 679,
+        "y": 24,
+        "width": 356,
+        "height": 540
+      },
+      "pivot": {
+        "x": 178,
+        "y": 270
+      },
+      "area": 97898
+    },
+    {
+      "id": "character-right-three-quarter",
+      "file": "character-right-three-quarter.png",
+      "sourceId": "part-003",
+      "bbox": {
+        "x": 1080,
+        "y": 40,
+        "width": 329,
+        "height": 508
+      },
+      "crop": {
+        "x": 1064,
+        "y": 24,
+        "width": 361,
+        "height": 540
+      },
+      "pivot": {
+        "x": 180,
+        "y": 270
+      },
+      "area": 99153
+    },
+    {
+      "id": "character-side",
+      "file": "character-side.png",
+      "sourceId": "part-004",
+      "bbox": {
+        "x": 1471,
+        "y": 40,
+        "width": 332,
+        "height": 508
+      },
+      "crop": {
+        "x": 1455,
+        "y": 24,
+        "width": 364,
+        "height": 540
+      },
+      "pivot": {
+        "x": 182,
+        "y": 270
+      },
+      "area": 90345
+    },
+    {
+      "id": "face-neutral",
+      "file": "face-neutral.png",
+      "sourceId": "part-012",
+      "bbox": {
+        "x": 1012,
+        "y": 647,
+        "width": 295,
+        "height": 249
+      },
+      "crop": {
+        "x": 996,
+        "y": 631,
+        "width": 327,
+        "height": 281
+      },
+      "pivot": {
+        "x": 163,
+        "y": 140
+      },
+      "area": 56512
+    },
+    {
+      "id": "face-happy",
+      "file": "face-happy.png",
+      "sourceId": "part-013",
+      "bbox": {
+        "x": 350,
+        "y": 648,
+        "width": 312,
+        "height": 247
+      },
+      "crop": {
+        "x": 334,
+        "y": 632,
+        "width": 344,
+        "height": 279
+      },
+      "pivot": {
+        "x": 172,
+        "y": 139
+      },
+      "area": 56842
+    },
+    {
+      "id": "face-surprised",
+      "file": "face-surprised.png",
+      "sourceId": "part-014",
+      "bbox": {
+        "x": 688,
+        "y": 649,
+        "width": 303,
+        "height": 246
+      },
+      "crop": {
+        "x": 672,
+        "y": 633,
+        "width": 335,
+        "height": 278
+      },
+      "pivot": {
+        "x": 167,
+        "y": 139
+      },
+      "area": 56194
+    },
+    {
+      "id": "face-angry",
+      "file": "face-angry.png",
+      "sourceId": "part-015",
+      "bbox": {
+        "x": 1319,
+        "y": 650,
+        "width": 287,
+        "height": 245
+      },
+      "crop": {
+        "x": 1303,
+        "y": 634,
+        "width": 319,
+        "height": 277
+      },
+      "pivot": {
+        "x": 159,
+        "y": 138
+      },
+      "area": 54338
+    },
+    {
+      "id": "face-sad",
+      "file": "face-sad.png",
+      "sourceId": "part-016",
+      "bbox": {
+        "x": 1621,
+        "y": 650,
+        "width": 288,
+        "height": 244
+      },
+      "crop": {
+        "x": 1605,
+        "y": 634,
+        "width": 320,
+        "height": 276
+      },
+      "pivot": {
+        "x": 160,
+        "y": 138
+      },
+      "area": 54177
+    },
+    {
+      "id": "head",
+      "file": "head.png",
+      "sourceId": "part-022",
+      "bbox": {
+        "x": 217,
+        "y": 964,
+        "width": 278,
+        "height": 230
+      },
+      "crop": {
+        "x": 201,
+        "y": 948,
+        "width": 310,
+        "height": 262
+      },
+      "pivot": {
+        "x": 155,
+        "y": 131
+      },
+      "area": 48222
+    },
+    {
+      "id": "torso",
+      "file": "torso.png",
+      "sourceId": "part-023",
+      "bbox": {
+        "x": 540,
+        "y": 985,
+        "width": 206,
+        "height": 196
+      },
+      "crop": {
+        "x": 524,
+        "y": 969,
+        "width": 238,
+        "height": 228
+      },
+      "pivot": {
+        "x": 119,
+        "y": 114
+      },
+      "area": 29588
+    },
+    {
+      "id": "left-arm",
+      "file": "left-arm.png",
+      "sourceId": "part-024",
+      "bbox": {
+        "x": 1077,
+        "y": 997,
+        "width": 77,
+        "height": 168
+      },
+      "crop": {
+        "x": 1061,
+        "y": 981,
+        "width": 109,
+        "height": 200
+      },
+      "pivot": {
+        "x": 54,
+        "y": 100
+      },
+      "area": 9075
+    },
+    {
+      "id": "right-arm",
+      "file": "right-arm.png",
+      "sourceId": "part-025",
+      "bbox": {
+        "x": 792,
+        "y": 999,
+        "width": 74,
+        "height": 166
+      },
+      "crop": {
+        "x": 776,
+        "y": 983,
+        "width": 106,
+        "height": 198
+      },
+      "pivot": {
+        "x": 53,
+        "y": 99
+      },
+      "area": 9408
+    },
+    {
+      "id": "leg",
+      "file": "leg.png",
+      "sourceId": "part-029",
+      "bbox": {
+        "x": 1597,
+        "y": 1001,
+        "width": 122,
+        "height": 82
+      },
+      "crop": {
+        "x": 1581,
+        "y": 985,
+        "width": 154,
+        "height": 114
+      },
+      "pivot": {
+        "x": 77,
+        "y": 57
+      },
+      "area": 8939
+    },
+    {
+      "id": "foot",
+      "file": "foot.png",
+      "sourceId": "part-033",
+      "bbox": {
+        "x": 1747,
+        "y": 1098,
+        "width": 173,
+        "height": 90
+      },
+      "crop": {
+        "x": 1731,
+        "y": 1082,
+        "width": 205,
+        "height": 122
+      },
+      "pivot": {
+        "x": 102,
+        "y": 61
+      },
+      "area": 7835
+    },
+    {
+      "id": "mouth-o",
+      "file": "mouth-o.png",
+      "sourceId": "part-048",
+      "bbox": {
+        "x": 1338,
+        "y": 1419,
+        "width": 73,
+        "height": 69
+      },
+      "crop": {
+        "x": 1322,
+        "y": 1403,
+        "width": 105,
+        "height": 101
+      },
+      "pivot": {
+        "x": 52,
+        "y": 50
+      },
+      "area": 3835
+    },
+    {
+      "id": "mouth-e",
+      "file": "mouth-e.png",
+      "sourceId": "part-050",
+      "bbox": {
+        "x": 568,
+        "y": 1424,
+        "width": 141,
+        "height": 56
+      },
+      "crop": {
+        "x": 552,
+        "y": 1408,
+        "width": 173,
+        "height": 88
+      },
+      "pivot": {
+        "x": 86,
+        "y": 44
+      },
+      "area": 5621
+    },
+    {
+      "id": "mouth-u",
+      "file": "mouth-u.png",
+      "sourceId": "part-052",
+      "bbox": {
+        "x": 1531,
+        "y": 1424,
+        "width": 57,
+        "height": 60
+      },
+      "crop": {
+        "x": 1515,
+        "y": 1408,
+        "width": 89,
+        "height": 92
+      },
+      "pivot": {
+        "x": 44,
+        "y": 46
+      },
+      "area": 2774
+    },
+    {
+      "id": "mouth-smile",
+      "file": "mouth-smile.png",
+      "sourceId": "part-053",
+      "bbox": {
+        "x": 955,
+        "y": 1426,
+        "width": 134,
+        "height": 57
+      },
+      "crop": {
+        "x": 939,
+        "y": 1410,
+        "width": 166,
+        "height": 89
+      },
+      "pivot": {
+        "x": 83,
+        "y": 44
+      },
+      "area": 5475
+    },
+    {
+      "id": "mouth-a",
+      "file": "mouth-a.png",
+      "sourceId": "part-054",
+      "bbox": {
+        "x": 1703,
+        "y": 1427,
+        "width": 123,
+        "height": 52
+      },
+      "crop": {
+        "x": 1687,
+        "y": 1411,
+        "width": 155,
+        "height": 84
+      },
+      "pivot": {
+        "x": 77,
+        "y": 42
+      },
+      "area": 3386
+    },
+    {
+      "id": "mouth-closed",
+      "file": "mouth-closed.png",
+      "sourceId": "part-055",
+      "bbox": {
+        "x": 356,
+        "y": 1431,
+        "width": 137,
+        "height": 35
+      },
+      "crop": {
+        "x": 340,
+        "y": 1415,
+        "width": 169,
+        "height": 67
+      },
+      "pivot": {
+        "x": 84,
+        "y": 33
+      },
+      "area": 3086
+    }
+  ]
+}

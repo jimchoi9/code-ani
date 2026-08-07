@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나비와 몽이 — 재생판</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "Gaegu", "Apple SD Gothic Neo", sans-serif;
+    background: #2b2621;
+    color: #3d3630;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 14px;
+  }
+  .svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+  /* ── 책 모양 무대 ── */
+  #book {
+    position: relative;
+    width: min(100%, 148vh);
+    aspect-ratio: 4 / 3;
+    max-height: calc(100% - 96px);
+    border: 5px solid #3d3630;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #fdfaf0;
+    box-shadow: 0 10px 0 #17130f;
+    cursor: pointer;
+    user-select: none;
+  }
+  .frame {
+    position: absolute; inset: 0;
+    opacity: 0; visibility: hidden;
+    transition: opacity .5s ease;
+  }
+  .frame.on { opacity: 1; visibility: visible; }
+  .frame svg { width: 100%; height: 100%; display: block; }
+
+  /* 종이 질감 */
+  #book::after {
+    content: ""; position: absolute; inset: 0;
+    pointer-events: none; opacity: .4; z-index: 3;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+  }
+
+  /* ── 자막 ── */
+  #caption {
+    position: absolute; z-index: 4;
+    left: 50%; bottom: 5%;
+    transform: translateX(-50%) rotate(-.8deg);
+    background: rgba(255,253,245,.96);
+    border: 4px solid #3d3630;
+    border-radius: 18px;
+    padding: 3px 26px 8px;
+    font-size: clamp(1rem, 2.6vw, 1.7rem);
+    font-weight: 700;
+    max-width: 88%;
+    text-align: center;
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+  #caption.on { opacity: 1; }
+
+  /* ── 씬 제목 인터타이틀 ── */
+  #title-card {
+    position: absolute; inset: 0; z-index: 5;
+    background: #fdfaf0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px;
+    opacity: 0; visibility: hidden;
+    transition: opacity .45s ease;
+  }
+  #title-card.on { opacity: 1; visibility: visible; }
+  #title-card .no {
+    background: #f5c93f; border: 3px solid #3d3630; border-radius: 14px;
+    padding: 0 18px 3px; font-size: 1.15rem; font-weight: 700; transform: rotate(-2deg);
+  }
+  #title-card h2 { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 700; margin-top: 8px; }
+  #title-card .when { font-size: 1.2rem; color: #8a7d6f; }
+
+  /* ── 탭 안내 ── */
+  #hint {
+    position: absolute; z-index: 4;
+    right: 14px; bottom: 12px;
+    font-size: .95rem; font-weight: 700;
+    color: #3d3630; background: rgba(255,253,245,.85);
+    border: 2px solid #3d3630; border-radius: 12px;
+    padding: 0 10px 2px;
+    opacity: .8;
+    transition: opacity .3s;
+  }
+  #hint.hide { opacity: 0; }
+
+  /* ── 조작 막대 ── */
+  #bar {
+    width: min(100%, 148vh);
+    margin-top: 12px;
+    display: flex; align-items: center; gap: 10px;
+    color: #fdfaf0;
+  }
+  button {
+    font-family: inherit; font-size: 1.15rem; font-weight: 700;
+    background: #fdfaf0; color: #3d3630;
+    border: 3px solid #17130f; border-radius: 12px;
+    padding: 1px 14px 4px; cursor: pointer;
+    box-shadow: 0 3px 0 #17130f;
+  }
+  button:hover { background: #f5c93f; }
+  button:active { transform: translateY(3px); box-shadow: none; }
+  #dots { display: flex; gap: 7px; margin-left: 4px; }
+  .dot {
+    width: 13px; height: 13px; border-radius: 50%;
+    border: 2.5px solid #fdfaf0; background: transparent;
+    cursor: pointer; padding: 0; box-shadow: none;
+  }
+  .dot:hover { background: #f5c93f; }
+  .dot.on { background: #f5c93f; border-color: #f5c93f; }
+  #track {
+    flex: 1; height: 9px; min-width: 40px;
+    background: #4a4038; border-radius: 99px; overflow: hidden;
+  }
+  #fill { height: 100%; width: 0%; background: #f5c93f; }
+  #label { font-size: 1.05rem; white-space: nowrap; opacity: .85; }
+</style>
+</head>
+<body>
+
+<script src="characters.js"></script>
+
+<div id="book">
+  <div id="title-card">
+    <span class="no"></span>
+    <h2></h2>
+    <p class="when"></p>
+  </div>
+  <div id="caption" aria-live="polite" aria-atomic="true"></div>
+  <div id="hint">화면을 누르면 다음 장면 →</div>
+</div>
+
+<div id="bar">
+  <button id="btn-play">⏸ 멈춤</button>
+  <button id="btn-prev">◀</button>
+  <button id="btn-next">▶</button>
+  <div id="dots"></div>
+  <div id="track"><div id="fill"></div></div>
+  <span id="label"></span>
+</div>
+
+<script src="prototype-runtime.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+/* ── 손그림 boil ── */
+const boilController = PrototypeRuntime.createBoilController({
+  nodes: document.querySelectorAll("feTurbulence.boil"),
+  intervalMs: 200,
+  documentRef: document,
+  motionQuery,
+});
+boilController.start();
+window.__prototypeDebug = { boil: boilController };
+
+/* ── 캐릭터 복제 ── */
+function spawn(defId, host, x, y, scale = 1, flip = false) {
+  const pos = document.createElementNS(NS, "g");
+  pos.setAttribute("transform", `translate(${x},${y})`);
+  const anim = document.createElementNS(NS, "g");
+  const body = document.createElementNS(NS, "g");
+  body.setAttribute("transform", `scale(${flip ? -scale : scale},${scale})`);
+  document.getElementById(defId).childNodes.forEach(n => body.appendChild(n.cloneNode(true)));
+  anim.appendChild(body);
+  pos.appendChild(anim);
+  host.appendChild(pos);
+  /* 모든 def는 원점 (0,0) 기준으로 그려져 있다. 명시하지 않으면 GSAP이
+     bbox에서 기준점을 추측해 회전과 이동이 함께 걸릴 때 위치가 어긋난다. */
+  gsap.set(anim, { svgOrigin: "0 0" });
+  return anim;
+}
+function cloneDef(defId, host) {
+  document.getElementById(defId).childNodes.forEach(n => host.appendChild(n.cloneNode(true)));
+  return host;
+}
+const part = (root, name) => root.querySelector(`[data-p="${name}"]`);
+function face(root, name) {
+  root.querySelectorAll("[data-face]").forEach(f => {
+    f.style.display = f.dataset.face === name ? "" : "none";
+  });
+}
+const hop = (n, d = 26, dur = 0.2) =>
+  ({ keyframes: Array.from({ length: n * 2 }, (_, i) => ({ y: i % 2 ? 0 : -d })), duration: dur * n * 2 });
+
+const bubble = (id, x, y, w, h, lines, size = 34, color = "#3d3630", tailLeft = true) => {
+  const tx = tailLeft ? x - w / 2 + 34 : x + w / 2 - 34;
+  const ty = y + h / 2;
+  const txt = lines.map((t, i) =>
+    `<text x="${x}" y="${y - (lines.length - 1) * (size * .62) + i * size * 1.24}" text-anchor="middle"
+      font-family="Gaegu, sans-serif" font-size="${size}" font-weight="700" fill="${color}">${t}</text>`).join("");
+  return `<g data-p="${id}" transform="scale(0)" transform-origin="${x}px ${y}px">
+    <g filter="url(#wob1)">
+      <path d="M${x - w / 2} ${y - h / 2} q${w / 2} -9 ${w} 0 q10 ${h * .5} 0 ${h}
+               q-${w / 2} 8 -${w} 0 q-10 -${h * .5} 0 -${h} z" fill="#fffdf5" stroke="#3d3630" stroke-width="5"/>
+      <path d="M${tx} ${ty - 4} l-5 26 l24 -20 z" fill="#fffdf5" stroke="#3d3630" stroke-width="5" stroke-linejoin="round"/>
+      ${txt}
+    </g></g>`;
+};
+
+/* ══════════════ 씬 정의 ══════════════ */
+const SCENES = [
+  {
+    no: "첫 번째 이야기", title: "평화로운 우리 집", when: "나비네 거실 · 낮",
+    sky: "", bg: "def-room", props: "",
+    fx: bubble("bell", 330, 300, 220, 70, ["딸랑딸랑 ♪"], 30),
+    setup(layer, bg) {
+      const nabi = spawn("def-nabi", layer, 300, 560, .78);
+      const ball = spawn("def-ball", layer, 396, 512);
+      /* 짐칸 뒤에서 빼꼼 — 스케일 대신 슬라이드로 처리해 기준점 문제를 피한다 */
+      gsap.set(part(bg, "truckdog"), { opacity: 0, y: 28 });
+      return { nabi, ball };
+    },
+    loops: ({ nabi }) => [
+      gsap.to(part(nabi, "tail"), { rotation: 20, duration: .5, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "64 -48" }),
+      gsap.to(part(nabi, "head"), { rotation: 4, duration: 1.1, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "0 -120" }),
+      gsap.to(part(nabi, "bell"), { rotation: 15, duration: .32, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "1 -117" }),
+    ],
+    beats: [
+      { text: "나비는 새 장난감 공이 세상에서 제일 좋아요.",
+        build: (tl, c) => tl.to(c.nabi, { y: -10, duration: .4, yoyo: true, repeat: 1 }) },
+      { text: "공을 톡! 굴리면 데굴데굴 굴러가요.",
+        build: (tl, c) => {
+          tl.to(c.ball, { keyframes: [{ x: 80, y: -66, rotation: 180 }, { x: 148, y: 0, rotation: 360 },
+            { x: 200, y: -44, rotation: 500 }, { x: 250, y: 0, rotation: 640 }], duration: 1.5 }, "a")
+            .to(c.nabi, hop(4, 28), "a").to(c.nabi, { x: 160, duration: 1.5 }, "a");
+        } },
+      { text: "방울 목걸이가 딸랑딸랑, 신나는 하루!",
+        build: (tl, c, fx) => {
+          tl.to(fx.bell, { scale: 1, duration: .4, ease: "back.out(2)" })
+            .to({}, { duration: .5 }).to(fx.bell, { scale: 0, duration: .3 })
+            .to(c.ball, { keyframes: [{ x: 170, y: -46, rotation: 500 }, { x: 100, y: 0, rotation: 360 },
+              { x: 40, y: -30, rotation: 250 }, { x: -16, y: 0, rotation: 180 }], duration: 1.2 }, "b")
+            .to(c.nabi, hop(3, 24), "b").to(c.nabi, { x: 0, duration: 1.2 }, "b");
+        } },
+      { text: "그때, 창밖으로 몽이네가 이사를 왔어요…",
+        build: (tl, c, fx, bg) => {
+          tl.to(part(bg, "truck"), { x: -35, duration: 1.2, ease: "power1.out" })
+            .to(part(bg, "truckdog"), { opacity: 1, y: 0, duration: .5, ease: "back.out(1.7)" })
+            .add(() => face(c.nabi, "surprised"), "<");
+        } },
+    ],
+  },
+  {
+    no: "두 번째 이야기", title: "갑작스러운 만남", when: "집 앞 마당 · 오후",
+    sky: `<rect x="-20" y="-20" width="840" height="480" fill="url(#skyAfternoon)"/>`, bg: "def-yard",
+    props: `<g filter="url(#wob2)">
+      <g data-p="sun"><g stroke="#f2a33c" stroke-width="5" stroke-linecap="round">
+        <line x1="118" y1="46" x2="118" y2="62"/><line x1="80" y1="62" x2="91" y2="74"/>
+        <line x1="156" y1="62" x2="145" y2="74"/><line x1="66" y1="100" x2="82" y2="100"/>
+        <line x1="170" y1="100" x2="154" y2="100"/><line x1="80" y1="138" x2="91" y2="127"/>
+        <line x1="156" y1="138" x2="145" y2="127"/></g>
+        <circle cx="118" cy="100" r="28" fill="#f5c93f" stroke="#3d3630" stroke-width="5"/></g>
+      <path d="M556 96 q-17 0 -17 13 q0 12 17 12 h42 q16 0 16-13 q0-12 -16-12 q-4-14 -21-11 q-13 2 -21 11 z"
+            fill="#fffdf5" stroke="#3d3630" stroke-width="4"/></g>`,
+    fx: bubble("shout", 250, 240, 280, 84, ["앗, 내 공!"], 44, "#e5564b"),
+    setup(layer) {
+      const nabi = spawn("def-nabi", layer, 300, 556, .72);
+      const mongi = spawn("def-mongi", layer, 900, 558, .72, true);
+      const ball = spawn("def-ball", layer, 400, 516, .92);
+      return { nabi, mongi, ball };
+    },
+    loops: ({ nabi, mongi }) => [
+      gsap.to(part(nabi, "tail"), { rotation: 18, duration: .5, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "64 -48" }),
+      gsap.to(part(nabi, "bell"), { rotation: 14, duration: .34, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "1 -117" }),
+      gsap.to(part(mongi, "tail"), { rotation: -26, duration: .34, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "62 -60" }),
+    ],
+    beats: [
+      { text: "다음 날 오후, 나비는 마당에서 공을 굴렸어요.",
+        build: (tl, c) => tl.to(c.ball, { x: -60, rotation: -240, duration: .8 }, "a").to(c.nabi, { x: -46, duration: .8 }, "a") },
+      { text: "그때 빨간 스카프를 두른 낯선 강아지가 들어왔어요.",
+        build: (tl, c) => tl.to(c.mongi, { x: -300, duration: 1.4, ease: "power1.out" }, "a").to(c.mongi, hop(5, 16, .14), "a") },
+      { text: "몽이는 나비의 반짝이는 공을 발견했어요.",
+        build: (tl, c) => tl.add(() => face(c.mongi, "sneaky"))
+          .to(part(c.mongi, "head"), { rotation: -12, duration: .4, svgOrigin: "0 -118" })
+          .add(() => face(c.nabi, "surprised"), "<") },
+      { text: "몽이가 공을 슬쩍 가져가자 나비가 깜짝 놀랐어요!",
+        build: (tl, c, fx) => tl.to(c.ball, { x: 150, rotation: 300, duration: .7, ease: "power2.in" }, "a")
+          .to(c.mongi, { x: -270, duration: .7 }, "a")
+          .to(fx.shout, { scale: 1, duration: .4, ease: "back.out(2.4)" })
+          .to(c.nabi, { keyframes: [{ y: -34 }, { y: 0 }], duration: .4 }, "<") },
+      { text: "둘은 서로를 빤히 바라보았어요. 참 어색했어요.",
+        build: (tl, c, fx) => tl.to(fx.shout, { scale: 0, duration: .3 })
+          .add(() => { face(c.nabi, "angry"); face(c.mongi, "shy"); })
+          .to(part(c.nabi, "head"), { rotation: -6, duration: .5, svgOrigin: "0 -120" })
+          .to(part(c.mongi, "head"), { rotation: 8, duration: .5, svgOrigin: "0 -118" }, "<") },
+    ],
+  },
+  {
+    no: "세 번째 이야기", title: "장난감 쟁탈전", when: "마당 · 다음 날 오후",
+    sky: `<rect x="-20" y="-20" width="840" height="480" fill="url(#skyAfternoon)"/>`, bg: "def-yard",
+    props: `<g filter="url(#wob2)">
+      <path d="M300 104 q-19 0 -19 14 q0 13 19 13 h46 q18 0 18-14 q0-13 -18-13 q-5-15 -23-12 q-15 2 -23 12 z"
+            fill="#fffdf5" stroke="#3d3630" stroke-width="4"/></g>`,
+    fx: `<g data-p="strain" opacity="0"><g stroke="#3d3630" stroke-width="5" stroke-linecap="round" filter="url(#wob1)">
+        <path d="M372 434 l-26 -18 M372 470 l-28 4 M428 434 l26 -18 M428 470 l28 4"/></g></g>
+      <g data-p="pop" opacity="0"><g filter="url(#wob1)" stroke="#3d3630" stroke-width="6" stroke-linecap="round">
+        <path d="M400 380 v-46 M340 400 l-42 -22 M460 400 l42 -22 M356 356 l-26 -34 M444 356 l26 -34"/></g>
+        <text x="400" y="316" text-anchor="middle" font-family="Gaegu, sans-serif" font-size="52" font-weight="700" fill="#e5564b">뚝!</text></g>`
+      + bubble("b1", 200, 230, 260, 76, ["이건 내 거야!"], 36)
+      + bubble("b2", 600, 230, 300, 76, ["내가 먼저 봤어!"], 36, "#3d3630", false),
+    setup(layer) {
+      const nabi = spawn("def-nabi", layer, 296, 556, .72);
+      const mongi = spawn("def-mongi", layer, 508, 558, .72, true);
+      const ball = spawn("def-ball", layer, 400, 500, .92);
+      const halfL = spawn("def-half-l", layer, 400, 500, .92);
+      const halfR = spawn("def-half-r", layer, 400, 500, .92);
+      gsap.set([halfL, halfR], { opacity: 0 });
+      face(nabi, "angry"); face(mongi, "angry");
+      return { nabi, mongi, ball, halfL, halfR };
+    },
+    loops: ({ nabi }) => [
+      gsap.to(part(nabi, "bell"), { rotation: 16, duration: .3, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "1 -117" }),
+    ],
+    beats: [
+      { text: "다음 날, 둘은 똑같은 공을 동시에 물었어요.",
+        build: (tl, c, fx) => tl.to(fx.strain, { opacity: 1, duration: .3 })
+          .to(c.ball, { scaleX: 1.35, scaleY: .82, duration: .5 }, "<")
+          .to(c.nabi, { x: -22, rotation: -6, duration: .5 }, "<")
+          .to(c.mongi, { x: 22, rotation: 6, duration: .5 }, "<") },
+      { text: "「이건 내 거야!」 나비가 외쳤어요.",
+        build: (tl, c, fx) => tl.to(fx.b1, { scale: 1, duration: .35, ease: "back.out(2)" }) },
+      { text: "「내가 먼저 봤어!」 몽이도 지지 않았어요.",
+        build: (tl, c, fx) => tl.to(fx.b1, { scale: 0, duration: .25 })
+          .to(fx.b2, { scale: 1, duration: .35, ease: "back.out(2)" })
+          .to({}, { duration: .4 }).to(fx.b2, { scale: 0, duration: .25 })
+          .to(c.ball, { scaleX: 1.7, scaleY: .68, duration: .6 }, "p")
+          .to(c.nabi, { x: -46, rotation: -12, duration: .6 }, "p")
+          .to(c.mongi, { x: 46, rotation: 12, duration: .6 }, "p") },
+      { text: "뚝! 공이 두 조각으로 찢어지고 말았어요!",
+        build: (tl, c, fx) => tl.add(() => { gsap.set(c.ball, { opacity: 0 }); gsap.set([c.halfL, c.halfR], { opacity: 1 }); })
+          .to(fx.pop, { opacity: 1, duration: .12 })
+          .to(c.halfL, { x: -92, y: -70, rotation: -220, duration: .5, ease: "power2.out" }, "<")
+          .to(c.halfR, { x: 92, y: -70, rotation: 220, duration: .5, ease: "power2.out" }, "<")
+          .to(c.nabi, { x: -96, rotation: -22, duration: .5, ease: "power2.out" }, "<")
+          .to(c.mongi, { x: 96, rotation: 22, duration: .5, ease: "power2.out" }, "<")
+          .to(fx.strain, { opacity: 0, duration: .2 }, "<")
+          .to(fx.pop, { opacity: 0, duration: .3 }) },
+      { text: "둘 다 속상해서 아무 말도 하지 못했어요.",
+        build: (tl, c) => tl.to(c.halfL, { x: -52, y: 68, rotation: -260, duration: .5, ease: "bounce.out" }, "f")
+          .to(c.halfR, { x: 52, y: 68, rotation: 260, duration: .5, ease: "bounce.out" }, "f")
+          .to(c.nabi, { rotation: 0, duration: .5 }, "f").to(c.mongi, { rotation: 0, duration: .5 }, "f")
+          .add(() => { face(c.nabi, "sad"); face(c.mongi, "sad"); })
+          .to(part(c.nabi, "head"), { rotation: 10, duration: .5, svgOrigin: "0 -120" })
+          .to(part(c.mongi, "head"), { rotation: -10, duration: .5, svgOrigin: "0 -118" }, "<") },
+    ],
+  },
+  {
+    no: "네 번째 이야기", title: "부엉 할아버지의 이야기", when: "나무 아래 · 해질녘",
+    sky: `<rect x="-20" y="-20" width="840" height="500" fill="url(#skySunset)"/>`, bg: "def-dusk", props: "",
+    fx: bubble("b1", 340, 190, 380, 78, ["얘들아, 무슨 일이니?"], 36)
+      + bubble("b2", 460, 232, 440, 118, ["사실은… 이사 와서", "친구가 없어 외로웠어."], 34, "#3d3630", false),
+    setup(layer) {
+      const nabi = spawn("def-nabi", layer, 300, 566, .7);
+      const mongi = spawn("def-mongi", layer, 560, 568, .7, true);
+      const owl = spawn("def-owl", layer, 150, 296, .62);
+      face(nabi, "sad"); face(mongi, "sad"); face(owl, "calm");
+      gsap.set(owl, { opacity: 0 });
+      return { nabi, mongi, owl };
+    },
+    loops: ({ nabi }) => [
+      gsap.to(part(nabi, "bell"), { rotation: 10, duration: .5, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "1 -117" }),
+    ],
+    beats: [
+      { text: "해질녘, 나무 위에서 부엉 할아버지가 내려다보셨어요.",
+        build: (tl, c) => tl.to(c.owl, { opacity: 1, duration: .4 })
+          .to(part(c.owl, "head"), { rotation: -10, duration: .5, svgOrigin: "0 -160" }) },
+      { text: "할아버지는 천천히 내려와 은색 안경을 고쳐 쓰셨어요.",
+        build: (tl, c) => tl.to(part(c.owl, "wingL"), { rotation: -34, duration: .3, svgOrigin: "-58 -150" }, "f")
+          .to(part(c.owl, "wingR"), { rotation: 34, duration: .3, svgOrigin: "58 -150" }, "f")
+          .to(part(c.owl, "head"), { rotation: 0, duration: .3, svgOrigin: "0 -160" }, "f")
+          .to(c.owl, { x: 270, y: 268, duration: 1.1, ease: "power1.inOut" }, "f")
+          .to(part(c.owl, "wingL"), { rotation: 0, duration: .35, svgOrigin: "-58 -150" })
+          .to(part(c.owl, "wingR"), { rotation: 0, duration: .35, svgOrigin: "58 -150" }, "<")
+          .add(() => face(c.owl, "wise"))
+          .to(part(c.owl, "glasses"), { y: -5, duration: .25 })
+          .to(part(c.owl, "glasses"), { y: 0, duration: .2 })
+          .to(part(c.owl, "glint"), { opacity: 1, duration: .2 })
+          .to(part(c.owl, "glint"), { opacity: 0, duration: .4 }) },
+      { text: "「얘들아, 무슨 일이니?」",
+        build: (tl, c, fx) => tl.to(fx.b1, { scale: 1, duration: .4, ease: "back.out(2)" }) },
+      { text: "몽이는 고개를 숙이고 진심을 털어놓았어요.",
+        build: (tl, c, fx) => tl.to(fx.b1, { scale: 0, duration: .25 })
+          .add(() => face(c.mongi, "shy"))
+          .to(part(c.mongi, "head"), { rotation: -16, duration: .5, svgOrigin: "0 -118" })
+          .to(part(c.mongi, "earL"), { rotation: 14, duration: .5, svgOrigin: "-44 -206" }, "<")
+          .to(part(c.mongi, "earR"), { rotation: -14, duration: .5, svgOrigin: "44 -204" }, "<")
+          .to(fx.b2, { scale: 1, duration: .45, ease: "back.out(2)" }) },
+      { text: "나비는 몽이의 마음을 알고 미안해졌어요.",
+        build: (tl, c, fx) => tl.to(fx.b2, { scale: 0, duration: .3 })
+          .add(() => face(c.nabi, "sorry"))
+          .to(part(c.nabi, "head"), { rotation: 12, duration: .5, svgOrigin: "0 -120" })
+          .to(c.nabi, { x: 60, duration: .9, ease: "power1.inOut" })
+          .to(part(c.mongi, "head"), { rotation: -4, duration: .5, svgOrigin: "0 -118" }, "<") },
+    ],
+  },
+  {
+    no: "마지막 이야기", title: "함께 만드는 새 장난감", when: "마당 · 다음 날 아침",
+    sky: `<rect x="-20" y="-20" width="840" height="480" fill="url(#skyMorning)"/>`, bg: "def-yard",
+    props: `<g filter="url(#wob2)">
+      <g data-p="sun"><g stroke="#f2a33c" stroke-width="5" stroke-linecap="round">
+        <line x1="118" y1="42" x2="118" y2="60"/><line x1="76" y1="60" x2="88" y2="73"/>
+        <line x1="160" y1="60" x2="148" y2="73"/><line x1="62" y1="102" x2="80" y2="102"/>
+        <line x1="174" y1="102" x2="156" y2="102"/><line x1="76" y1="144" x2="88" y2="131"/>
+        <line x1="160" y1="144" x2="148" y2="131"/></g>
+        <circle cx="118" cy="102" r="30" fill="#f5c93f" stroke="#3d3630" stroke-width="5"/></g>
+      <g stroke="#3d3630" stroke-width="4" fill="none" stroke-linecap="round">
+        <path d="M470 96 q12 -12 24 0 M494 96 q12 -12 24 0 M566 150 q10 -10 20 0 M586 150 q10 -10 20 0"/></g></g>`,
+    fx: `<g data-p="sparkle" opacity="0"><g stroke="#f5c93f" stroke-width="5" stroke-linecap="round" filter="url(#wob1)">
+        <path d="M400 300 v-30 M400 386 v30 M352 344 h-32 M448 344 h32 M364 308 l-22 -22 M436 308 l22 -22 M364 380 l-22 22 M436 380 l22 22"/></g></g>
+      <g data-p="hearts" opacity="0"><g filter="url(#wob1)">
+        <path d="M258 300 q-19-21 -3-30 q11 6 3 10 q8-9 16-1 q10 11 -16 21" fill="#f6a8b8" stroke="#3d3630" stroke-width="3.5"/>
+        <path d="M548 288 q-15-17 -2-24 q9 5 2 8 q6-7 13-1 q8 9 -13 17" fill="#e5564b" stroke="#3d3630" stroke-width="3.5"/></g></g>`
+      + bubble("done", 400, 180, 340, 80, ["짜잔! 완성이야!"], 40, "#e5564b"),
+    setup(layer) {
+      const nabi = spawn("def-nabi", layer, 250, 560, .7);
+      const mongi = spawn("def-mongi", layer, 550, 562, .7, true);
+      const owl = spawn("def-owl", layer, 400, 552, .6);
+      const halfL = spawn("def-half-l", layer, 320, 502, .9);
+      const halfR = spawn("def-half-r", layer, 480, 502, .9);
+      const star = spawn("def-star", layer, 400, 452);
+      gsap.set(star, { opacity: 0, scale: 0 });
+      face(owl, "wise");
+      return { nabi, mongi, owl, halfL, halfR, star };
+    },
+    loops: ({ nabi, mongi }) => [
+      gsap.to(part(nabi, "tail"), { rotation: 18, duration: .5, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "64 -48" }),
+      gsap.to(part(mongi, "tail"), { rotation: -24, duration: .36, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "62 -60" }),
+      gsap.to(part(nabi, "bell"), { rotation: 15, duration: .3, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "1 -117" }),
+    ],
+    beats: [
+      { text: "다음 날 아침, 셋은 찢어진 공 조각을 모았어요.",
+        build: (tl, c) => tl.to(c.halfL, { x: 62, y: -34, rotation: 180, duration: .9, ease: "power1.inOut" }, "g")
+          .to(c.halfR, { x: -62, y: -34, rotation: -180, duration: .9, ease: "power1.inOut" }, "g")
+          .to(c.nabi, { x: 44, duration: .9 }, "g").to(c.mongi, { x: -44, duration: .9 }, "g") },
+      { text: "부엉 할아버지가 이어 붙이는 법을 알려주셨어요.",
+        build: (tl, c) => tl.to(part(c.owl, "wingL"), { rotation: -22, duration: .5, svgOrigin: "-58 -150" })
+          .to(part(c.owl, "wingR"), { rotation: 22, duration: .5, svgOrigin: "58 -150" }, "<") },
+      { text: "짜잔! 반짝이는 별 장난감이 완성됐어요.",
+        build: (tl, c, fx) => tl.to(fx.sparkle, { opacity: 1, duration: .25 })
+          .to(fx.sparkle, { rotation: 90, duration: .6, svgOrigin: "400 344" }, "<")
+          .to([c.halfL, c.halfR], { opacity: 0, duration: .3 }, "<+0.2")
+          .to(c.star, { opacity: 1, scale: 1, duration: .5, ease: "back.out(2)" }, "<")
+          .to(fx.sparkle, { opacity: 0, duration: .35 })
+          .to(part(c.owl, "wingL"), { rotation: 0, duration: .4, svgOrigin: "-58 -150" }, "<")
+          .to(part(c.owl, "wingR"), { rotation: 0, duration: .4, svgOrigin: "58 -150" }, "<")
+          .to(fx.done, { scale: 1, duration: .4, ease: "back.out(2)" }) },
+      { text: "나비와 몽이는 서로 양보하며 사이좋게 놀았어요.",
+        build: (tl, c, fx) => tl.to(fx.done, { scale: 0, duration: .25 })
+          .to(c.star, { x: 105, y: -70, rotation: 200, duration: .6, ease: "power1.out" }, "p")
+          .to(c.nabi, hop(3, 30), "p").to(c.mongi, hop(3, 30), "p")
+          .to(c.star, { x: -105, y: -70, rotation: -200, duration: .6, ease: "power1.inOut" }, "q")
+          .to(c.nabi, hop(3, 30), "q").to(c.mongi, hop(3, 30), "q")
+          .to(c.star, { x: 0, y: -110, rotation: 0, duration: .5, ease: "power1.out" }) },
+      { text: "방울 소리와 함께, 셋은 진짜 친구가 되었답니다.",
+        build: (tl, c, fx) => tl.to(fx.hearts, { opacity: 1, duration: .4 }, "f")
+          .to(fx.hearts, { y: -34, duration: 1.4 }, "f")
+          .to(c.star, { y: -130, rotation: 22, duration: 1.4 }, "f")
+          .to([c.nabi, c.mongi], { y: -14, duration: .45, yoyo: true, repeat: 2 }, "f") },
+    ],
+  },
+];
+
+/* ══════════════ 재생 엔진 ══════════════ */
+const DWELL = 1.5;            // 대사를 읽을 시간(초)
+const book = document.getElementById("book");
+const capEl = document.getElementById("caption");
+const cardEl = document.getElementById("title-card");
+const hintEl = document.getElementById("hint");
+const fillEl = document.getElementById("fill");
+const labelEl = document.getElementById("label");
+const dotsEl = document.getElementById("dots");
+const btnPlay = document.getElementById("btn-play");
+
+const built = [];
+let cur = -1, playing = true, busy = false;
+window.__prototypeDebug.getCurrentLoops = () => built[cur]?.loops || [];
+
+/* 씬 하나를 만들고 타임라인을 조립한다 */
+function build(def, idx) {
+  const frame = document.createElement("div");
+  frame.className = "frame";
+  frame.innerHTML = `<svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" xmlns="${NS}">
+      ${def.sky}<g class="bg"></g>${def.props}<g class="layer"></g><g class="fx">${def.fx}</g></svg>`;
+  book.insertBefore(frame, cardEl);
+
+  const svg = frame.querySelector("svg");
+  const bg = cloneDef(def.bg, svg.querySelector(".bg"));
+  const chars = def.setup(svg.querySelector(".layer"), bg);
+  const fxHost = svg.querySelector(".fx");
+  const fx = {};
+  fxHost.querySelectorAll("[data-p]").forEach(n => fx[n.dataset.p] = n);
+
+  const tl = gsap.timeline({ paused: true, defaults: { ease: "power1.inOut" } });
+  def.beats.forEach((b, i) => {
+    tl.addLabel("b" + i);
+    b.build(tl, chars, fx, bg);
+    tl.to({}, { duration: DWELL });
+  });
+
+  const times = def.beats.map((_, i) => tl.labels["b" + i]);
+  return { def, frame, tl, chars, fx, bg, times, loops: null };
+}
+
+function beatIndex(s) {
+  const t = s.tl.time() + 0.001;
+  let i = 0;
+  s.times.forEach((x, k) => { if (t >= x) i = k; });
+  return i;
+}
+
+function setCaption(text) {
+  if (capEl.textContent === text) { capEl.classList.add("on"); return; }
+  capEl.classList.remove("on");
+  setTimeout(() => { capEl.textContent = text; capEl.classList.add("on"); }, 160);
+}
+
+function sync() {
+  const s = built[cur];
+  if (!s) return;
+  const i = beatIndex(s);
+  setCaption(s.def.beats[i].text);
+  fillEl.style.width = (s.tl.progress() * 100) + "%";
+  labelEl.textContent = `${cur + 1}/${SCENES.length} · ${i + 1}장면`;
+}
+
+/* 씬 전환: 제목 카드를 보여준 뒤 무대를 바꾼다 */
+async function goScene(i, { showTitle = true } = {}) {
+  if (busy || i < 0 || i >= SCENES.length) return;
+  busy = true;
+  capEl.classList.remove("on");
+
+  if (cur >= 0) {
+    built[cur].tl.pause();
+    built[cur].loops?.forEach(t => t.pause());
+  }
+
+  const s = built[i] ||= build(SCENES[i], i);
+
+  if (showTitle) {
+    cardEl.querySelector(".no").textContent = s.def.no;
+    cardEl.querySelector("h2").textContent = s.def.title;
+    cardEl.querySelector(".when").textContent = s.def.when;
+    cardEl.classList.add("on");
+    await wait(1100);
+  }
+
+  built.forEach(b => b?.frame.classList.remove("on"));
+  s.frame.classList.add("on");
+  cur = i;
+
+  /* 되돌아왔을 때를 위해 씬을 처음 상태로 되감는다 */
+  s.tl.pause(0);
+  s.loops ||= s.def.loops ? s.def.loops(s.chars) : [];
+  s.loops.forEach(t => motionQuery.matches ? t.pause() : t.play());
+
+  if (showTitle) { cardEl.classList.remove("on"); await wait(420); }
+
+  [...dotsEl.children].forEach((d, k) => d.classList.toggle("on", k === i));
+  sync();
+  busy = false;
+  if (playing) s.tl.play();
+}
+
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+motionQuery.addEventListener("change", event => {
+  built.forEach(scene => scene?.loops?.forEach(tween => tween.pause()));
+  if (!event.matches && cur >= 0) built[cur].loops?.forEach(tween => tween.play());
+});
+
+/* 타임라인 시간을 직접 보간해 목표 지점으로 건너뛴다.
+   tweenTo()는 멈춘 타임라인에서 신뢰할 수 없어 쓰지 않는다. */
+function seek(s, target, done) {
+  s.tl.pause();
+  gsap.killTweensOf(s.tl);
+  gsap.to(s.tl, {
+    time: target, duration: .3, ease: "power2.out", overwrite: true,
+    onComplete() { if (playing && !done) s.tl.play(); done && done(); },
+  });
+}
+
+function nextBeat() {
+  const s = built[cur];
+  if (!s || busy) return;
+  const t = s.tl.time();
+  const nxt = s.times.find(x => x > t + 0.05);
+  if (nxt != null) return seek(s, nxt);
+  /* 마지막 장면이면 끝까지 감고 다음 씬으로 */
+  if (cur >= SCENES.length - 1) return seek(s, s.tl.duration());
+  seek(s, s.tl.duration(), () => goScene(cur + 1));
+}
+
+function prevBeat() {
+  const s = built[cur];
+  if (!s || busy) return;
+  const t = s.tl.time();
+  const prev = [...s.times].reverse().find(x => x < t - 0.35);
+  if (prev == null) return cur > 0 ? goScene(cur - 1, { showTitle: false }) : seek(s, 0);
+  seek(s, prev);
+}
+
+function setPlaying(v) {
+  playing = v;
+  btnPlay.textContent = v ? "⏸ 멈춤" : "▶ 재생";
+  const s = built[cur];
+  if (!s) return;
+  gsap.killTweensOf(s.tl);   // 건너뛰던 중이면 취소
+  v ? s.tl.play() : s.tl.pause();
+}
+
+/* 점 만들기 */
+SCENES.forEach((s, i) => {
+  const d = document.createElement("button");
+  d.className = "dot";
+  d.title = s.title;
+  d.onclick = e => { e.stopPropagation(); goScene(i); };
+  dotsEl.appendChild(d);
+});
+
+/* 조작 연결 */
+book.addEventListener("click", () => { hintEl.classList.add("hide"); nextBeat(); });
+btnPlay.onclick = e => { e.stopPropagation(); setPlaying(!playing); };
+document.getElementById("btn-next").onclick = e => { e.stopPropagation(); nextBeat(); };
+document.getElementById("btn-prev").onclick = e => { e.stopPropagation(); prevBeat(); };
+window.addEventListener("keydown", e => {
+  if (e.code === "Space") { e.preventDefault(); setPlaying(!playing); }
+  if (e.code === "ArrowRight") { e.preventDefault(); nextBeat(); }
+  if (e.code === "ArrowLeft") { e.preventDefault(); prevBeat(); }
+});
+
+/* 자막·진행 막대 갱신 + 씬 자동 넘김 */
+gsap.ticker.add(() => {
+  const s = built[cur];
+  if (!s || busy) return;
+  sync();
+  if (playing && s.tl.progress() >= 1) {
+    if (cur < SCENES.length - 1) goScene(cur + 1);
+    else { setPlaying(false); }
+  }
+});
+
+/* 시작 */
+goScene(0);
+</script>
+</body>
+</html>

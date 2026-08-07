@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인터랙션 놀이터 — 나비와 몽이</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 28px 18px 36px;
+    font-family: "Gaegu", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    color: #453c35;
+    background:
+      radial-gradient(circle at 12% 12%, rgba(255,255,255,.78) 0 4px, transparent 5px),
+      #fdf6e9;
+    background-size: 38px 38px;
+  }
+  main { width: min(1080px, 100%); margin: 0 auto; }
+  header { text-align: center; margin-bottom: 18px; }
+  .eyebrow {
+    display: inline-block;
+    margin: 0 0 5px;
+    padding: 3px 14px 5px;
+    border: 2px solid #453c35;
+    border-radius: 999px;
+    background: #f5c93f;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  h1 { margin: 0; font-size: clamp(2.25rem, 7vw, 3.7rem); line-height: 1; }
+  header > p:last-child {
+    margin: 8px 0 0;
+    color: #796b60;
+    font-size: clamp(1.12rem, 3vw, 1.4rem);
+  }
+  .stage-shell {
+    position: relative;
+    overflow: hidden;
+    border: 4px solid #453c35;
+    border-radius: 30px;
+    background: #bfe4f6;
+    box-shadow: 0 10px 0 #dfc9a6;
+  }
+  #playground {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: min(72vh, 720px);
+    touch-action: manipulation;
+  }
+  [data-interaction] { cursor: pointer; outline: none; }
+  .hit-area { fill: transparent; pointer-events: all; }
+  .focus-ring {
+    fill: none;
+    stroke: #fffdf5;
+    stroke-width: 8;
+    stroke-dasharray: 14 10;
+    opacity: 0;
+    pointer-events: none;
+    vector-effect: non-scaling-stroke;
+  }
+  [data-interaction]:hover .focus-ring,
+  [data-interaction]:focus-visible .focus-ring {
+    opacity: .95;
+  }
+  [data-interaction]:focus-visible .focus-ring {
+    stroke: #e5564b;
+  }
+  #speech-bubble { pointer-events: none; }
+  .bubble-shape {
+    fill: #fffdf5;
+    stroke: #453c35;
+    stroke-width: 5;
+    filter: drop-shadow(0 6px 0 rgba(69,60,53,.14));
+  }
+  #speech-text { font-size: 31px; font-weight: 700; fill: #453c35; }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .back-link {
+    display: inline-block;
+    margin-top: 24px;
+    color: #453c35;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  @media (max-width: 560px) {
+    body { padding: 18px 10px 28px; }
+    .stage-shell { border-width: 3px; border-radius: 20px; box-shadow: 0 7px 0 #dfc9a6; }
+    header { margin-bottom: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+<script src="characters.js"></script>
+<main>
+  <header>
+    <p class="eyebrow">SVG + GSAP 터치 실험</p>
+    <h1>친구들을 눌러 보세요!</h1>
+    <p>나비와 몽이, 주변 물건을 누르면 반응해요.</p>
+  </header>
+
+  <section class="stage-shell" aria-label="캐릭터와 사물 인터랙션 놀이터">
+    <svg id="playground" viewBox="0 0 1200 720" role="group"
+         aria-label="나비와 몽이가 있는 햇살 좋은 마당">
+      <defs>
+        <linearGradient id="play-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#a9dcf5"/>
+          <stop offset="1" stop-color="#e8f7ff"/>
+        </linearGradient>
+        <pattern id="play-crayon" width="9" height="9" patternUnits="userSpaceOnUse"
+                 patternTransform="rotate(35)">
+          <line x1="0" y1="0" x2="0" y2="9" stroke="#fff" stroke-width="3" opacity=".18"/>
+        </pattern>
+      </defs>
+
+      <rect width="1200" height="720" fill="url(#play-sky)"/>
+      <circle cx="142" cy="122" r="58" fill="#f5c93f" stroke="#453c35" stroke-width="6"/>
+      <g stroke="#f2a33c" stroke-width="7" stroke-linecap="round">
+        <path d="M142 35v-24 M142 233v-24 M55 122H31 M253 122h-24
+                 M80 60L63 43 M221 201l-17-17 M80 184l-17 17 M221 43l-17 17"/>
+      </g>
+      <path d="M0 540 Q300 500 600 532 T1200 514 V720 H0Z"
+            fill="#83c45d" stroke="#453c35" stroke-width="7"/>
+      <path d="M0 540 Q300 500 600 532 T1200 514 V720 H0Z" fill="url(#play-crayon)"/>
+      <path d="M0 642 Q300 618 610 644 T1200 628 V720 H0Z"
+            fill="#f6d9a0" opacity=".9"/>
+
+      <g id="cloud-art" data-interaction="cloud" role="button" tabindex="0"
+         aria-label="둥실거리는 구름">
+        <rect class="hit-area" x="760" y="42" width="292" height="164" rx="62"/>
+        <rect class="focus-ring" x="766" y="48" width="280" height="152" rx="58"/>
+        <g class="reaction-art">
+          <path d="M806 145q-34-4-34-34 0-28 34-31 11-38 55-36 36 1 52 30
+                   12-12 34-9 30 4 31 33 38 5 38 35 0 32-38 32H806Z"
+                fill="#fffdf5" stroke="#453c35" stroke-width="6" stroke-linejoin="round"/>
+          <circle cx="866" cy="116" r="5" fill="#453c35"/>
+          <circle cx="918" cy="116" r="5" fill="#453c35"/>
+          <path d="M877 136q14 13 29 0" fill="none" stroke="#453c35"
+                stroke-width="5" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <g id="nabi-art" data-interaction="nabi" role="button" tabindex="0"
+         aria-label="고양이 나비">
+        <rect class="hit-area" x="125" y="278" width="292" height="350" rx="72"/>
+        <rect class="focus-ring" x="133" y="286" width="276" height="334" rx="66"/>
+        <g class="placement" transform="translate(270 610)">
+          <g class="reaction-art">
+            <g transform="scale(.98)"><use href="#def-nabi"/></g>
+          </g>
+        </g>
+      </g>
+
+      <g id="mongi-art" data-interaction="mongi" role="button" tabindex="0"
+         aria-label="강아지 몽이">
+        <rect class="hit-area" x="410" y="278" width="304" height="350" rx="72"/>
+        <rect class="focus-ring" x="418" y="286" width="288" height="334" rx="66"/>
+        <g class="placement" transform="translate(560 610)">
+          <g class="reaction-art">
+            <g transform="scale(.98)"><use href="#def-mongi"/></g>
+          </g>
+        </g>
+      </g>
+
+      <g id="ball-art" data-interaction="ball" role="button" tabindex="0"
+         aria-label="통통 튀는 공">
+        <rect class="hit-area" x="708" y="445" width="190" height="190" rx="65"/>
+        <rect class="focus-ring" x="716" y="453" width="174" height="174" rx="60"/>
+        <g class="placement" transform="translate(803 555)">
+          <g class="reaction-art">
+            <g transform="scale(1.12)"><use href="#def-ball"/></g>
+          </g>
+        </g>
+      </g>
+
+      <g id="flower-art" data-interaction="flower" role="button" tabindex="0"
+         aria-label="간질간질 꽃">
+        <rect class="hit-area" x="924" y="368" width="190" height="270" rx="64"/>
+        <rect class="focus-ring" x="932" y="376" width="174" height="254" rx="58"/>
+        <g class="reaction-art" filter="url(#wob2)">
+          <path d="M1018 560q-13-83 0-138" fill="none" stroke="#4f8a3a"
+                stroke-width="14" stroke-linecap="round"/>
+          <path d="M1015 493q-45-29-58 4 29 22 60 8M1020 523q42-33 58-1-27 26-57 14"
+                fill="#86c25f" stroke="#453c35" stroke-width="5" stroke-linejoin="round"/>
+          <g transform="translate(1018 414)">
+            <ellipse cx="0" cy="-38" rx="25" ry="38" fill="#f6a8b8" stroke="#453c35" stroke-width="5"/>
+            <ellipse cx="37" cy="-7" rx="25" ry="38" transform="rotate(72 37 -7)"
+                     fill="#ef90a5" stroke="#453c35" stroke-width="5"/>
+            <ellipse cx="23" cy="34" rx="25" ry="38" transform="rotate(144 23 34)"
+                     fill="#f6a8b8" stroke="#453c35" stroke-width="5"/>
+            <ellipse cx="-23" cy="34" rx="25" ry="38" transform="rotate(216 -23 34)"
+                     fill="#ef90a5" stroke="#453c35" stroke-width="5"/>
+            <ellipse cx="-37" cy="-7" rx="25" ry="38" transform="rotate(288 -37 -7)"
+                     fill="#f6a8b8" stroke="#453c35" stroke-width="5"/>
+            <circle r="29" fill="#f5c93f" stroke="#453c35" stroke-width="5"/>
+            <circle cx="-9" cy="-4" r="3.5" fill="#453c35"/>
+            <circle cx="9" cy="-4" r="3.5" fill="#453c35"/>
+            <path d="M-9 10q9 10 18 0" fill="none" stroke="#453c35"
+                  stroke-width="4" stroke-linecap="round"/>
+          </g>
+        </g>
+      </g>
+
+      <g id="speech-bubble" aria-hidden="true" opacity="0">
+        <path class="bubble-shape"
+              d="M-118-62q0-25 25-25H93q25 0 25 25v61q0 25-25 25H20L2 50-17 24h-76q-25 0-25-25Z"/>
+        <text id="speech-text" y="-18" text-anchor="middle"></text>
+      </g>
+    </svg>
+  </section>
+
+  <p id="interaction-status" class="sr-only" aria-live="polite"
+     aria-atomic="true"></p>
+  <a class="back-link" href="index.html">← 실험 목록으로</a>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+const stage = document.getElementById("playground");
+const bubble = document.getElementById("speech-bubble");
+const speechText = document.getElementById("speech-text");
+const status = document.getElementById("interaction-status");
+const reactionArt = Array.from(document.querySelectorAll(".reaction-art"));
+const activationCounts = new Map();
+let activeTimeline = null;
+let activeId = null;
+
+const reactions = {
+  nabi: {
+    name: "나비",
+    message: "나랑 놀자!",
+    bubble: { x: 270, y: 260 },
+    build(timeline, art, reduced) {
+      if (reduced) {
+        return timeline.to(art, {
+          scale: 1.04,
+          duration: .15,
+          yoyo: true,
+          repeat: 1
+        });
+      }
+      return timeline
+        .to(art, { y: -42, duration: .22, ease: "power2.out" })
+        .to(art, { y: 0, duration: .28, ease: "bounce.out" });
+    }
+  },
+  mongi: {
+    name: "몽이",
+    message: "멍멍! 반가워!",
+    bubble: { x: 560, y: 260 },
+    build(timeline, art, reduced) {
+      if (reduced) {
+        return timeline.to(art, {
+          opacity: .72,
+          duration: .15,
+          yoyo: true,
+          repeat: 1
+        });
+      }
+      const tail = document.querySelector('#def-mongi [data-p="tail"]') || art;
+      return timeline.to(tail, {
+        rotation: 18,
+        transformOrigin: "25% 80%",
+        duration: .1,
+        yoyo: true,
+        repeat: 5
+      });
+    }
+  },
+  ball: {
+    name: "공",
+    message: "통통!",
+    bubble: { x: 803, y: 398 },
+    build(timeline, art, reduced) {
+      if (reduced) {
+        return timeline.to(art, {
+          scale: 1.08,
+          duration: .15,
+          yoyo: true,
+          repeat: 1
+        });
+      }
+      return timeline
+        .to(art, { y: -70, duration: .25, ease: "power2.out" })
+        .to(art, { y: 0, duration: .3, ease: "bounce.out" });
+    }
+  },
+  flower: {
+    name: "꽃",
+    message: "간질간질~",
+    bubble: { x: 1008, y: 318 },
+    build(timeline, art, reduced) {
+      if (reduced) {
+        return timeline.to(art, {
+          opacity: .7,
+          duration: .15,
+          yoyo: true,
+          repeat: 1
+        });
+      }
+      return timeline
+        .to(art, { rotation: -8, transformOrigin: "50% 100%", duration: .12 })
+        .to(art, { rotation: 8, duration: .12, yoyo: true, repeat: 3 })
+        .to(art, { rotation: 0, duration: .12 });
+    }
+  },
+  cloud: {
+    name: "구름",
+    message: "둥실둥실",
+    bubble: { x: 874, y: 246 },
+    build(timeline, art, reduced) {
+      if (reduced) {
+        return timeline.to(art, {
+          scale: 1.03,
+          duration: .15,
+          yoyo: true,
+          repeat: 1
+        });
+      }
+      return timeline
+        .to(art, { x: 34, duration: .55, ease: "sine.inOut" })
+        .to(art, { x: 0, duration: .55, ease: "sine.inOut" });
+    }
+  }
+};
+
+function resetReactionArt() {
+  gsap.set(reactionArt, { clearProps: "x,y,rotation,scale,opacity" });
+  const mongiTail = document.querySelector('#def-mongi [data-p="tail"]');
+  if (mongiTail) {
+    gsap.set(mongiTail, { clearProps: "rotation,transformOrigin" });
+  }
+}
+
+function activateInteraction(id) {
+  const definition = reactions[id];
+  const target = document.querySelector(`[data-interaction="${id}"]`);
+  const art = target?.querySelector(".reaction-art");
+  if (!definition || !art) {
+    console.warn(`[interaction] Missing target: ${id}`);
+    return false;
+  }
+
+  activeTimeline?.kill();
+  resetReactionArt();
+  activeId = id;
+  activationCounts.set(id, (activationCounts.get(id) || 0) + 1);
+  speechText.textContent = definition.message;
+  status.textContent = `${definition.name}: ${definition.message}`;
+  gsap.set(bubble, {
+    x: definition.bubble.x,
+    y: definition.bubble.y,
+    opacity: 1
+  });
+
+  activeTimeline = definition.build(
+    gsap.timeline({ paused: true }),
+    art,
+    motionQuery.matches
+  );
+  activeTimeline.eventCallback("onComplete", () => {
+    gsap.to(bubble, { opacity: 0, duration: .2 });
+  });
+  activeTimeline.play(0);
+  return true;
+}
+
+function stopActiveReaction() {
+  activeTimeline?.kill();
+  activeTimeline = null;
+  resetReactionArt();
+  gsap.set(bubble, { opacity: 0 });
+}
+
+stage.addEventListener("click", event => {
+  const target = event.target.closest("[data-interaction]");
+  if (target) activateInteraction(target.dataset.interaction);
+});
+
+stage.addEventListener("keydown", event => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const target = event.target.closest("[data-interaction]");
+  if (!target) return;
+  event.preventDefault();
+  activateInteraction(target.dataset.interaction);
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopActiveReaction();
+});
+motionQuery.addEventListener("change", stopActiveReaction);
+
+window.__interactionDebug = {
+  activate: activateInteraction,
+  activeId: () => activeId,
+  activationCount: id => activationCounts.get(id) || 0,
+  isReducedMotion: () => motionQuery.matches,
+  isTimelineActive: () => Boolean(activeTimeline?.isActive?.())
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나비와 몽이</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Gaegu", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    background: #fdf6e9;
+    color: #4a4038;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  h1 { font-size: 3.4rem; font-weight: 700; margin-bottom: 2px; }
+  p.sub { color: #8a7d6f; font-size: 1.3rem; margin-bottom: 32px; }
+  .cards { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+  a.card {
+    display: block;
+    width: 320px;
+    background: #fff;
+    border: 3px solid #4a4038;
+    border-radius: 20px;
+    padding: 28px 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  a.card:hover { transform: translateY(-4px); box-shadow: 0 8px 0 #e8d9c0; }
+  .card h2 { font-size: 1.5rem; margin-bottom: 6px; }
+  .card .badge {
+    display: inline-block; font-size: .95rem; font-weight: 700;
+    padding: 0 12px 2px; border-radius: 99px; margin-bottom: 12px;
+    border: 2px solid #4a4038;
+  }
+  .badge.a { background: #d9f0d0; color: #3d7a2e; }
+  .badge.b { background: #d0e6f7; color: #2e5f8a; }
+  .badge.c { background: #fbe0c0; color: #a05a1e; }
+  .card p { font-size: 1.05rem; line-height: 1.5; color: #6f6459; }
+
+  /* 웹툰 바로가기 — 가장 눈에 띄게 */
+  a.card.main {
+    width: min(92vw, 660px);
+    background: #fff8e6;
+    border-width: 4px;
+    border-radius: 26px;
+    padding: 26px 30px 28px;
+    margin-bottom: 4px;
+    text-align: left;
+    transform: rotate(-.6deg);
+  }
+  a.card.main:hover { transform: rotate(-.6deg) translateY(-5px); box-shadow: 0 9px 0 #e8c98c; }
+  a.card.main h2 { font-size: 2.1rem; margin-bottom: 2px; }
+  a.card.main .badge { background: #f5c93f; color: #4a4038; }
+  a.card.main p { font-size: 1.15rem; }
+  .cast { display: block; width: 260px; height: auto; margin: 6px 0 -6px; }
+</style>
+</head>
+<body>
+  <h1>🐱 나비와 몽이</h1>
+  <p class="sub">JSON/SVG 기반 세로 스크롤 웹툰</p>
+
+  <a class="card main" href="webtoon.html">
+    <h2>▶ 전체 이야기 보기</h2>
+    <span class="badge c">현재 기준안 · 5개 씬</span>
+    <svg class="cast" viewBox="-8 4 316 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g fill="none" stroke="#3d3630" stroke-width="4" stroke-linejoin="round">
+        <!-- 나비 -->
+        <g transform="translate(44,50)">
+          <path d="M-24 -20 L-32 -40 L-8 -28 Z" fill="#fbe6c0"/>
+          <path d="M24 -20 L31 -38 L8 -28 Z" fill="#fbe6c0"/>
+          <circle cx="0" cy="0" r="30" fill="#fbe6c0"/>
+          <circle cx="-11" cy="-6" r="3.6" fill="#3d3630" stroke="none"/>
+          <circle cx="11" cy="-5" r="3.4" fill="#3d3630" stroke="none"/>
+          <path d="M-4 4 L4 4 L0 10 Z" fill="#e8888f" stroke-width="2"/>
+          <path d="M0 10 q-5 6 -9 2 M0 10 q5 6 9 2" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="-21" cy="9" rx="6" ry="4" fill="#f6a8b8" stroke="none"/>
+          <ellipse cx="21" cy="10" rx="6" ry="4" fill="#f6a8b8" stroke="none"/>
+          <path d="M-30 -2 l-14 -3 M-30 7 l-13 3 M30 -2 l14 -3 M30 7 l13 3" stroke-width="2.6" stroke-linecap="round"/>
+        </g>
+        <!-- 몽이 -->
+        <g transform="translate(150,52)">
+          <path d="M-26 -18 q-16 4 -17 24 q-1 16 10 18 q9 2 11 -14 z" fill="#c98a4b"/>
+          <path d="M26 -18 q16 4 17 24 q1 16 -10 18 q-9 2 -11 -14 z" fill="#c98a4b"/>
+          <circle cx="0" cy="0" r="29" fill="#e0b075"/>
+          <ellipse cx="0" cy="14" rx="17" ry="12" fill="#f2d3a8" stroke-width="3"/>
+          <ellipse cx="0" cy="7" rx="5.5" ry="4.5" fill="#3d3630" stroke="none"/>
+          <circle cx="-11" cy="-7" r="3.4" fill="#3d3630" stroke="none"/>
+          <circle cx="11" cy="-6" r="3.4" fill="#3d3630" stroke="none"/>
+          <path d="M0 12 v6 M0 18 q-6 5 -10 1 M0 18 q6 5 10 1" stroke-width="3" stroke-linecap="round"/>
+          <path d="M-24 30 q24 9 48 -2 l2 9 q-26 12 -52 2 z" fill="#e5564b" stroke-width="3.5"/>
+        </g>
+        <!-- 부엉 할아버지 -->
+        <g transform="translate(252,52)">
+          <path d="M-24 -22 l-7 -17 l16 8 z" fill="#b9a184" stroke-width="3.5"/>
+          <path d="M24 -22 l7 -17 l-16 8 z" fill="#b9a184" stroke-width="3.5"/>
+          <ellipse cx="0" cy="2" rx="30" ry="32" fill="#b9a184"/>
+          <ellipse cx="0" cy="10" rx="18" ry="20" fill="#e8dcc4" stroke="none"/>
+          <path d="M-26 -14 q11 -6 21 -1 M26 -14 q-11 -6 -21 -1" stroke="#fffdf5" stroke-width="4.5" stroke-linecap="round"/>
+          <circle cx="-12" cy="-2" r="10" fill="#cfe3ea" stroke="#9aa6ad" stroke-width="3.5"/>
+          <circle cx="12" cy="-2" r="10" fill="#cfe3ea" stroke="#9aa6ad" stroke-width="3.5"/>
+          <path d="M-2 -3 q2 -3 4 0" stroke="#9aa6ad" stroke-width="3.5"/>
+          <path d="M-17 -1 q5 5 10 0 M7 -1 q5 5 10 0" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="M0 12 l-6 -5 h12 z" fill="#f2a33c" stroke-width="3"/>
+        </g>
+      </g>
+    </svg>
+    <p>평화로운 우리 집 → 갑작스러운 만남 → 장난감 쟁탈전 → 부엉 할아버지의 이야기 → 함께 만드는 새 장난감.
+       스크롤을 내리면 이야기가 움직입니다.</p>
+  </a>
+
+  <p class="sub" style="margin:36px 0 18px">현재 비교 대상 — 같은 SVG 리그, 다른 재생 방식</p>
+  <div class="cards">
+    <a class="card" href="webtoon.html">
+      <h2>스크롤판</h2>
+      <span class="badge a">세로 스크롤</span>
+      <p>스크롤 위치가 그대로 재생 위치가 됩니다. 웹툰처럼 내 속도로 읽어 내려가고, 되감기도 자유롭습니다.</p>
+    </a>
+    <a class="card" href="player.html">
+      <h2>재생판</h2>
+      <span class="badge b">자동재생 · 클릭</span>
+      <p>그림책을 넘기듯 봅니다. 자동으로 흘러가고, 화면을 누르면 다음 장면으로. 스페이스바로 멈추고 ←→로 오갑니다.</p>
+    </a>
+  </div>
+
+  <p class="sub" style="margin:36px 0 18px">보조 기술 실험</p>
+  <div class="cards">
+    <a class="card" href="parallax.html">
+      <h2>패럴랙스 산책</h2>
+      <span class="badge a">스크롤 · 포인터 · 깊이</span>
+      <p>하늘부터 앞쪽 풀잎까지 7단계 레이어를 서로 다른 거리로 움직여 평면 장면의 공간감과 시점 반응을 테스트합니다.</p>
+    </a>
+    <a class="card" href="png-rig.html">
+      <h2>PNG 파츠 리깅</h2>
+      <span class="badge b">관절 · 표정 · 립싱크</span>
+      <p>투명 PNG 파츠를 조립해 머리와 팔 관절, 표정·방향 전환, “안녕하세요!” 입 모양 순환을 테스트합니다.</p>
+    </a>
+    <a class="card" href="interaction.html">
+      <h2>인터랙션 놀이터</h2>
+      <span class="badge c">클릭 · 터치 · 키보드</span>
+      <p>나비와 몽이, 공과 꽃, 구름을 직접 눌러 대상별 SVG 반응과 짧은 말풍선을 테스트합니다.</p>
+    </a>
+    <a class="card" href="lottie.html">
+      <h2>Lottie 기준선</h2>
+      <span class="badge b">Lottie JSON (lottie-web)</span>
+      <p>단일 씬·5개 레이어의 저복잡도 프로토타입. 순수 JSON 손작성과 스크롤 프레임 매핑 가능성만 확인하며, 현재 SVG 캐릭터 리그와 동등한 품질 비교는 아닙니다.</p>
+    </a>
+    <a class="card" href="kid-style.html">
+      <h2>스타일 교체 실험</h2>
+      <span class="badge c">어린이 그림풍 (SVG + GSAP)</span>
+      <p>같은 SVG+GSAP 기술에서 그림 스타일만 바꾸는 독립 시안. 손그림 필터와 초당 5회 boil 효과의 표현과 비용을 비교합니다.</p>
+    </a>
+    <a class="card" href="swap-test.html">
+      <h2>캐릭터 교체 실험</h2>
+      <span class="badge a">외부 SVG · 파츠 리깅</span>
+      <p>자동 트레이싱 SVG를 기존 장면에 넣어 전신 이동과 파츠 애니메이션의 차이를 확인합니다. 파츠 분리 납품 스펙이 왜 필요한지 보여주는 테스트입니다.</p>
+    </a>
+  </div>
+
+  <p class="sub" style="margin:36px 0 18px">초기 아카이브</p>
+  <div class="cards">
+    <a class="card" href="svg-gsap.html">
+      <h2>초기 SVG + GSAP 시안</h2>
+      <span class="badge a">Version A · 아카이브</span>
+      <p>현재 나비·몽이 공용 리그 이전의 초기 구현입니다. 기술 선택의 출발점을 기록하기 위해 보존하며 현재 품질 비교 대상에서는 제외합니다.</p>
+    </a>
+  </div>
+</body>
+</html>

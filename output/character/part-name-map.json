@@ -1,0 +1,31 @@
+
+{
+  "part-001": "character-front",
+  "part-002": "character-left-three-quarter",
+  "part-003": "character-right-three-quarter",
+  "part-004": "character-side",
+
+  "part-012": "face-neutral",
+  "part-013": "face-happy",
+  "part-014": "face-surprised",
+  "part-015": "face-angry",
+  "part-016": "face-sad",
+
+  "part-022": "head",
+  "part-023": "torso",
+
+  "part-024": "left-arm",
+  "part-025": "right-arm",
+
+
+  "part-029": "leg",
+  "part-033": "foot",
+
+
+  "part-055": "mouth-closed",
+  "part-054": "mouth-a",
+  "part-050": "mouth-e",
+  "part-048": "mouth-o",
+  "part-052": "mouth-u",
+  "part-053": "mouth-smile"
+}

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>패럴랙스 산책 — 나비와 몽이</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html { overflow-x: clip; }
+  body {
+    margin: 0;
+    overflow-x: clip;
+    font-family: "Gaegu", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    color: #453c35;
+    background: #fdf6e9;
+  }
+  button, a { font: inherit; }
+  .svg-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+  .intro, .outro {
+    min-height: 52vh;
+    display: grid;
+    place-items: center;
+    padding: 56px 20px;
+    text-align: center;
+  }
+  .intro-inner { max-width: 760px; }
+  .eyebrow {
+    display: inline-block;
+    margin: 0 0 12px;
+    padding: 4px 15px 6px;
+    border: 2px solid #453c35;
+    border-radius: 999px;
+    background: #f5c93f;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(3rem, 9vw, 5.8rem);
+    line-height: .9;
+    letter-spacing: -.03em;
+  }
+  .intro p:last-child {
+    margin: 18px auto 0;
+    color: #76685d;
+    font-size: clamp(1.2rem, 3vw, 1.55rem);
+    line-height: 1.45;
+  }
+  .scroll-cue {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    font-size: 1.08rem;
+    font-weight: 700;
+  }
+  .scroll-cue::before {
+    content: "↓";
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 2px solid #453c35;
+    border-radius: 50%;
+    background: #fffdf5;
+  }
+  #parallax-track {
+    position: relative;
+    height: 280vh;
+  }
+  .sticky-stage {
+    position: sticky;
+    top: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+  }
+  #parallax-stage {
+    position: relative;
+    width: min(1180px, 100%);
+    height: min(78vh, 720px);
+    min-height: 520px;
+    overflow: hidden;
+    border: 4px solid #453c35;
+    border-radius: 34px;
+    background: #bce5f7;
+    box-shadow: 0 12px 0 #ddc69f;
+    isolation: isolate;
+    touch-action: pan-y;
+  }
+  #parallax-scene {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  [data-parallax-layer] {
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform;
+  }
+  .stage-copy {
+    position: absolute;
+    z-index: 20;
+    top: 24px;
+    left: 26px;
+    width: min(430px, calc(100% - 210px));
+    padding: 13px 18px 15px;
+    border: 3px solid #453c35;
+    border-radius: 18px;
+    background: rgba(255, 253, 245, .9);
+    box-shadow: 0 6px 0 rgba(69, 60, 53, .14);
+    backdrop-filter: blur(5px);
+  }
+  .stage-copy strong {
+    display: block;
+    font-size: clamp(1.35rem, 3vw, 1.9rem);
+  }
+  .stage-copy span {
+    display: block;
+    margin-top: 2px;
+    color: #73665b;
+    font-size: 1.05rem;
+  }
+  #toggle-parallax {
+    position: absolute;
+    z-index: 22;
+    top: 24px;
+    right: 25px;
+    min-height: 48px;
+    padding: 7px 15px 9px;
+    border: 3px solid #453c35;
+    border-radius: 15px;
+    color: #453c35;
+    background: #f5c93f;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #453c35;
+  }
+  #toggle-parallax:hover { transform: translateY(-2px); }
+  #toggle-parallax:active { transform: translateY(2px); box-shadow: 0 2px 0 #453c35; }
+  #toggle-parallax[aria-pressed="false"] { background: #fffdf5; }
+  #toggle-parallax:focus-visible {
+    outline: 4px solid #e5564b;
+    outline-offset: 3px;
+  }
+  .progress-shell {
+    position: absolute;
+    z-index: 21;
+    right: 27px;
+    bottom: 27px;
+    display: flex;
+    align-items: flex-end;
+    gap: 9px;
+    padding: 10px 11px;
+    border: 3px solid #453c35;
+    border-radius: 15px;
+    background: rgba(255, 253, 245, .9);
+  }
+  .progress-shell span {
+    font-size: .95rem;
+    font-weight: 700;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+  #parallax-progress {
+    position: relative;
+    width: 12px;
+    height: 118px;
+    overflow: hidden;
+    border: 2px solid #453c35;
+    border-radius: 999px;
+    background: #fffdf5;
+  }
+  #parallax-progress::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: calc(var(--progress, 0) * 100%);
+    background: #e5564b;
+    transition: height .08s linear;
+  }
+  .depth-legend {
+    position: absolute;
+    z-index: 21;
+    left: 26px;
+    bottom: 26px;
+    display: flex;
+    gap: 7px;
+    margin: 0;
+    padding: 9px 13px;
+    list-style: none;
+    border: 3px solid #453c35;
+    border-radius: 15px;
+    background: rgba(255, 253, 245, .9);
+  }
+  .depth-legend li {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .95rem;
+    font-weight: 700;
+  }
+  .depth-legend i {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #453c35;
+    border-radius: 50%;
+  }
+  .depth-legend li:nth-child(1) i { background: #afd9ee; }
+  .depth-legend li:nth-child(2) i { background: #83c45d; }
+  .depth-legend li:nth-child(3) i { background: #f5c93f; }
+  .outro {
+    min-height: 56vh;
+    background: #f4e6cd;
+  }
+  .outro-inner {
+    max-width: 680px;
+    padding: 30px;
+    border: 3px solid #453c35;
+    border-radius: 24px;
+    background: #fffdf5;
+    box-shadow: 0 8px 0 #d7bd91;
+  }
+  .outro h2 { margin: 0 0 8px; font-size: 2.2rem; }
+  .outro p { margin: 0; color: #73665b; font-size: 1.2rem; line-height: 1.45; }
+  .back-link {
+    display: inline-block;
+    margin-top: 18px;
+    color: #453c35;
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-underline-offset: 4px;
+  }
+  @media (max-width: 640px) {
+    .intro { min-height: 45vh; padding-inline: 18px; }
+    #parallax-track { height: 250vh; }
+    .sticky-stage { padding: 10px; }
+    #parallax-stage {
+      height: 74vh;
+      min-height: 560px;
+      border-width: 3px;
+      border-radius: 23px;
+      box-shadow: 0 8px 0 #ddc69f;
+    }
+    .stage-copy {
+      top: 15px;
+      left: 15px;
+      width: calc(100% - 142px);
+      padding: 9px 11px 10px;
+      border-width: 2px;
+      border-radius: 13px;
+    }
+    .stage-copy strong { font-size: 1.16rem; }
+    .stage-copy span { font-size: .9rem; line-height: 1.1; }
+    #toggle-parallax {
+      top: 15px;
+      right: 14px;
+      min-height: 42px;
+      padding: 5px 10px 7px;
+      border-width: 2px;
+      border-radius: 12px;
+      box-shadow: 0 3px 0 #453c35;
+      font-size: .95rem;
+    }
+    .progress-shell {
+      right: 14px;
+      bottom: 14px;
+      padding: 7px 8px;
+      border-width: 2px;
+    }
+    #parallax-progress { height: 84px; width: 10px; }
+    .depth-legend {
+      left: 14px;
+      bottom: 14px;
+      gap: 5px;
+      padding: 7px 9px;
+      border-width: 2px;
+    }
+    .depth-legend li { font-size: .82rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-parallax-layer] { will-change: auto; }
+    #parallax-progress::after { transition: none; }
+  }
+</style>
+</head>
+<body>
+<script src="characters.js"></script>
+
+<header class="intro">
+  <div class="intro-inner">
+    <p class="eyebrow">스크롤 + 포인터 깊이 실험</p>
+    <h1>나비와 몽이의<br>패럴랙스 산책</h1>
+    <p>천천히 스크롤하고 장면 위에서 포인터를 움직여 보세요.<br>
+       가까운 풀잎은 크게, 먼 산은 작게 움직입니다.</p>
+    <span class="scroll-cue" aria-hidden="true">산책 시작하기</span>
+  </div>
+</header>
+
+<main>
+  <section id="parallax-track" aria-label="패럴랙스 기술 실험 구간">
+    <div class="sticky-stage">
+      <div id="parallax-stage" aria-label="나비와 몽이가 산길을 걷는 다층 패럴랙스 장면">
+        <svg id="parallax-scene" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" role="img"
+             aria-label="하늘, 산, 구름, 언덕, 캐릭터와 풀잎이 깊이별로 배치된 풍경">
+          <defs>
+            <linearGradient id="parallax-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#8fcdf0"/>
+              <stop offset=".68" stop-color="#e8f7ff"/>
+              <stop offset="1" stop-color="#fff0c7"/>
+            </linearGradient>
+            <pattern id="parallax-crayon" width="10" height="10"
+                     patternUnits="userSpaceOnUse" patternTransform="rotate(34)">
+              <line x1="0" y1="0" x2="0" y2="10"
+                    stroke="#fff" stroke-width="3" opacity=".16"/>
+            </pattern>
+            <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="8" stdDeviation="5" flood-color="#453c35" flood-opacity=".18"/>
+            </filter>
+          </defs>
+
+          <g data-parallax-layer data-layer-name="sky" data-depth=".04" data-scroll="-8"
+             aria-hidden="true">
+            <rect x="-80" y="-60" width="1360" height="840" fill="url(#parallax-sky)"/>
+          </g>
+
+          <g data-parallax-layer data-layer-name="sun" data-depth=".12" data-scroll="-16"
+             aria-hidden="true">
+            <circle cx="1010" cy="135" r="76" fill="#f5c93f" stroke="#453c35" stroke-width="7"/>
+            <g stroke="#f2a33c" stroke-width="8" stroke-linecap="round">
+              <path d="M1010 28V2M1010 268v-26M903 135h-26M1143 135h-26
+                       M934 59l-19-19M1105 230l-19-19M934 211l-19 19M1105 40l-19 19"/>
+            </g>
+          </g>
+
+          <g data-parallax-layer data-layer-name="mountains" data-depth=".2" data-scroll="24"
+             aria-hidden="true">
+            <path d="M-70 492L185 236l128 128 162-194 198 232 130-148 310 282H-70Z"
+                  fill="#9cb8b5" stroke="#453c35" stroke-width="7" stroke-linejoin="round"/>
+            <path d="M134 287l51-51 46 46 25-30 57 112-70-36-49 27z
+                     M418 238l57-68 70 82-57-27-34 25z"
+                  fill="#fffdf5" opacity=".9"/>
+            <path d="M-70 492L185 236l128 128 162-194 198 232 130-148 310 282H-70Z"
+                  fill="url(#parallax-crayon)"/>
+          </g>
+
+          <g data-parallax-layer data-layer-name="clouds" data-depth=".34" data-scroll="-32"
+             aria-hidden="true" fill="#fffdf5" stroke="#453c35" stroke-width="6"
+             stroke-linejoin="round">
+            <path d="M86 214q-29-2-29-28 0-24 28-27 10-34 50-32 32 1 47 27
+                     11-11 30-8 28 4 28 30 34 4 34 31 0 28-34 28H86Z"/>
+            <path d="M700 176q-25-2-25-24 0-21 24-23 9-30 43-28 28 1 40 23
+                     10-9 27-7 24 4 24 26 29 4 29 27 0 24-29 24H700Z"/>
+          </g>
+
+          <g data-parallax-layer data-layer-name="hills" data-depth=".5" data-scroll="48"
+             aria-hidden="true">
+            <path d="M-80 524Q140 388 344 508Q550 370 746 510Q985 348 1280 514V780H-80Z"
+                  fill="#83c45d" stroke="#453c35" stroke-width="8"/>
+            <path d="M-80 524Q140 388 344 508Q550 370 746 510Q985 348 1280 514V780H-80Z"
+                  fill="url(#parallax-crayon)"/>
+            <g fill="#6baa4d" stroke="#453c35" stroke-width="5">
+              <path d="M110 510q-4-88 38-119 40 35 28 119z"/>
+              <path d="M1080 505q-6-101 42-136 43 39 30 136z"/>
+            </g>
+          </g>
+
+          <g data-parallax-layer data-layer-name="characters" data-depth=".7" data-scroll="72"
+             aria-hidden="true" filter="url(#soft-shadow)">
+            <g transform="translate(482 628) scale(.78)"><use href="#def-nabi"/></g>
+            <g transform="translate(700 630) scale(.8)"><use href="#def-mongi"/></g>
+            <path d="M390 649q215-42 430 0" fill="none" stroke="#f6d9a0"
+                  stroke-width="58" stroke-linecap="round"/>
+          </g>
+
+          <g data-parallax-layer data-layer-name="foreground" data-depth="1" data-scroll="112"
+             aria-hidden="true">
+            <path d="M-80 668Q176 603 389 672Q635 604 850 674Q1058 605 1280 663V790H-80Z"
+                  fill="#4f963d" stroke="#453c35" stroke-width="8"/>
+            <g fill="none" stroke="#3f7f32" stroke-width="16" stroke-linecap="round">
+              <path d="M55 708q0-104 36-147M93 706q22-96 72-124M1120 706q-8-103-54-145
+                       M1154 710q9-98 61-136M255 720q2-79-37-117M926 716q-4-85 42-128"/>
+            </g>
+            <g fill="#f6a8b8" stroke="#453c35" stroke-width="4">
+              <circle cx="178" cy="615" r="18"/><circle cx="1015" cy="602" r="18"/>
+            </g>
+          </g>
+        </svg>
+
+        <div class="stage-copy">
+          <strong>깊이 7단계가 함께 움직여요</strong>
+          <span>스크롤은 세로 거리, 포인터는 시점 차이를 만듭니다.</span>
+        </div>
+
+        <button id="toggle-parallax" type="button" aria-pressed="true">
+          패럴랙스 켜짐
+        </button>
+
+        <div class="progress-shell">
+          <span aria-hidden="true">산책 진행</span>
+          <div id="parallax-progress" role="progressbar" aria-label="패럴랙스 산책 진행도"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+        </div>
+
+        <ul class="depth-legend" aria-label="레이어 깊이 범례">
+          <li><i></i>멀리</li>
+          <li><i></i>중간</li>
+          <li><i></i>가까이</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="outro">
+  <div class="outro-inner">
+    <h2>한 장면, 서로 다른 이동 거리</h2>
+    <p>패럴랙스는 가까운 요소를 더 크게 움직여 평면 그림에 카메라 깊이감을 더합니다.
+       위의 비교 버튼으로 효과를 끄고 원본 구도와 바로 비교할 수 있습니다.</p>
+    <a class="back-link" href="index.html">← 프로토타입 목록으로</a>
+  </div>
+</footer>
+
+<script src="parallax.js"></script>
+</body>
+</html>

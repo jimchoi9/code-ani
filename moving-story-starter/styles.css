@@ -1,0 +1,193 @@
+:root {
+  font-family: "Gaegu", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  color: #403831;
+  background: #fdf6e9;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: clip; }
+button { font: inherit; }
+[hidden] { display: none !important; }
+
+.story-header {
+  min-height: 46vh;
+  display: grid;
+  place-content: center;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.story-header p {
+  justify-self: center;
+  margin: 0 0 10px;
+  padding: 4px 14px 6px;
+  border: 2px solid #403831;
+  border-radius: 999px;
+  background: #f5c93f;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.story-header h1 {
+  margin: 0;
+  font-size: clamp(3.2rem, 10vw, 6rem);
+  line-height: .9;
+}
+
+.story-header span { margin-top: 15px; color: #75675d; font-size: 1.25rem; }
+
+#story-scroll-track { height: 260vh; }
+.story-sticky {
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+}
+
+.story-frame { width: min(1120px, 100%); }
+
+#story-stage {
+  position: relative;
+  height: min(68vh, 680px);
+  min-height: 480px;
+  overflow: hidden;
+  border: 4px solid #403831;
+  border-radius: 30px;
+  background: #bce5f7;
+  box-shadow: 0 10px 0 #dcc59e;
+  isolation: isolate;
+  touch-action: pan-y;
+}
+
+#story-stage svg { display: block; width: 100%; height: 100%; }
+[data-parallax-layer] {
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.scene-label {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px 10px;
+  border: 3px solid #403831;
+  border-radius: 16px;
+  background: rgba(255, 253, 245, .92);
+  box-shadow: 0 5px 0 rgba(64, 56, 49, .14);
+}
+
+.scene-label span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fffdf5;
+  background: #e5564b;
+  font-weight: 700;
+}
+
+.scene-label strong { font-size: 1.35rem; }
+
+.progress-shell {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 16px;
+  height: 126px;
+  overflow: hidden;
+  border: 3px solid #403831;
+  border-radius: 999px;
+  background: #fffdf5;
+}
+
+#story-progress::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(var(--progress, 0) * 100%);
+  background: #e5564b;
+}
+
+#story-caption {
+  width: min(820px, calc(100% - 24px));
+  min-height: 62px;
+  margin: -32px auto 12px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 13px 22px;
+  border: 3px solid #403831;
+  border-radius: 18px;
+  background: #fffdf5;
+  box-shadow: 0 6px 0 #dcc59e;
+  text-align: center;
+  font-size: clamp(1.15rem, 3vw, 1.45rem);
+  font-weight: 700;
+}
+
+.story-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.story-controls button {
+  min-height: 44px;
+  padding: 7px 15px 9px;
+  border: 2px solid #403831;
+  border-radius: 12px;
+  color: #403831;
+  background: #fffdf5;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.story-controls button[data-action="play"] { background: #f5c93f; }
+.story-controls button[aria-pressed="true"] { background: #d9f0d0; }
+.story-controls button:disabled { cursor: not-allowed; opacity: .42; }
+.story-controls button:focus-visible { outline: 4px solid #e5564b; outline-offset: 2px; }
+
+.story-footer {
+  min-height: 42vh;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  padding: 40px 20px;
+  text-align: center;
+  background: #f2e3c9;
+}
+
+.story-footer strong { font-size: 2rem; }
+.story-footer span { color: #74665a; font-size: 1.18rem; }
+
+@media (max-width: 560px) {
+  .story-header { min-height: 40vh; }
+  #story-scroll-track { height: 230vh; }
+  .story-sticky { padding: 9px; }
+  #story-stage {
+    height: 66vh;
+    min-height: 500px;
+    border-width: 3px;
+    border-radius: 22px;
+    box-shadow: 0 7px 0 #dcc59e;
+  }
+  .scene-label { top: 13px; left: 13px; border-width: 2px; }
+  .scene-label strong { font-size: 1.1rem; }
+  .progress-shell { right: 13px; bottom: 13px; height: 92px; border-width: 2px; }
+  #story-caption { margin-top: -24px; padding-inline: 14px; border-width: 2px; }
+  .story-controls { gap: 6px; }
+  .story-controls button { padding-inline: 10px; font-size: .92rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-parallax-layer] { will-change: auto; }
+}
+

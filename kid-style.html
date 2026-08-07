@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Version C — 어린이 그림풍</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Gaegu", "Apple SD Gothic Neo", sans-serif;
+    background: #fdfaf0;
+    color: #3d3630;
+  }
+  /* 종이 질감 */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: 1;
+    pointer-events: none;
+    opacity: .5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+  }
+
+  a.home {
+    position: fixed; top: 16px; left: 16px; z-index: 50;
+    background: #fff; border: 3px solid #3d3630; border-radius: 14px;
+    padding: 4px 16px; font-size: 1.1rem; text-decoration: none; color: inherit;
+    transform: rotate(-2deg); font-weight: 700;
+  }
+
+  .intro {
+    height: 100vh; position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px;
+    text-align: center;
+  }
+  .intro .scene-tag {
+    background: #f5c93f; border: 3px solid #3d3630; border-radius: 14px;
+    padding: 2px 20px; font-size: 1.2rem; font-weight: 700;
+    transform: rotate(-3deg);
+  }
+  .intro h1 { font-size: 4rem; font-weight: 700; transform: rotate(1deg); }
+  .intro p { color: #8a7d6f; font-size: 1.4rem; }
+  .intro .arrow { font-size: 2rem; animation: bob 1s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(12px); } }
+
+  #stage { height: 100vh; position: relative; overflow: hidden; z-index: 2; }
+  #stage svg { width: 100%; height: 100%; display: block; }
+
+  .caption {
+    position: absolute;
+    left: 50%; bottom: 8%;
+    transform: translateX(-50%) translateY(20px) rotate(-1deg);
+    background: #fffdf5;
+    border: 4px solid #3d3630;
+    border-radius: 18px;
+    padding: 6px 30px 10px;
+    font-size: clamp(1.4rem, 3.4vw, 2rem);
+    font-weight: 700;
+    white-space: nowrap;
+    opacity: 0;
+  }
+
+  .outro {
+    min-height: 70vh; position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+    text-align: center; padding: 40px 20px;
+  }
+  .outro .scene-tag {
+    background: #a8d5f0; border: 3px solid #3d3630; border-radius: 14px;
+    padding: 2px 20px; font-size: 1.2rem; font-weight: 700;
+    transform: rotate(2deg);
+  }
+  .outro h2 { font-size: 2.6rem; font-weight: 700; }
+  .outro p { color: #8a7d6f; font-size: 1.3rem; }
+</style>
+</head>
+<body>
+<a class="home" href="index.html">← 목록</a>
+
+<section class="intro">
+  <span class="scene-tag">첫 번째 이야기</span>
+  <h1>평화로운 우리 집</h1>
+  <p>나비네 거실, 낮</p>
+  <div class="arrow">▼</div>
+</section>
+
+<section id="stage">
+  <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- 손그림 왜곡 필터: seed를 JS로 계속 바꿔서 선이 꿈틀거리게 -->
+      <filter id="wob1" x="-15%" y="-15%" width="130%" height="130%">
+        <feTurbulence class="boil" type="fractalNoise" baseFrequency="0.022" numOctaves="3" seed="2" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <filter id="wob2" x="-15%" y="-15%" width="130%" height="130%">
+        <feTurbulence class="boil" type="fractalNoise" baseFrequency="0.03" numOctaves="3" seed="9" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <!-- 배경처럼 큰 면은 약하게만 -->
+      <filter id="wobBg" x="-8%" y="-8%" width="116%" height="116%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="5" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+
+      <!-- 크레용 결 -->
+      <pattern id="crayon" width="7" height="7" patternTransform="rotate(38)" patternUnits="userSpaceOnUse">
+        <rect width="7" height="7" fill="none"/>
+        <line x1="0" y1="0" x2="0" y2="7" stroke="#fff" stroke-width="2.6" opacity=".33"/>
+      </pattern>
+    </defs>
+
+    <!-- ===== 배경 ===== -->
+    <g filter="url(#wobBg)">
+      <rect x="-20" y="-20" width="840" height="520" fill="#cfe8f5"/>
+      <!-- 바닥: 손으로 그은 것처럼 기울어진 경계 -->
+      <path d="M-20 486 Q 200 474 410 482 T 820 472 L820 620 L-20 620 Z" fill="#f7e0a8"/>
+      <path d="M-20 486 Q 200 474 410 482 T 820 472" fill="none" stroke="#3d3630" stroke-width="6" stroke-linecap="round"/>
+      <rect x="-20" y="-20" width="840" height="640" fill="url(#crayon)"/>
+    </g>
+
+    <!-- 액자 (삐뚤게) -->
+    <g filter="url(#wob2)" transform="rotate(-4 175 196)">
+      <rect x="124" y="152" width="102" height="86" fill="#f5c93f"/>
+      <rect x="124" y="152" width="102" height="86" fill="none" stroke="#3d3630" stroke-width="5"/>
+      <path d="M175 216 q-17-19 -3-27 q10 5 3 9 q7-8 14-1 q9 10 -14 19" fill="#e5564b"/>
+    </g>
+
+    <!-- 창문 -->
+    <g id="window" filter="url(#wob2)">
+      <rect x="548" y="132" width="186" height="156" fill="#fffdf5"/>
+      <clipPath id="glassClip"><rect x="562" y="146" width="158" height="128"/></clipPath>
+      <rect x="562" y="146" width="158" height="128" fill="#a8d5f0"/>
+      <g clip-path="url(#glassClip)">
+        <!-- 아이들이 꼭 그리는 광선 있는 해 -->
+        <g id="sun">
+          <g stroke="#f2a33c" stroke-width="4.5" stroke-linecap="round">
+            <line x1="596" y1="140" x2="596" y2="152"/>
+            <line x1="570" y1="152" x2="578" y2="161"/>
+            <line x1="622" y1="152" x2="614" y2="161"/>
+            <line x1="560" y1="177" x2="572" y2="177"/>
+            <line x1="632" y1="177" x2="620" y2="177"/>
+            <line x1="572" y1="200" x2="579" y2="193"/>
+            <line x1="620" y1="200" x2="613" y2="193"/>
+          </g>
+          <circle cx="596" cy="177" r="20" fill="#f5c93f" stroke="#3d3630" stroke-width="4"/>
+        </g>
+        <!-- 구름 -->
+        <path d="M672 172 q-14 0 -14 11 q0 10 14 10 h34 q13 0 13-11 q0-10 -13-10 q-3-11 -17-9 q-11 1 -17 9 z"
+              fill="#fffdf5" stroke="#3d3630" stroke-width="3.5"/>
+        <!-- 잔디 -->
+        <path d="M550 252 Q 640 244 740 250 L740 290 L550 290 Z" fill="#86c25f"/>
+        <g stroke="#5f9a3d" stroke-width="3" stroke-linecap="round">
+          <path d="M578 252 l-4 -12 M596 250 l4 -13 M628 249 l-3 -11 M660 248 l5 -12 M694 249 l-4 -11"/>
+        </g>
+        <!-- 이삿짐 트럭 -->
+        <g id="truck" transform="translate(210,0)">
+          <rect x="580" y="198" width="84" height="44" fill="#e5564b"/>
+          <rect x="580" y="198" width="84" height="44" fill="none" stroke="#3d3630" stroke-width="4"/>
+          <path d="M664 212 h34 v30 h-34 z" fill="#f5c93f" stroke="#3d3630" stroke-width="4"/>
+          <rect x="670" y="218" width="17" height="12" fill="#a8d5f0" stroke="#3d3630" stroke-width="3"/>
+          <circle cx="602" cy="245" r="10" fill="#3d3630"/>
+          <circle cx="676" cy="245" r="10" fill="#3d3630"/>
+          <text x="592" y="228" font-family="Gaegu, sans-serif" font-size="21" font-weight="700" fill="#fffdf5">이사</text>
+          <!-- 몽이가 짐칸에서 빼꼼 -->
+          <g id="dog" transform="translate(0,30) scale(.01)" transform-origin="622 190">
+            <path d="M604 168 l-6 -22 l18 10 z" fill="#c98a4b" stroke="#3d3630" stroke-width="3"/>
+            <path d="M640 168 l7 -21 l-18 9 z" fill="#c98a4b" stroke="#3d3630" stroke-width="3"/>
+            <circle cx="622" cy="181" r="19" fill="#e0b075" stroke="#3d3630" stroke-width="4"/>
+            <circle cx="615" cy="177" r="2.8" fill="#3d3630"/>
+            <circle cx="630" cy="178" r="2.8" fill="#3d3630"/>
+            <ellipse cx="622" cy="188" rx="5" ry="4" fill="#3d3630"/>
+            <path d="M604 196 q18 6 36 0 l-2 9 q-16 5 -32 0 z" fill="#e5564b" stroke="#3d3630" stroke-width="3"/>
+          </g>
+        </g>
+      </g>
+      <line x1="641" y1="146" x2="639" y2="274" stroke="#3d3630" stroke-width="4"/>
+      <line x1="562" y1="209" x2="720" y2="212" stroke="#3d3630" stroke-width="4"/>
+      <rect x="548" y="132" width="186" height="156" fill="none" stroke="#3d3630" stroke-width="6"/>
+    </g>
+
+    <!-- 러그: 색이 선 밖으로 삐져나오게 -->
+    <g filter="url(#wob2)">
+      <ellipse cx="296" cy="547" rx="228" ry="33" fill="#f6a8b8"/>
+      <ellipse cx="302" cy="544" rx="222" ry="30" fill="none" stroke="#e0899b" stroke-width="4"/>
+    </g>
+
+    <!-- 화분 -->
+    <g filter="url(#wob2)">
+      <path d="M736 446 q-20-54 8-80 q6 46 16 80 z" fill="#86c25f" stroke="#3d3630" stroke-width="4"/>
+      <path d="M756 446 q24-42 3-74 q-15 40 -17 74 z" fill="#9fd177" stroke="#3d3630" stroke-width="4"/>
+      <path d="M719 444 h60 l-9 44 h-43 z" fill="#e59a5c" stroke="#3d3630" stroke-width="5"/>
+    </g>
+
+    <!-- ===== 나비 ===== -->
+    <g id="cat" transform="translate(240,455)">
+      <g filter="url(#wob1)">
+        <!-- 꼬리 -->
+        <g id="tail" transform-origin="74 6">
+          <path d="M74 6 Q 100 -30 92 -74" fill="none" stroke="#3d3630" stroke-width="22" stroke-linecap="round"/>
+          <path d="M74 6 Q 100 -30 92 -74" fill="none" stroke="#fbe6c0" stroke-width="14" stroke-linecap="round"/>
+          <circle cx="93" cy="-76" r="13" fill="#f0a04d" stroke="#3d3630" stroke-width="4"/>
+        </g>
+        <!-- 몸통: 채색이 선 밖으로 -->
+        <ellipse cx="-4" cy="3" rx="79" ry="57" fill="#fbe6c0"/>
+        <ellipse cx="16" cy="12" rx="33" ry="24" fill="#f0a04d" opacity=".7"/>
+        <ellipse cx="0" cy="0" rx="77" ry="55" fill="none" stroke="#3d3630" stroke-width="6"/>
+        <!-- 앞발 -->
+        <ellipse cx="-31" cy="49" rx="17" ry="13" fill="#fbe6c0" stroke="#3d3630" stroke-width="5"/>
+        <ellipse cx="31" cy="51" rx="17" ry="13" fill="#fbe6c0" stroke="#3d3630" stroke-width="5"/>
+        <!-- 머리 -->
+        <g id="catHead" transform-origin="0 -70">
+          <!-- 귀: 좌우 크기가 다름 -->
+          <path d="M-38 -158 L-55 -199 L-10 -172 Z" fill="#fbe6c0" stroke="#3d3630" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M38 -158 L49 -193 L13 -173 Z" fill="#fbe6c0" stroke="#3d3630" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M-36 -166 L-45 -186 L-22 -173 Z" fill="#f6a8b8"/>
+          <path d="M36 -166 L42 -183 L23 -173 Z" fill="#f6a8b8"/>
+          <!-- 얼굴 -->
+          <circle cx="-2" cy="-120" r="57" fill="#fbe6c0"/>
+          <circle cx="0" cy="-122" r="55" fill="none" stroke="#3d3630" stroke-width="6"/>
+          <!-- 눈: 높이가 살짝 안 맞음 -->
+          <circle cx="-19" cy="-131" r="6" fill="#3d3630"/>
+          <circle cx="18" cy="-128" r="5.4" fill="#3d3630"/>
+          <path d="M-7 -115 L7 -115 L0 -105 Z" fill="#e8888f" stroke="#3d3630" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M0 -105 q-8 9 -14 3 M0 -105 q8 9 14 3" fill="none" stroke="#3d3630" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="-39" cy="-106" rx="10" ry="6" fill="#f6a8b8" opacity=".9"/>
+          <ellipse cx="38" cy="-104" rx="10" ry="6" fill="#f6a8b8" opacity=".9"/>
+          <!-- 수염: 길이 제각각 -->
+          <g stroke="#3d3630" stroke-width="3.5" stroke-linecap="round">
+            <line x1="-54" y1="-118" x2="-88" y2="-126"/>
+            <line x1="-54" y1="-106" x2="-82" y2="-101"/>
+            <line x1="54" y1="-118" x2="85" y2="-123"/>
+            <line x1="54" y1="-106" x2="90" y2="-103"/>
+          </g>
+        </g>
+        <!-- 목걸이 + 방울 -->
+        <path d="M-35 -74 q35 12 70 -2 l2 13 q-36 14 -74 2 z" fill="#e5564b" stroke="#3d3630" stroke-width="5"/>
+        <g id="bell" transform-origin="0 -60">
+          <circle cx="1" cy="-51" r="12" fill="#f5c93f" stroke="#3d3630" stroke-width="5"/>
+          <circle cx="1" cy="-47" r="2.6" fill="#3d3630"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- 공 -->
+    <g id="ball" transform="translate(370,502)">
+      <g filter="url(#wob1)">
+        <circle cx="0" cy="0" r="35" fill="#e5564b"/>
+        <path d="M-34 -2 a34 34 0 0 1 68 0 z" fill="#f5c93f"/>
+        <circle cx="0" cy="0" r="34" fill="none" stroke="#3d3630" stroke-width="6"/>
+        <path d="M-34 0 q17 6 34 0 t34 -1" fill="none" stroke="#3d3630" stroke-width="5" stroke-linecap="round"/>
+      </g>
+    </g>
+
+    <!-- 말풍선 -->
+    <g id="bubble" transform-origin="315 332" transform="scale(0)">
+      <g filter="url(#wob1)">
+        <path d="M252 300 q64-6 128 0 q10 26 2 60 q-38 5 -70 3 l-24 21 3 -21 q-24 1 -40 -3 q-8-32 1-60 z"
+              fill="#fffdf5" stroke="#3d3630" stroke-width="5" stroke-linejoin="round"/>
+        <text x="316" y="342" text-anchor="middle" font-family="Gaegu, sans-serif" font-size="30" font-weight="700" fill="#3d3630">딸랑딸랑 ♪</text>
+      </g>
+    </g>
+  </svg>
+
+  <div class="caption" id="cap1">나비는 새 장난감 공이 세상에서 제일 좋아요.</div>
+  <div class="caption" id="cap2">방울 목걸이가 딸랑딸랑, 오늘도 신나는 하루!</div>
+  <div class="caption" id="cap3">그때, 창밖으로 몽이네가 이사를 왔어요…</div>
+</section>
+
+<section class="outro">
+  <span class="scene-tag">다음 이야기</span>
+  <h2>갑작스러운 만남</h2>
+  <p>빨간 스카프를 두른 몽이가 마당에 나타난다면?</p>
+</section>
+
+<script src="prototype-runtime.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+/* 손그림 "boil": 보이는 탭에서 모션 허용 시에만 초당 5회 교체 */
+const boilController = PrototypeRuntime.createBoilController({
+  nodes: document.querySelectorAll("feTurbulence.boil"),
+  intervalMs: 200,
+  documentRef: document,
+  motionQuery,
+});
+boilController.start();
+window.__prototypeDebug = { boil: boilController };
+
+/* 항상 도는 아이들 모션 */
+const decorativeLoops = PrototypeRuntime.createLoopController({ reducedMotion: motionQuery.matches });
+decorativeLoops.add(
+  gsap.to("#tail", { rotation: 20, duration: 0.5, yoyo: true, repeat: -1, ease: "sine.inOut" }),
+  gsap.to("#catHead", { rotation: 4, duration: 1.1, yoyo: true, repeat: -1, ease: "sine.inOut" }),
+  gsap.to("#bell", { rotation: 15, duration: 0.32, yoyo: true, repeat: -1, ease: "sine.inOut" }),
+  gsap.to("#sun", { rotation: 360, duration: 26, repeat: -1, ease: "none", transformOrigin: "596px 177px" })
+);
+decorativeLoops.enter();
+motionQuery.addEventListener("change", event => decorativeLoops.syncMotion(event.matches));
+
+/* 스크롤 스크럽 타임라인 */
+const tl = gsap.timeline({
+  scrollTrigger: { trigger: "#stage", start: "top top", end: "+=4000", scrub: 1, pin: true },
+  defaults: { ease: "none" },
+});
+
+tl.to("#cap1", { opacity: 1, y: 0, duration: 0.5 })
+  .to("#cap1", { opacity: 0, duration: 0.4 }, "+=0.5");
+
+tl.to("#ball", {
+    keyframes: [
+      { x: 460, y: 440, rotation: 180 },
+      { x: 540, y: 502, rotation: 360 },
+      { x: 600, y: 460, rotation: 500 },
+      { x: 660, y: 502, rotation: 640 },
+    ], duration: 1.6,
+  }, "chase")
+  .to("#cat", {
+    keyframes: [
+      { x: 300, y: 420 }, { x: 340, y: 455 },
+      { x: 390, y: 420 }, { x: 430, y: 455 },
+    ], duration: 1.6,
+  }, "chase");
+
+tl.to("#bubble", { scale: 1, x: 150, duration: 0.5, ease: "back.out(2)" })
+  .to("#cap2", { opacity: 1, y: 0, duration: 0.5 }, "<")
+  .to("#bubble", { scale: 0, duration: 0.35 }, "+=0.6")
+  .to("#cap2", { opacity: 0, duration: 0.4 }, "<");
+
+tl.to("#ball", {
+    keyframes: [
+      { x: 560, y: 450, rotation: 500 }, { x: 470, y: 502, rotation: 360 },
+      { x: 400, y: 470, rotation: 250 }, { x: 350, y: 502, rotation: 180 },
+    ], duration: 1.2,
+  }, "back")
+  .to("#cat", {
+    keyframes: [
+      { x: 380, y: 420 }, { x: 330, y: 455 },
+      { x: 270, y: 420 }, { x: 220, y: 455 },
+    ], duration: 1.2,
+  }, "back");
+
+tl.to("#truck", { x: -35, duration: 1.4, ease: "power1.out" })
+  .to("#dog", { scale: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" })
+  .to("#cap3", { opacity: 1, y: 0, duration: 0.6 }, "<+0.2")
+  .to({}, { duration: 0.8 });
+</script>
+</body>
+</html>

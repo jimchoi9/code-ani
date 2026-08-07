@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캐릭터 교체 실험 — Scene 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Gaegu", "Apple SD Gothic Neo", sans-serif;
+    background: #2b2621; color: #fdfaf0;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px; gap: 12px;
+  }
+  .svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  a.home {
+    position: fixed; top: 12px; left: 12px; z-index: 50;
+    background: #fdfaf0; border: 3px solid #17130f; border-radius: 12px;
+    padding: 1px 14px 3px; font-size: 1.05rem; font-weight: 700;
+    text-decoration: none; color: #3d3630;
+  }
+  h1 { font-size: 1.9rem; }
+  h1 small { font-weight: 400; color: #b5a894; font-size: 1.1rem; }
+
+  #stage {
+    position: relative;
+    width: min(96vw, 900px); aspect-ratio: 4 / 3;
+    border: 5px solid #17130f; border-radius: 18px;
+    overflow: hidden; background: #fdfaf0;
+  }
+  #stage svg { width: 100%; height: 100%; display: block; }
+  #stage::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .4;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+  }
+
+  #bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+  button {
+    font-family: inherit; font-size: 1.05rem; font-weight: 700;
+    background: #fdfaf0; color: #3d3630;
+    border: 3px solid #17130f; border-radius: 12px;
+    padding: 1px 14px 3px; cursor: pointer; box-shadow: 0 3px 0 #17130f;
+  }
+  button:hover { background: #f5c93f; }
+  button:active { transform: translateY(3px); box-shadow: none; }
+  button.on { background: #f5c93f; }
+
+  #report {
+    width: min(96vw, 900px);
+    background: #fdfaf0; color: #3d3630;
+    border: 4px solid #17130f; border-radius: 16px;
+    padding: 14px 18px 16px;
+  }
+  #report h2 { font-size: 1.3rem; margin-bottom: 6px; }
+  #report table { width: 100%; border-collapse: collapse; font-size: 1.05rem; }
+  #report td { padding: 4px 6px; border-bottom: 2px dashed #d8c9b0; vertical-align: top; }
+  #report td:first-child { width: 34%; font-weight: 700; }
+  .ok { color: #2f7a3d; font-weight: 700; }
+  .no { color: #c23a2c; font-weight: 700; }
+  .meh { color: #b07b1e; font-weight: 700; }
+</style>
+</head>
+<body>
+<a class="home" href="index.html">← 목록</a>
+
+<script src="characters.js"></script>
+
+<h1>캐릭터 교체 실험 <small>Scene 1 · 나비네 거실</small></h1>
+
+<div id="stage">
+  <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <g class="bg"></g>
+    <g class="layer"></g>
+  </svg>
+</div>
+
+<div id="bar">
+  <button id="t-char" class="on">캐릭터: 새 캐릭터</button>
+  <button id="t-wob" class="on">손그림 필터: 켬</button>
+  <button id="t-collar" class="on">방울 목걸이: 켬</button>
+  <button id="replay">↻ 다시 재생</button>
+</div>
+
+<div id="report">
+  <h2>교체 가능 여부</h2>
+  <table>
+    <tr><td>전신 이동 · 폴짝뛰기</td><td><span class="ok">가능</span> — 몸 전체를 옮기는 연출은 문제없습니다.</td></tr>
+    <tr><td>찌그러짐(squash) · 기울이기</td><td><span class="ok">가능</span> — 발밑을 기준으로 회전·변형됩니다.</td></tr>
+    <tr><td>눈동자 움직임 · 눈 깜빡임</td><td><span class="ok">가능</span> — 눈이 별도 도형으로 분리돼 있습니다.</td></tr>
+    <tr><td>입 모양 바꾸기</td><td><span class="meh">조건부</span> — 입은 분리돼 있지만, 표정 벌수만큼 새로 그려야 합니다.</td></tr>
+    <tr><td>고개 돌리기 · 갸웃하기</td><td><span class="no">불가</span> — 외곽선이 머리와 몸통을 통째로 한 path로 그려서, 머리만 돌리면 선이 찢어집니다.</td></tr>
+    <tr><td>꼬리 흔들기</td><td><span class="no">불가</span> — 꼬리가 아예 없습니다.</td></tr>
+    <tr><td>방울 목걸이</td><td><span class="meh">덧그림</span> — 원본에 없어서 따로 얹었습니다. 이야기의 &ldquo;딸랑딸랑&rdquo;에 필요합니다.</td></tr>
+  </table>
+</div>
+
+<script src="prototype-runtime.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+/* ── boil ── */
+const boilController = PrototypeRuntime.createBoilController({
+  nodes: document.querySelectorAll("feTurbulence.boil"),
+  intervalMs: 200,
+  documentRef: document,
+  motionQuery,
+});
+boilController.start();
+window.__prototypeDebug = { boil: boilController };
+
+const part = (root, n) => root.querySelector(`[data-p="${n}"]`);
+function face(root, n) {
+  root.querySelectorAll("[data-face]").forEach(f => f.style.display = f.dataset.face === n ? "" : "none");
+}
+function spawn(defId, host, x, y, scale = 1) {
+  const pos = document.createElementNS(NS, "g");
+  pos.setAttribute("transform", `translate(${x},${y})`);
+  const anim = document.createElementNS(NS, "g");
+  const body = document.createElementNS(NS, "g");
+  body.setAttribute("transform", `scale(${scale},${scale})`);
+  document.getElementById(defId).childNodes.forEach(n => body.appendChild(n.cloneNode(true)));
+  anim.appendChild(body);
+  pos.appendChild(anim);
+  host.appendChild(pos);
+  gsap.set(anim, { svgOrigin: "0 0" });
+  return anim;
+}
+
+/* ══ 새 캐릭터를 def로 등록 ══
+   원본은 1376×768 화면에 그려져 있고 캐릭터는 (477,102)~(868,703)에 있다.
+   프로젝트 규칙(원점 = 발밑 중앙)에 맞추려면 그만큼 밀어야 한다. */
+const FEET_X = 672.5, FEET_Y = 703;   // 발밑 중앙
+const NECK_Y = 500;                    // 머리와 몸통이 만나는 높이
+
+/* 원본 도형 순서 → 부위 이름. 자동 추적으로 나온 파일이라 이름이 없다. */
+const PART_BY_INDEX = {
+  13: "outline", 14: "headfill", 24: "bodyfill",
+  15: "eyeRring", 16: "eyeRwhite", 17: "eyeLring", 18: "eyeLwhite",
+  19: "pupilR", 20: "pupilL", 21: "mouth", 22: "teeth", 23: "tongue",
+};
+
+async function registerNewChar() {
+  const txt = await (await fetch("new_char.svg")).text();
+  const src = new DOMParser().parseFromString(txt, "image/svg+xml").querySelector("svg");
+
+  const inner = document.createElementNS(NS, "g");
+  inner.setAttribute("transform", `translate(${-FEET_X},${-FEET_Y})`);
+  [...src.childNodes].forEach(n => inner.appendChild(n.cloneNode(true)));
+
+  /* 흰 배경판(전체를 덮는 사각형)은 무대를 가리므로 뺀다 */
+  const shapes = [...inner.querySelectorAll("path,circle,ellipse")];
+  shapes.forEach((el, i) => {
+    if (i === 12) el.remove();                       // 배경 흰 판
+    else if (PART_BY_INDEX[i]) el.dataset.p = PART_BY_INDEX[i];
+  });
+
+  /* 왼쪽 눈동자만 transform 속성으로 자리를 잡고 있다. GSAP이 그 속성을
+     통째로 덮어써서 도형이 화면 밖으로 튄다. 좌표를 도형 자체에 넣어 없앤다. */
+  inner.querySelectorAll("ellipse[transform]").forEach(el => {
+    const m = el.getAttribute("transform").match(/translate\(\s*([-\d.]+)[ ,]+([-\d.]+)/);
+    if (!m) return;
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", m[1]);
+    c.setAttribute("cy", m[2]);
+    c.setAttribute("r", (+el.getAttribute("rx") + +el.getAttribute("ry")) / 2);
+    c.setAttribute("fill", el.getAttribute("fill"));
+    if (el.dataset.p) c.dataset.p = el.dataset.p;
+    el.replaceWith(c);
+  });
+
+  /* 이야기에 필요한 방울 목걸이를 덧그린다 */
+  const collar = document.createElementNS(NS, "g");
+  collar.dataset.p = "collar";
+  collar.innerHTML = `
+    <path d="M604 ${NECK_Y} q68 30 140 -2 l5 30 q-74 34 -150 6 z"
+          fill="#e5564b" stroke="#1a1918" stroke-width="9" stroke-linejoin="round"/>
+    <g data-p="bell">
+      <circle cx="676" cy="${NECK_Y + 62}" r="24" fill="#f5c93f" stroke="#1a1918" stroke-width="9"/>
+      <circle cx="676" cy="${NECK_Y + 70}" r="5" fill="#1a1918"/>
+    </g>`;
+  inner.appendChild(collar);
+
+  const wrap = document.createElementNS(NS, "g");
+  wrap.dataset.p = "wob";
+  wrap.setAttribute("filter", "url(#wob1)");
+  wrap.appendChild(inner);
+
+  const def = document.createElementNS(NS, "g");
+  def.id = "def-newcat";
+  def.appendChild(wrap);
+  document.querySelector(".svg-defs defs").appendChild(def);
+}
+
+/* ══ 무대 ══ */
+const stage = document.querySelector("#stage svg");
+const layer = stage.querySelector(".layer");
+let useNew = true, useWob = true, useCollar = true;
+let cat, ball, bg, tl, loops = [];
+
+function buildScene() {
+  loops.forEach(t => t.kill());
+  loops = [];
+  tl?.kill();
+  layer.innerHTML = "";
+
+  if (!bg) {
+    bg = stage.querySelector(".bg");
+    document.getElementById("def-room").childNodes.forEach(n => bg.appendChild(n.cloneNode(true)));
+    gsap.set(part(bg, "truckdog"), { opacity: 0, y: 28 });
+  }
+  gsap.set(part(bg, "truck"), { x: 0 });
+  gsap.set(part(bg, "truckdog"), { opacity: 0, y: 28 });
+
+  cat = useNew
+    ? spawn("def-newcat", layer, 300, 560, 0.327)   // 601 × 0.327 ≈ 원본 나비와 같은 키
+    : spawn("def-nabi", layer, 300, 560, 0.78);
+  ball = spawn("def-ball", layer, 396, 512, 1);
+
+  applyWob();
+  applyCollar();
+
+  /* 새 캐릭터에서 따로 움직일 수 있는 부위들 */
+  const EYE_R = "763 320", EYE_L = "576 355";       // 두 눈의 중심 (원본 좌표)
+  let eyeR, eyeL, pupils, blinkTl = null;
+
+  if (useNew) {
+    eyeR = [part(cat, "eyeRring"), part(cat, "eyeRwhite")];
+    eyeL = [part(cat, "eyeLring"), part(cat, "eyeLwhite")];
+    pupils = [part(cat, "pupilR"), part(cat, "pupilL")];
+
+    loops.push(gsap.to(part(cat, "bell"), { rotation: 16, duration: .32, yoyo: true, repeat: -1,
+      ease: "sine.inOut", svgOrigin: `676 ${NECK_Y + 40}` }));
+
+    /* 눈 깜빡임 — 눈 중심에서 납작하게 눌렀다 편다.
+       yoyo+repeatDelay는 감은 채로 머무르므로 타임라인으로 짠다. */
+    blinkTl = gsap.timeline({ repeat: -1, repeatDelay: 2.8 });
+    blinkTl.to(eyeR, { scaleY: .06, duration: .08, svgOrigin: EYE_R }, 0)
+      .to(eyeL, { scaleY: .06, duration: .08, svgOrigin: EYE_L }, 0)
+      .to(pupils, { opacity: 0, duration: .08 }, 0)
+      .to(eyeR, { scaleY: 1, duration: .1 }, .1)
+      .to(eyeL, { scaleY: 1, duration: .1 }, .1)
+      .to(pupils, { opacity: 1, duration: .1 }, .1);
+    loops.push(blinkTl);
+  } else {
+    loops.push(gsap.to(part(cat, "tail"), { rotation: 20, duration: .5, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "64 -48" }));
+    loops.push(gsap.to(part(cat, "head"), { rotation: 4, duration: 1.1, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "0 -120" }));
+    loops.push(gsap.to(part(cat, "bell"), { rotation: 15, duration: .32, yoyo: true, repeat: -1, ease: "sine.inOut", svgOrigin: "1 -117" }));
+  }
+  if (motionQuery.matches) loops.forEach(tween => tween.pause());
+
+  tl = gsap.timeline({ defaults: { ease: "power1.inOut" } });
+
+  /* 1. 공을 쫓아 폴짝폴짝 — 두 캐릭터 모두 가능 */
+  const hop = n => ({ keyframes: Array.from({ length: n * 2 }, (_, i) => ({ y: i % 2 ? 0 : -28 })), duration: .4 * n });
+  tl.to(ball, { keyframes: [{ x: 80, y: -66, rotation: 180 }, { x: 148, y: 0, rotation: 360 },
+      { x: 200, y: -44, rotation: 500 }, { x: 250, y: 0, rotation: 640 }], duration: 1.6 }, "a")
+    .to(cat, hop(4), "a")
+    .to(cat, { x: 160, duration: 1.6 }, "a");
+
+  /* 2. 눈동자로 공을 따라본다 — 고개를 못 돌리니 눈으로 대신한다 */
+  if (useNew) {
+    tl.to(pupils, { x: 7, duration: .5 }, "a")
+      .to(pupils, { x: -6, duration: .5 }, "a+=1.1");
+  }
+
+  /* 3. 착지 반동 — 발밑 기준 찌그러짐 */
+  tl.to(cat, { scaleX: 1.12, scaleY: .88, duration: .12 })
+    .to(cat, { scaleX: 1, scaleY: 1, duration: .3, ease: "elastic.out(1,.4)" });
+
+  /* 4. 공을 데려온다 */
+  tl.to(ball, { keyframes: [{ x: 170, y: -46, rotation: 500 }, { x: 100, y: 0, rotation: 360 },
+      { x: 40, y: -30, rotation: 250 }, { x: -16, y: 0, rotation: 180 }], duration: 1.3 }, "b")
+    .to(cat, hop(3), "b")
+    .to(cat, { x: 0, duration: 1.3 }, "b");
+
+  /* 5. 창밖에 이삿짐 트럭 → 놀란다 */
+  tl.to(part(bg, "truck"), { x: -35, duration: 1.2, ease: "power1.out" })
+    .to(part(bg, "truckdog"), { opacity: 1, y: 0, duration: .5, ease: "back.out(1.7)" })
+    .to(cat, { rotation: -7, duration: .3 }, "<")        // 고개 대신 몸을 기울인다
+    .to(cat, { rotation: 0, duration: .5, ease: "elastic.out(1,.5)" });
+  if (useNew) {
+    /* 놀란 표정 — 깜빡임과 같은 속성을 다투므로 잠시 멈춰두고 눈을 키운다 */
+    tl.add(() => blinkTl.pause(0), "-=0.7")
+      .to(eyeR, { scaleY: 1.3, scaleX: 1.15, duration: .25, svgOrigin: EYE_R }, "<")
+      .to(eyeL, { scaleY: 1.3, scaleX: 1.15, duration: .25, svgOrigin: EYE_L }, "<")
+      .to(part(cat, "mouth"), { scaleY: 1.6, duration: .25, svgOrigin: "677 372" }, "<");
+  } else {
+    tl.add(() => face(cat, "surprised"), "-=0.7");
+  }
+}
+
+function applyWob() {
+  const w = part(cat, "wob");
+  if (w) w.setAttribute("filter", useWob ? "url(#wob1)" : "none");
+  cat.querySelectorAll('[filter]').forEach(n => {
+    if (n !== w) n.setAttribute("filter", useWob ? "url(#wob1)" : "none");
+  });
+}
+function applyCollar() {
+  const c = part(cat, "collar");
+  if (c) c.style.display = useCollar ? "" : "none";
+}
+
+/* ── 조작 ── */
+const bChar = document.getElementById("t-char");
+const bWob = document.getElementById("t-wob");
+const bCollar = document.getElementById("t-collar");
+bChar.onclick = () => {
+  useNew = !useNew;
+  bChar.textContent = "캐릭터: " + (useNew ? "새 캐릭터" : "원본 나비");
+  bChar.classList.toggle("on", useNew);
+  bCollar.style.display = useNew ? "" : "none";
+  buildScene();
+};
+bWob.onclick = () => {
+  useWob = !useWob;
+  bWob.textContent = "손그림 필터: " + (useWob ? "켬" : "끔");
+  bWob.classList.toggle("on", useWob);
+  applyWob();
+};
+bCollar.onclick = () => {
+  useCollar = !useCollar;
+  bCollar.textContent = "방울 목걸이: " + (useCollar ? "켬" : "끔");
+  bCollar.classList.toggle("on", useCollar);
+  applyCollar();
+};
+document.getElementById("replay").onclick = () => buildScene();
+
+motionQuery.addEventListener("change", event => {
+  loops.forEach(tween => event.matches ? tween.pause() : tween.play());
+});
+
+registerNewChar().then(buildScene);
+</script>
+</body>
+</html>

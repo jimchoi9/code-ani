@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PNG 파츠 리깅 실험</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #423933;
+    --paper: #fffaf0;
+    --yellow: #f6cc49;
+    --blue: #3e71c8;
+    --red: #e54e48;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 28px 18px 40px;
+    color: var(--ink);
+    font-family: "Gaegu", "Apple SD Gothic Neo", sans-serif;
+    background:
+      radial-gradient(circle at 16% 18%, rgba(255,255,255,.86) 0 4px, transparent 5px),
+      #f7efdf;
+    background-size: 34px 34px;
+  }
+  main { width: min(1120px, 100%); margin: 0 auto; }
+  header { text-align: center; margin-bottom: 18px; }
+  .eyebrow {
+    display: inline-block;
+    margin: 0 0 7px;
+    padding: 3px 14px 5px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--yellow);
+    font-weight: 700;
+  }
+  h1 { margin: 0; font-size: clamp(2.4rem, 7vw, 3.8rem); line-height: 1; }
+  header p:last-child { margin: 7px 0 0; color: #76695f; font-size: 1.25rem; }
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(360px, 1.15fr) minmax(300px, .85fr);
+    gap: 20px;
+    align-items: stretch;
+  }
+  .stage-card, .control-panel {
+    border: 4px solid var(--ink);
+    border-radius: 28px;
+    background: rgba(255,250,240,.96);
+    box-shadow: 0 9px 0 #dbc49f;
+  }
+  .stage-card { position: relative; overflow: hidden; min-height: 650px; }
+  #png-rig {
+    position: relative;
+    min-height: 650px;
+    overflow: hidden;
+    background: linear-gradient(#bce2f5 0 68%, #83c45d 68% 86%, #f0d89b 86%);
+  }
+  #png-rig::after {
+    content: "";
+    position: absolute;
+    inset: 68% 0 14%;
+    background: repeating-linear-gradient(20deg, transparent 0 8px, rgba(255,255,255,.13) 9px 12px);
+    pointer-events: none;
+  }
+  .sun {
+    position: absolute; left: 42px; top: 38px; width: 74px; height: 74px;
+    border: 5px solid var(--ink); border-radius: 50%; background: var(--yellow);
+    box-shadow: 0 -24px 0 -20px #f1a43a, 0 24px 0 -20px #f1a43a,
+                24px 0 0 -20px #f1a43a, -24px 0 0 -20px #f1a43a;
+  }
+  #rig-character, #pose-character {
+    position: absolute;
+    left: 50%;
+    bottom: 72px;
+    width: 360px;
+    height: 520px;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+  #pose-character {
+    display: none;
+    object-fit: contain;
+    object-position: center bottom;
+  }
+  #pose-backdrop {
+    position: absolute;
+    left: 50%;
+    bottom: 82px;
+    z-index: 1;
+    display: none;
+    width: 330px;
+    height: 500px;
+    border: 3px dashed rgba(66,57,51,.22);
+    border-radius: 48% 48% 36% 36%;
+    background: rgba(255,255,255,.94);
+    transform: translateX(-50%);
+  }
+  .part { position: absolute; pointer-events: none; }
+  .part img { display: block; width: 100%; height: auto; }
+  .motion { width: 100%; transform-origin: inherit; }
+  .lower-body { left: 111px; top: 351px; width: 138px; z-index: 1; }
+  .feet { left: 77px; top: 405px; width: 206px; height: 123px; z-index: 2; }
+  .feet img { position: relative; z-index: 2; }
+  .white-restoration {
+    position: absolute;
+    z-index: 1;
+    display: block;
+    background: #fff;
+    pointer-events: none;
+  }
+  .sock-backing { top: 17px; width: 48px; height: 34px; border-radius: 9px; }
+  .sock-left { left: 35px; }
+  .sock-right { right: 35px; }
+  .shoe-backing { top: 53px; width: 73px; height: 49px; border-radius: 46% 46% 36% 36%; }
+  .shoe-left { left: 18px; }
+  .shoe-right { right: 18px; }
+  .torso { left: 73px; top: 219px; width: 214px; z-index: 3; }
+  .arm { width: 89px; top: 235px; z-index: 2; }
+  .arm-left { left: 38px; transform-origin: 72px 23px; }
+  .arm-right { right: 38px; transform-origin: 17px 23px; }
+  .head { left: 30px; top: 12px; width: 300px; z-index: 5; transform-origin: 150px 245px; }
+  #mouth-mask {
+    position: absolute;
+    left: 106px;
+    top: 157px;
+    width: 88px;
+    height: 58px;
+    z-index: 6;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, #f6c99d 42%, rgba(246,201,157,0) 72%);
+  }
+  #mouth-image { max-width: 78px; max-height: 48px; object-fit: contain; }
+  #speech-bubble {
+    position: absolute;
+    z-index: 8;
+    top: 76px;
+    right: 34px;
+    min-width: 180px;
+    padding: 16px 20px;
+    border: 4px solid var(--ink);
+    border-radius: 22px;
+    background: #fff;
+    font-size: 1.7rem;
+    font-weight: 700;
+    text-align: center;
+    opacity: 0;
+    transform: scale(.8);
+    transform-origin: 50% 100%;
+  }
+  #speech-bubble::after {
+    content: "";
+    position: absolute;
+    left: 42px;
+    bottom: -18px;
+    width: 28px;
+    height: 28px;
+    border-right: 4px solid var(--ink);
+    border-bottom: 4px solid var(--ink);
+    background: #fff;
+    transform: rotate(45deg);
+  }
+  .joint {
+    position: absolute;
+    z-index: 12;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 0 0 3px var(--ink);
+    opacity: 0;
+    pointer-events: none;
+  }
+  #png-rig.show-joints .joint { opacity: 1; }
+  .joint-neck { left: 50%; top: 270px; }
+  .joint-left { left: calc(50% - 102px); top: 331px; }
+  .joint-right { left: calc(50% + 102px); top: 331px; }
+  .control-panel { padding: 22px; }
+  fieldset {
+    margin: 0 0 17px;
+    padding: 13px;
+    border: 2px dashed #9a8878;
+    border-radius: 18px;
+  }
+  legend { padding: 0 8px; font-size: 1.25rem; font-weight: 700; }
+  .button-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+  button {
+    min-height: 47px;
+    padding: 8px 10px 10px;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    background: #fff;
+    color: var(--ink);
+    font: 700 1.08rem/1 "Gaegu", sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #d8c8b2;
+  }
+  button:hover { transform: translateY(-2px); }
+  button:active { transform: translateY(2px); box-shadow: 0 1px 0 #d8c8b2; }
+  button:focus-visible { outline: 4px solid #3e71c8; outline-offset: 2px; }
+  button[aria-pressed="true"] { background: var(--yellow); }
+  #toggle-joints { width: 100%; background: #d9eff8; }
+  .status-card {
+    min-height: 52px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: #f4ead9;
+    font-size: 1.08rem;
+  }
+  .back-link {
+    display: inline-block;
+    margin-top: 22px;
+    color: var(--ink);
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-underline-offset: 4px;
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  @media (max-width: 820px) {
+    .workspace { grid-template-columns: 1fr; }
+    .stage-card, #png-rig { min-height: 590px; }
+    #rig-character, #pose-character { bottom: 42px; transform: translateX(-50%) scale(.9); }
+    #pose-backdrop { bottom: 56px; transform: translateX(-50%) scale(.9); }
+  }
+  @media (max-width: 460px) {
+    body { padding: 17px 10px 30px; }
+    .stage-card, .control-panel { border-width: 3px; border-radius: 20px; }
+    .stage-card, #png-rig { min-height: 520px; }
+    #rig-character, #pose-character { bottom: -1px; transform: translateX(-50%) scale(.78); }
+    #pose-backdrop { bottom: 8px; transform: translateX(-50%) scale(.78); }
+    #speech-bubble { top: 50px; right: 16px; min-width: 145px; font-size: 1.35rem; }
+    .button-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">투명 PNG + GSAP</p>
+    <h1>PNG 파츠 리깅 실험</h1>
+    <p>관절 동작, 표정과 방향, 간단한 말하기를 한 번에 확인합니다.</p>
+  </header>
+
+  <div class="workspace">
+    <section class="stage-card" aria-label="PNG 캐릭터 무대">
+      <div id="png-rig">
+        <div class="sun" aria-hidden="true"></div>
+        <div id="speech-bubble" aria-hidden="true">안녕하세요!</div>
+
+        <div id="rig-character" aria-label="파츠로 조립한 소년 캐릭터">
+          <div class="part lower-body"><img src="output/character/leg.png" alt=""></div>
+          <div class="part feet">
+            <span class="white-restoration sock-backing sock-left" aria-hidden="true"></span>
+            <span class="white-restoration sock-backing sock-right" aria-hidden="true"></span>
+            <span class="white-restoration shoe-backing shoe-left" aria-hidden="true"></span>
+            <span class="white-restoration shoe-backing shoe-right" aria-hidden="true"></span>
+            <img src="output/character/foot.png" alt="">
+          </div>
+          <div class="part torso"><img src="output/character/torso.png" alt=""></div>
+          <div class="part arm arm-left"><div class="motion"><img src="output/character/left-arm.png" alt=""></div></div>
+          <div class="part arm arm-right"><div class="motion"><img src="output/character/right-arm.png" alt=""></div></div>
+          <div class="part head">
+            <div class="motion">
+              <img id="expression-image" src="output/character/head.png" alt="">
+              <div id="mouth-mask"><img id="mouth-image" src="output/character/mouth-closed.png" alt=""></div>
+            </div>
+          </div>
+        </div>
+        <div id="pose-backdrop" aria-hidden="true"></div>
+        <img id="pose-character" src="output/character/character-front.png"
+             alt="정면을 바라보는 소년 캐릭터">
+
+        <span class="joint joint-neck" aria-hidden="true"></span>
+        <span class="joint joint-left" aria-hidden="true"></span>
+        <span class="joint joint-right" aria-hidden="true"></span>
+      </div>
+    </section>
+
+    <aside class="control-panel" aria-label="리깅 실험 컨트롤">
+      <fieldset>
+        <legend>동작</legend>
+        <div class="button-grid">
+          <button type="button" data-action="hello">👋 안녕하세요!</button>
+          <button type="button" data-action="nod">고개 끄덕이기</button>
+          <button type="button" data-action="wave">팔 흔들기</button>
+          <button type="button" data-action="jump">점프하기</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>표정</legend>
+        <div class="button-grid">
+          <button type="button" data-expression="neutral" aria-pressed="true">기본</button>
+          <button type="button" data-expression="happy" aria-pressed="false">행복</button>
+          <button type="button" data-expression="surprised" aria-pressed="false">놀람</button>
+          <button type="button" data-expression="angry" aria-pressed="false">화남</button>
+          <button type="button" data-expression="sad" aria-pressed="false">슬픔</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>방향</legend>
+        <div class="button-grid">
+          <button type="button" data-direction="front" aria-pressed="true">정면</button>
+          <button type="button" data-direction="left-three-quarter" aria-pressed="false">왼쪽 3/4</button>
+          <button type="button" data-direction="right-three-quarter" aria-pressed="false">오른쪽 3/4</button>
+          <button type="button" data-direction="side" aria-pressed="false">측면</button>
+        </div>
+      </fieldset>
+
+      <button type="button" id="toggle-joints" aria-pressed="false">관절점 보기</button>
+      <p class="status-card" id="rig-status" aria-live="polite" aria-atomic="true">
+        정면 · 기본 표정
+      </p>
+    </aside>
+  </div>
+
+  <a class="back-link" href="index.html">← 실험 목록으로</a>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="png-rig.js"></script>
+</body>
+</html>
