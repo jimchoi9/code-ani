@@ -267,7 +267,7 @@ test("비주얼노벨 스타일은 반응형 무대, 화자 색상, ending overl
   assert.match(styles, /\.vn-nameplate--rabbit\s*\{[^}]*#c9364f/);
   assert.match(styles, /\.vn-nameplate--cat\s*\{[^}]*#7350a2/);
   assert.match(styles, /\.vn-nameplate--hatter\s*\{[^}]*#147aa0/);
-  assert.match(styles, /\.vn-nameplate--caterpillar\s*\{[^}]*#3d8b57/);
+  assert.match(styles, /\.vn-nameplate--caterpillar\s*\{[^}]*#327347/);
   assert.match(styles, /\[data-ending-tone="curiosity"\]\s+\.vn-background::after/);
   assert.match(styles, /@media\s*\(min-width:\s*900px\)/);
   assert.match(styles, /@media\s*\(hover:\s*hover\)/);
