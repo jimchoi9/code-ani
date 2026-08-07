@@ -1,5 +1,19 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
+import {
+  choosePath,
+  continueChip,
+  createAppState,
+  createDebugGetters,
+  openVocabulary,
+  restartStory,
+  selectChip,
+  startStory,
+} from "../src/app.js";
+import { visitScene } from "../src/session.js";
 import {
   escapeHtml,
   renderEnding,
@@ -19,6 +33,147 @@ const session = {
   vocabTapped: [],
   endingsSeen: ["E1"],
 };
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+test("브라우저 셸은 앱, 스타일, 모듈 진입점을 연결한다", () => {
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+
+  assert.match(html, /<html lang="ko">/);
+  assert.match(html, /name="viewport"/);
+  assert.match(html, /href="#app"/);
+  assert.match(html, /id="app"/);
+  assert.match(html, /href="\.\/styles\.css"/);
+  assert.match(html, /type="module" src="\.\/src\/app\.js"/);
+  assert.match(html, /<noscript>/);
+});
+
+function beginStory() {
+  return startStory(createAppState(), {
+    HERO: "지민",
+    TREAT: "젤리",
+    PET: "토끼",
+    COLOR: "분홍",
+  });
+}
+
+test("설정에서 시작하면 S00을 방문하고 선택 피드백을 다음 장면에 둔다", () => {
+  const started = beginStory();
+  const branched = choosePath(started, "S01", "작은 문을 열어 본다");
+
+  assert.equal(started.screen, "scene");
+  assert.equal(started.sceneId, "S00");
+  assert.deepEqual(started.session.path, ["S00"]);
+  assert.equal(branched.screen, "scene");
+  assert.equal(branched.sceneId, "S01");
+  assert.equal(branched.feedback, "작은 문을 열어 본다");
+  assert.deepEqual(branched.session.path, ["S00", "S01"]);
+});
+
+test("세 갈래 플레이가 칩 응답 화면을 거쳐 각각의 결말에 도달한다", () => {
+  const routes = [
+    { scenes: [["S01", "작은 문을 열어 본다"], ["A1", "나무 위 웃음소리로 간다"]], chip: ["이 길 끝에 뭐가 있어?", "재미있는 생각이구나.", "E1"], ending: "E1" },
+    { scenes: [["S01", "작은 문을 열어 본다"], ["A3", "멀리 들리는 찻잔 소리로 간다"]], chip: ["노래가 나오는 시계", "훌륭한 생각이야!", "E3"], ending: "E3" },
+    { scenes: [["S02", "젤리를 먹어 본다"], ["B2", "계속 읽기"]], chip: ["강을 한 번에 건너고 싶어요", "그것도 좋은 일이지.", "E5"], ending: "E5" },
+  ];
+
+  for (const route of routes) {
+    let state = beginStory();
+    for (const [sceneId, label] of route.scenes) state = choosePath(state, sceneId, label);
+    state = selectChip(state, {
+      label: route.chip[0],
+      response: route.chip[1],
+      nextSceneId: route.chip[2],
+    });
+
+    assert.equal(state.screen, "chip-response");
+    assert.equal(state.chipResponse.label, route.chip[0]);
+    assert.deepEqual(state.session.chipChoices, [{ sceneId: state.sceneId, label: route.chip[0] }]);
+
+    state = continueChip(state);
+    assert.equal(state.screen, "ending");
+    assert.equal(state.sceneId, route.ending);
+    assert.deepEqual(state.session.endingsSeen, [route.ending]);
+  }
+});
+
+test("새로고침 상태 복원은 활성 장면과 칩 응답을 유지한다", () => {
+  const sceneState = choosePath(beginStory(), "S01", "작은 문을 열어 본다");
+  const restoredScene = createAppState(sceneState.session);
+  const chipState = selectChip(choosePath(sceneState, "A1", "나무 위 웃음소리로 간다"), {
+    label: "너는 왜 웃고 있어?",
+    response: "그건 나도 궁금했어.",
+    nextSceneId: "E1",
+  });
+  const restoredChip = createAppState(chipState.session);
+
+  assert.equal(restoredScene.screen, "scene");
+  assert.equal(restoredScene.sceneId, "S01");
+  assert.equal(restoredScene.feedback, "작은 문을 열어 본다");
+  assert.equal(restoredChip.screen, "chip-response");
+  assert.equal(restoredChip.sceneId, "A1");
+  assert.deepEqual(restoredChip.chipResponse, {
+    label: "너는 왜 웃고 있어?",
+    response: "그건 나도 궁금했어. 고양이의 귀가 쫑긋 움직였어요.",
+    nextSceneId: "E1",
+  });
+});
+
+test("낱말은 패널을 열고 현재 실행에 중복 없이 기록된다", () => {
+  const first = openVocabulary(beginStory(), "황급히");
+  const second = openVocabulary(first, "황급히");
+
+  assert.deepEqual(second.vocabulary, { word: "황급히", definition: "아주 급하게, 서둘러서" });
+  assert.deepEqual(second.session.vocabTapped, ["황급히"]);
+  assert.deepEqual(second.session.runs[0].vocabTapped, ["황급히"]);
+});
+
+test("다시 시작과 슬롯 수정은 결말 및 실행 기록을 보존한다", () => {
+  let state = choosePath(choosePath(beginStory(), "S01"), "A1");
+  state = continueChip(selectChip(state, {
+    label: "이 길 끝에 뭐가 있어?",
+    response: "재미있는 생각이구나.",
+    nextSceneId: "E1",
+  }));
+  state = restartStory(state);
+
+  assert.equal(state.screen, "setup");
+  assert.deepEqual(state.session.endingsSeen, ["E1"]);
+  assert.equal(state.session.runs.length, 2);
+  assert.equal(state.session.runs[0].replayed, true);
+
+  state = startStory(state, { ...state.session.slots, HERO: "민서", TREAT: "쿠키" });
+  assert.equal(state.sceneId, "S00");
+  assert.equal(state.session.slots.HERO, "민서");
+  assert.equal(state.session.slots.TREAT, "쿠키");
+  assert.deepEqual(state.session.endingsSeen, ["E1"]);
+  assert.equal(state.session.runs.length, 2);
+});
+
+test("존재하지 않는 활성 장면은 복구 화면으로 전환한다", () => {
+  const started = beginStory();
+  const invalidSession = visitScene(started.session, "NOT_A_SCENE");
+  const restored = createAppState(invalidSession);
+  const navigated = choosePath(started, "NOT_A_SCENE", "없는 길");
+
+  assert.equal(restored.screen, "recovery");
+  assert.equal(restored.sceneId, "NOT_A_SCENE");
+  assert.equal(navigated.screen, "recovery");
+  assert.deepEqual(navigated.session.path, ["S00"]);
+});
+
+test("디버그 getter는 내부 세션을 바꿀 수 없는 복제본을 반환한다", () => {
+  let state = beginStory();
+  const debug = createDebugGetters(() => state);
+  const snapshot = debug.session();
+  snapshot.path.push("BROKEN");
+  snapshot.slots.HERO = "변조";
+
+  assert.equal(debug.screen(), "scene");
+  assert.equal(debug.sceneId(), "S00");
+  assert.deepEqual(debug.session().path, ["S00"]);
+  assert.equal(debug.session().slots.HERO, "지민");
+});
 
 test("escapeHtml escapes all HTML-significant characters", () => {
   assert.equal(escapeHtml("&<>\"'"), "&amp;&lt;&gt;&quot;&#039;");

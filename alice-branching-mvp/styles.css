@@ -1,0 +1,689 @@
+:root {
+  color-scheme: light;
+  --ink: #242235;
+  --paper: #fffdf8;
+  --sky: #bce8f5;
+  --leaf: #3d8b57;
+  --leaf-dark: #24613a;
+  --cherry: #c9364f;
+  --yellow: #f6cc4c;
+  --violet: #7350a2;
+  --line: #29273a;
+  --shadow: 0 8px 0 rgb(36 34 53 / 14%);
+  font-family: "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+label,
+input[type="radio"] {
+  touch-action: manipulation;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 4px solid #147aa0;
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 20;
+  top: 8px;
+  left: 8px;
+  padding: 12px 16px;
+  color: #fff;
+  background: var(--ink);
+  transform: translateY(-160%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.story-screen {
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: minmax(220px, 42svh) 1fr;
+  background: var(--paper);
+}
+
+.scene-art {
+  position: relative;
+  min-height: 220px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.scene-art::before,
+.scene-art::after {
+  position: absolute;
+  display: block;
+  content: "";
+}
+
+.story-screen > article {
+  width: 100%;
+  padding: 26px clamp(20px, 6vw, 48px) 44px;
+  background: var(--paper);
+}
+
+.story-screen h1 {
+  max-width: 34rem;
+  margin: 0 0 18px;
+  font-family: Georgia, "AppleMyungjo", serif;
+  font-size: 36px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.scene-kicker {
+  margin: 0 0 8px;
+  color: #686173;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.story-copy {
+  max-width: 34rem;
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.story-copy p {
+  margin: 0 0 1.2em;
+}
+
+.choice-feedback,
+.chip-answer,
+.choice-recall,
+.story-trait {
+  max-width: 34rem;
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border-left: 5px solid var(--cherry);
+  background: #fff2b8;
+  font-size: 18px;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.actions {
+  display: grid;
+  gap: 10px;
+  max-width: 34rem;
+  margin-top: 24px;
+}
+
+.choice,
+.chip,
+.primary-action,
+[data-action="restart"],
+[data-action="start"] {
+  min-height: 52px;
+  width: 100%;
+  padding: 12px 18px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  background: var(--yellow);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.choice:nth-child(even),
+.chip:nth-child(even) {
+  color: #fff;
+  background: var(--violet);
+}
+
+button:hover {
+  filter: brightness(1.04);
+}
+
+button:active {
+  box-shadow: 0 3px 0 rgb(36 34 53 / 16%);
+  transform: translateY(2px);
+}
+
+.vocabulary {
+  max-width: 34rem;
+  margin: 24px 0;
+  padding: 16px 0;
+  border-top: 2px dashed #b7adb9;
+  border-bottom: 2px dashed #b7adb9;
+}
+
+.vocabulary h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+.vocabulary ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vocab-word,
+.vocabulary button {
+  min-height: 44px;
+  padding: 2px 12px;
+  border: 2px solid var(--leaf-dark);
+  border-radius: 8px;
+  background: #d8f1cf;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.vocabulary-panel {
+  position: fixed;
+  z-index: 10;
+  right: 14px;
+  bottom: 14px;
+  left: 14px;
+  max-width: 420px;
+  margin-left: auto;
+  padding: 20px;
+  border: 3px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgb(36 34 53 / 25%);
+  background: #fff;
+}
+
+.vocabulary-panel h2,
+.vocabulary-panel p {
+  margin: 0 0 10px;
+}
+
+.vocabulary-panel p {
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.vocabulary-panel button {
+  min-width: 88px;
+  min-height: 44px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--sky);
+  font-weight: 800;
+}
+
+.chip-prompt {
+  max-width: 34rem;
+  margin: 24px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.chip-response-screen .primary-action,
+.ending-screen [data-action="restart"] {
+  max-width: 34rem;
+  margin-top: 12px;
+}
+
+.ending-progress {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin: 20px 0;
+  border: 3px solid var(--line);
+  border-radius: 50%;
+  place-items: center;
+  background: var(--sky);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* Setup */
+.setup-screen header {
+  display: grid;
+  min-height: 220px;
+  padding: 32px clamp(22px, 7vw, 60px);
+  align-content: end;
+  background:
+    radial-gradient(circle at 78% 24%, #fff 0 10%, transparent 11%),
+    linear-gradient(155deg, transparent 0 56%, var(--leaf) 57% 100%),
+    var(--sky);
+}
+
+.setup-screen header h1 {
+  max-width: 620px;
+  margin: 0;
+}
+
+.setup-screen form {
+  width: min(100%, 620px);
+  padding: 26px clamp(20px, 6vw, 48px) 44px;
+}
+
+.setup-screen form > label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.setup-screen input[type="text"] {
+  width: 100%;
+  min-height: 52px;
+  margin-bottom: 20px;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 18px;
+}
+
+.setup-screen fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.setup-screen legend {
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.setup-screen fieldset label {
+  display: flex;
+  min-height: 46px;
+  padding: 8px 10px;
+  border: 2px solid #aaa1ad;
+  border-radius: 6px;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  font-weight: 700;
+}
+
+.setup-screen fieldset label:has(input:checked) {
+  border-color: var(--leaf-dark);
+  background: #d8f1cf;
+}
+
+.setup-screen input[type="radio"] {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--leaf-dark);
+}
+
+/* Rabbit hole: sky, grass, a small door, and a pocket watch. */
+.scene-rabbit-hole .scene-art {
+  background:
+    radial-gradient(ellipse at 72% 79%, #281f35 0 13%, transparent 14%),
+    linear-gradient(8deg, var(--leaf) 0 37%, transparent 38%),
+    var(--sky);
+}
+
+.scene-rabbit-hole .scene-art::before {
+  right: 16%;
+  bottom: 18%;
+  width: 76px;
+  height: 112px;
+  border: 7px solid #75452d;
+  border-radius: 38px 38px 4px 4px;
+  background: var(--cherry);
+  box-shadow: inset -10px 0 rgb(0 0 0 / 10%);
+}
+
+.scene-rabbit-hole .scene-art::after {
+  top: 18%;
+  left: 16%;
+  width: 66px;
+  height: 66px;
+  border: 6px solid var(--line);
+  border-radius: 50%;
+  background: conic-gradient(from 2deg, #fff 0 24%, var(--yellow) 25% 27%, #fff 28% 100%);
+}
+
+/* Tiny garden: oversized door and flower field. */
+.scene-tiny-garden .scene-art {
+  background:
+    radial-gradient(circle at 15% 77%, var(--cherry) 0 4%, var(--yellow) 4.5% 7%, transparent 7.5%),
+    radial-gradient(circle at 35% 72%, var(--violet) 0 4%, #fff 4.5% 7%, transparent 7.5%),
+    radial-gradient(circle at 73% 79%, var(--yellow) 0 4%, var(--cherry) 4.5% 7%, transparent 7.5%),
+    linear-gradient(var(--sky) 0 58%, #63a74d 59% 100%);
+}
+
+.scene-tiny-garden .scene-art::before {
+  left: 50%;
+  bottom: 24%;
+  width: 105px;
+  height: 150px;
+  border: 8px solid #583725;
+  border-radius: 55px 55px 3px 3px;
+  background: #fff3c2;
+  transform: translateX(-50%);
+}
+
+.scene-tiny-garden .scene-art::after {
+  left: calc(50% + 23px);
+  bottom: calc(24% + 65px);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--cherry);
+}
+
+/* Cheshire tree: broad trunk and the cat's floating grin. */
+.scene-cheshire-tree .scene-art {
+  background:
+    radial-gradient(circle at 15% 12%, #6aaf60 0 25%, transparent 26%),
+    radial-gradient(circle at 77% 11%, #3f8c53 0 31%, transparent 32%),
+    linear-gradient(var(--sky) 0 70%, #79b95d 71% 100%);
+}
+
+.scene-cheshire-tree .scene-art::before {
+  left: 40%;
+  bottom: -40px;
+  width: 90px;
+  height: 260px;
+  border-radius: 60% 35% 0 0;
+  background: #75452d;
+  transform: rotate(7deg);
+}
+
+.scene-cheshire-tree .scene-art::after {
+  top: 29%;
+  right: 20%;
+  width: 112px;
+  height: 52px;
+  border-bottom: 13px solid #fff;
+  border-radius: 0 0 60px 60px;
+  background: repeating-linear-gradient(90deg, var(--violet) 0 18px, #72b95b 18px 36px);
+  box-shadow: 0 0 0 6px var(--violet);
+}
+
+/* Tea party: long table with mismatched cups. */
+.scene-tea-party .scene-art {
+  background:
+    radial-gradient(ellipse at 25% 62%, #fff 0 5%, var(--cherry) 5.5% 8%, transparent 8.5%),
+    radial-gradient(ellipse at 52% 57%, #fff 0 5%, var(--violet) 5.5% 8%, transparent 8.5%),
+    radial-gradient(ellipse at 77% 64%, #fff 0 5%, #147aa0 5.5% 8%, transparent 8.5%),
+    linear-gradient(var(--sky) 0 47%, #6e9b4d 48% 100%);
+}
+
+.scene-tea-party .scene-art::before {
+  right: 5%;
+  bottom: 17%;
+  left: 5%;
+  height: 72px;
+  border: 6px solid #5a3624;
+  border-radius: 50% 50% 8px 8px;
+  background: var(--yellow);
+}
+
+.scene-tea-party .scene-art::after {
+  top: 9%;
+  left: 12%;
+  width: 110px;
+  height: 75px;
+  border-bottom: 14px solid var(--violet);
+  border-radius: 50%;
+  background: var(--cherry);
+  transform: rotate(-8deg);
+}
+
+/* Giant land: a high boot above a miniature landscape. */
+.scene-giant-land .scene-art {
+  background:
+    radial-gradient(circle at 84% 17%, var(--yellow) 0 11%, transparent 11.5%),
+    linear-gradient(165deg, transparent 0 58%, #608d50 59% 72%, #3c79a1 73% 79%, #88b85a 80%),
+    var(--sky);
+}
+
+.scene-giant-land .scene-art::before {
+  left: 13%;
+  bottom: 14%;
+  width: 100px;
+  height: 180px;
+  border: 6px solid var(--line);
+  border-radius: 35px 35px 10px 10px;
+  background: var(--cherry);
+  transform: rotate(-6deg);
+}
+
+.scene-giant-land .scene-art::after {
+  left: 17%;
+  bottom: 8%;
+  width: 150px;
+  height: 58px;
+  border: 6px solid var(--line);
+  border-radius: 8px 34px 20px 12px;
+  background: #f4cf65;
+}
+
+/* Giant mushroom: cap and stem dominate the scene. */
+.scene-giant-mushroom .scene-art {
+  background: linear-gradient(var(--sky) 0 68%, #5b9f55 69% 100%);
+}
+
+.scene-giant-mushroom .scene-art::before {
+  left: 50%;
+  bottom: -18%;
+  width: 92px;
+  height: 190px;
+  border: 6px solid #70452f;
+  border-radius: 45% 45% 10px 10px;
+  background: #fff2c5;
+  transform: translateX(-50%);
+}
+
+.scene-giant-mushroom .scene-art::after {
+  top: 10%;
+  left: 50%;
+  width: 280px;
+  height: 145px;
+  border: 7px solid #70452f;
+  border-radius: 55% 55% 22% 22%;
+  background:
+    radial-gradient(circle at 25% 38%, #fff 0 9%, transparent 10%),
+    radial-gradient(circle at 72% 24%, var(--yellow) 0 8%, transparent 9%),
+    var(--cherry);
+  transform: translateX(-50%);
+}
+
+/* Endings: question book, celebratory tea, and confident hill. */
+.scene-ending-curiosity .scene-art {
+  background:
+    radial-gradient(circle at 80% 22%, var(--yellow) 0 10%, transparent 10.5%),
+    linear-gradient(150deg, var(--sky) 0 65%, #70a95c 66% 100%);
+}
+
+.scene-ending-curiosity .scene-art::before {
+  right: 17%;
+  bottom: 15%;
+  width: 190px;
+  height: 105px;
+  border: 6px solid var(--line);
+  border-radius: 8px 8px 45% 45%;
+  background: linear-gradient(90deg, #fff 0 48%, var(--line) 49% 51%, #fff6c9 52%);
+  transform: rotate(4deg);
+}
+
+.scene-ending-curiosity .scene-art::after {
+  top: 13%;
+  left: 20%;
+  content: "?";
+  color: var(--violet);
+  font-family: Georgia, serif;
+  font-size: 110px;
+  font-weight: 900;
+}
+
+.scene-ending-joy .scene-art {
+  background:
+    radial-gradient(circle at 18% 18%, var(--cherry) 0 2%, transparent 2.5%),
+    radial-gradient(circle at 78% 22%, var(--violet) 0 2.5%, transparent 3%),
+    radial-gradient(circle at 63% 45%, var(--yellow) 0 3%, transparent 3.5%),
+    linear-gradient(var(--sky) 0 62%, #62a155 63% 100%);
+}
+
+.scene-ending-joy .scene-art::before {
+  left: 50%;
+  bottom: 14%;
+  width: 170px;
+  height: 92px;
+  border: 7px solid var(--line);
+  border-radius: 12px 12px 70px 70px;
+  background: #fff;
+  transform: translateX(-50%);
+}
+
+.scene-ending-joy .scene-art::after {
+  left: calc(50% + 77px);
+  bottom: 26%;
+  width: 58px;
+  height: 48px;
+  border: 7px solid var(--line);
+  border-left: 0;
+  border-radius: 0 40px 40px 0;
+}
+
+.scene-ending-confidence .scene-art {
+  background:
+    radial-gradient(circle at 83% 17%, var(--yellow) 0 10%, transparent 10.5%),
+    linear-gradient(162deg, transparent 0 55%, #477d48 56% 72%, #75a957 73%),
+    var(--sky);
+}
+
+.scene-ending-confidence .scene-art::before {
+  left: 25%;
+  bottom: 26%;
+  width: 68px;
+  height: 115px;
+  border: 6px solid var(--line);
+  border-radius: 40px 40px 10px 10px;
+  background: var(--violet);
+  box-shadow: 58px 54px 0 -9px var(--cherry), 118px 82px 0 -18px var(--yellow);
+  transform: rotate(10deg);
+}
+
+.scene-ending-confidence .scene-art::after {
+  top: 18%;
+  left: 22%;
+  width: 150px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 120px 60px 0 -3px #fff;
+}
+
+.recovery-screen {
+  grid-template-rows: 1fr;
+  place-items: center;
+  padding: 24px;
+  background: var(--sky);
+}
+
+.recovery-screen section {
+  width: min(100%, 520px);
+  padding: 28px;
+  border: 3px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.recovery-screen p {
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+@media (min-width: 760px) {
+  .story-screen {
+    grid-template-columns: minmax(320px, 1fr) minmax(360px, 560px);
+    grid-template-rows: 100svh;
+  }
+
+  .scene-art {
+    min-height: 100svh;
+  }
+
+  .story-screen > article,
+  .setup-screen form {
+    overflow-y: auto;
+    padding: 48px clamp(34px, 5vw, 64px) 64px;
+  }
+
+  .setup-screen header {
+    min-height: 100svh;
+    padding: 64px;
+  }
+
+  .story-screen h1 {
+    font-size: 46px;
+  }
+
+  .recovery-screen {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .story-screen > article {
+    animation: scene-in 220ms ease-out both;
+  }
+
+  @keyframes scene-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+  }
+}
