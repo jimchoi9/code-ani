@@ -382,3 +382,469 @@
     transition: none;
   }
 }
+
+/* Dark fantasy portrait game frame. */
+[data-ui="visual-novel"] {
+  --vn-gold: #d8a83f;
+  --vn-gold-soft: #f4d984;
+  --vn-panel: #111127;
+  --vn-panel-soft: #1b1836;
+  --vn-edge: rgb(224 181 76 / 56%);
+  display: block;
+  min-height: 100svh;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 2%) 25%, transparent 25%) 0 0 / 28px 28px,
+    linear-gradient(315deg, rgb(255 255 255 / 2%) 25%, transparent 25%) 0 0 / 28px 28px,
+    #0e0c20;
+}
+
+.vn-game-frame {
+  position: relative;
+  width: min(100%, 620px);
+  min-height: calc(100svh - 24px);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgb(233 193 91 / 36%);
+  border-radius: 22px;
+  background:
+    linear-gradient(45deg, rgb(255 255 255 / 2%) 25%, transparent 25%, transparent 75%, rgb(255 255 255 / 2%) 75%) 0 0 / 30px 30px,
+    linear-gradient(135deg, #221b47, #15122f 48%, #211940);
+  box-shadow: 0 28px 70px rgb(0 0 0 / 44%), inset 0 0 0 3px rgb(255 255 255 / 3%);
+}
+
+.vn-game-hud {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) auto auto;
+  min-height: 86px;
+  padding: 12px 16px;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgb(224 181 76 / 18%);
+  background: rgb(9 9 24 / 78%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+
+.vn-avatar {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  border: 2px solid var(--vn-gold);
+  border-radius: 50%;
+  color: #fff0a3;
+  background:
+    radial-gradient(circle at 50% 34%, #f2d37c 0 18%, transparent 19%),
+    radial-gradient(circle at 50% 58%, #3fa7cc 0 36%, #153a68 37% 55%, #0d1024 56%);
+  box-shadow: 0 0 0 3px #191438, 0 5px 15px rgb(0 0 0 / 32%);
+  font-family: Georgia, serif;
+  font-size: 24px;
+  font-weight: 900;
+  place-items: center;
+}
+
+.vn-player {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.vn-player strong {
+  overflow: hidden;
+  color: #fff4c7;
+  font-size: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vn-player span {
+  color: #c9bddf;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.vn-hud-stat {
+  display: grid;
+  min-width: 58px;
+  min-height: 48px;
+  padding: 7px 10px;
+  border: 1px solid rgb(222 184 88 / 22%);
+  border-radius: 14px;
+  background: #0c0c20;
+  place-items: center;
+}
+
+.vn-hud-stat span {
+  color: #a99fbe;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.vn-hud-stat strong {
+  color: #ffe595;
+  font-size: 15px;
+}
+
+.vn-title-plaque {
+  position: relative;
+  z-index: 3;
+  width: min(calc(100% - 64px), 470px);
+  margin: 18px auto 14px;
+  padding: 13px 28px 12px;
+  border: 1px solid var(--vn-gold);
+  color: #f7d56e;
+  background: linear-gradient(180deg, #17182e, #0c0d1c);
+  box-shadow: 0 0 0 4px #262044, 0 0 0 5px rgb(216 168 63 / 48%), 0 8px 22px rgb(0 0 0 / 34%);
+  text-align: center;
+  clip-path: polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0 50%);
+}
+
+.vn-title-plaque::before,
+.vn-title-plaque::after {
+  position: absolute;
+  top: 50%;
+  color: #9a7531;
+  content: "◆";
+  transform: translateY(-50%);
+}
+
+.vn-title-plaque::before { left: 17px; }
+.vn-title-plaque::after { right: 17px; }
+
+.vn-title-plaque h1 {
+  margin: 0;
+  font-family: Georgia, "AppleMyungjo", serif;
+  font-size: clamp(22px, 5vw, 30px);
+  line-height: 1.2;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.vn-title-plaque p {
+  margin: 4px 0 0;
+  color: #eee3ca;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vn-game-frame .vn-stage {
+  display: block;
+  width: auto;
+  min-height: 0;
+  margin: 0 22px;
+  overflow: visible;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.vn-art-frame {
+  position: relative;
+  padding: 5px;
+  overflow: hidden;
+  border: 1px solid var(--vn-gold);
+  border-radius: 18px;
+  background: #080918;
+  box-shadow: 0 0 0 3px #30284a, 0 12px 28px rgb(0 0 0 / 34%);
+}
+
+.vn-art-frame .vn-background {
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+  border-radius: 13px;
+}
+
+.vn-art-frame .vn-sprite {
+  max-width: min(66%, 330px);
+  max-height: 92%;
+}
+
+.vn-game-frame .vn-dialogue {
+  position: relative;
+  z-index: 3;
+  min-height: 0;
+  margin: -34px 12px 0;
+  padding: 20px 20px 18px;
+  overflow: visible;
+  border: 1px solid var(--vn-gold);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgb(17 17 39 / 98%), rgb(9 10 24 / 99%));
+  box-shadow: 0 0 0 3px #2d2545, 0 12px 26px rgb(0 0 0 / 34%);
+  text-align: center;
+}
+
+.vn-game-frame .vn-dialogue h1 {
+  max-width: none;
+  margin: 4px 0 11px;
+  color: #ffe18a;
+  font-size: 20px;
+}
+
+.vn-game-frame .vn-nameplate,
+.vn-game-frame .vn-kicker {
+  margin: -34px auto 12px;
+  border-color: rgb(255 233 152 / 34%);
+  border-radius: 14px;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 28%);
+}
+
+.vn-game-frame .vn-copy {
+  max-width: 34rem;
+  margin: 0 auto;
+  color: #f4ecd9;
+  font-size: 16px;
+  line-height: 1.72;
+}
+
+.vn-game-frame .vn-feedback,
+.vn-game-frame .vn-trait {
+  margin-inline: auto;
+  border-color: rgb(244 217 132 / 24%);
+  background: rgb(255 242 194 / 6%);
+  color: #f6e8bd;
+  text-align: left;
+}
+
+.vn-game-frame .vn-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: none;
+  margin-top: 18px;
+  gap: 12px;
+}
+
+.vn-game-frame .vn-choice {
+  position: relative;
+  min-height: 62px;
+  padding: 12px 16px 12px 44px;
+  border: 1px solid #5bd6ed;
+  border-radius: 9px;
+  color: #fff;
+  background: linear-gradient(180deg, #179dd0, #0872aa);
+  box-shadow: 0 7px 0 #074a78, 0 12px 22px rgb(0 0 0 / 24%), inset 0 1px rgb(255 255 255 / 26%);
+  text-align: center;
+}
+
+.vn-game-frame .vn-choice::before {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  font-size: 22px;
+  content: "➜";
+  transform: translateY(-50%);
+}
+
+.vn-game-frame .vn-choice:nth-child(even) {
+  border-color: #ff6b9e;
+  background: linear-gradient(180deg, #d83272, #a91855);
+  box-shadow: 0 7px 0 #72103e, 0 12px 22px rgb(0 0 0 / 24%), inset 0 1px rgb(255 255 255 / 24%);
+}
+
+.vn-game-frame .vn-choice:active {
+  box-shadow: 0 2px 0 #082f50, 0 5px 10px rgb(0 0 0 / 24%);
+  transform: translateY(4px);
+}
+
+.vn-game-frame .vn-vocabulary {
+  max-width: none;
+  border-top-color: rgb(232 201 112 / 20%);
+  text-align: left;
+}
+
+.vn-game-frame .vn-vocabulary button {
+  border-color: rgb(93 214 237 / 28%);
+  background: #192d48;
+}
+
+.vn-game-frame .vn-trail {
+  grid-template-columns: repeat(5, 28px);
+  justify-content: center;
+  margin: 20px auto 0;
+}
+
+.vn-game-frame .vn-trail-card {
+  width: 28px;
+  height: 18px;
+  border-radius: 9px;
+}
+
+.vn-game-frame .vn-trail-card.is-complete {
+  border-color: #f2c94f;
+  background: linear-gradient(180deg, #ffe88b, #c99724);
+}
+
+.vn-game-footer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  min-height: 74px;
+  margin: 20px 14px 12px;
+  padding: 11px 14px;
+  border: 1px solid rgb(216 168 63 / 44%);
+  border-radius: 26px 26px 14px 14px;
+  background: linear-gradient(180deg, #17132e, #0b0b1c);
+  box-shadow: 0 -5px 18px rgb(0 0 0 / 20%), inset 0 1px rgb(255 255 255 / 5%);
+  color: #bfb4d3;
+  font-size: 11px;
+  text-align: center;
+}
+
+.vn-game-footer span {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+}
+
+.vn-game-footer strong {
+  color: #f4d984;
+  font-size: 16px;
+}
+
+.vn-setup-panel,
+.vn-game-frame .vn-recovery {
+  margin: 0 26px;
+  padding: 20px;
+  border: 1px solid rgb(216 168 63 / 40%);
+  border-radius: 14px;
+  background: rgb(9 10 27 / 72%);
+  box-shadow: 0 0 0 3px rgb(48 39 73 / 78%), 0 14px 28px rgb(0 0 0 / 24%);
+}
+
+.vn-setup-panel form[data-action="start"] {
+  padding: 0;
+}
+
+.vn-setup-panel .vn-trail {
+  margin-inline: auto;
+}
+
+.vn-setup-panel fieldset {
+  padding: 14px 0;
+  border-bottom: 1px solid rgb(216 168 63 / 14%);
+}
+
+.vn-setup-panel fieldset label {
+  border-color: rgb(255 255 255 / 14%);
+  border-radius: 8px;
+  background: #15152d;
+}
+
+.vn-setup-panel fieldset label:has(input:checked) {
+  border-color: #d8a83f;
+  background: #282147;
+  box-shadow: 0 0 0 2px rgb(216 168 63 / 12%);
+}
+
+.vn-setup-panel input[type="text"] {
+  border-color: rgb(216 168 63 / 34%);
+  border-radius: 8px;
+  color: #f7f2df;
+  background: #0d0e22;
+}
+
+.vn-setup-panel button[data-action="start"] {
+  width: min(100%, 360px);
+  margin: 18px auto 0;
+  border-color: #ff719f;
+  background: linear-gradient(180deg, #da3b78, #a71954);
+  box-shadow: 0 7px 0 #71103c, 0 12px 22px rgb(0 0 0 / 26%);
+}
+
+.vn-game-frame .vn-recovery {
+  display: grid;
+  min-height: 44svh;
+  align-content: center;
+  text-align: center;
+}
+
+.vn-game-frame .vn-recovery .vn-choice {
+  width: min(100%, 300px);
+  margin: 8px auto 0;
+}
+
+.vn-vocabulary-panel {
+  border-color: rgb(216 168 63 / 46%);
+  border-radius: 14px;
+  background: #111127;
+  box-shadow: 0 22px 60px rgb(0 0 0 / 48%);
+}
+
+@media (hover: hover) {
+  .vn-game-frame .vn-choice:hover {
+    filter: brightness(1.08) saturate(1.05);
+    transform: translateY(-2px);
+  }
+}
+
+@media (max-width: 600px) {
+  [data-ui="visual-novel"] {
+    padding: 0;
+  }
+
+  .vn-game-frame {
+    min-height: 100svh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .vn-game-hud {
+    grid-template-columns: 50px minmax(0, 1fr) 52px 52px;
+    min-height: 74px;
+    padding: 9px 10px;
+    gap: 7px;
+  }
+
+  .vn-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .vn-player strong { font-size: 17px; }
+  .vn-hud-stat { min-width: 0; padding-inline: 5px; }
+
+  .vn-title-plaque {
+    width: calc(100% - 52px);
+    margin-block: 15px 12px;
+    padding-inline: 25px;
+  }
+
+  .vn-game-frame .vn-stage {
+    margin-inline: 14px;
+  }
+
+  .vn-art-frame .vn-background {
+    aspect-ratio: 4 / 3;
+  }
+
+  .vn-game-frame .vn-dialogue {
+    margin-inline: 8px;
+    padding-inline: 14px;
+  }
+
+  .vn-game-frame .vn-actions {
+    gap: 9px;
+  }
+
+  .vn-game-frame .vn-choice {
+    min-height: 58px;
+    padding: 10px 9px 10px 34px;
+    font-size: 14px;
+  }
+
+  .vn-game-frame .vn-choice::before {
+    left: 9px;
+    font-size: 18px;
+  }
+
+  .vn-setup-panel,
+  .vn-game-frame .vn-recovery {
+    margin-inline: 16px;
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vn-game-frame .vn-choice {
+    transition: none;
+  }
+}

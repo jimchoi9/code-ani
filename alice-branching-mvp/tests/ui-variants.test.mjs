@@ -237,6 +237,25 @@ test("비주얼노벨은 manifest 배경, 이름표, 캐릭터, 선택 카드와
   assert.match(html, /data-chip-label="이 길 끝에 뭐가 있어\?"/);
 });
 
+test("비주얼노벨 전체 화면은 실제 모험 상태를 표시하는 게임 프레임을 사용한다", () => {
+  const renderer = getUiRenderer("visual-novel");
+  const setupHtml = renderer.renderSetup(visualNovelSession.slots);
+  const sceneHtml = renderer.renderScene(story.scenes.S00, visualNovelSession);
+  const endingHtml = renderer.renderEnding(story.scenes.E1, visualNovelEndingSession);
+  const recoveryHtml = renderer.renderRecovery();
+
+  for (const html of [setupHtml, sceneHtml, endingHtml, recoveryHtml]) {
+    assert.match(html, /class="vn-game-frame"/);
+    assert.match(html, /class="vn-game-hud"/);
+    assert.match(html, /class="vn-title-plaque"/);
+    assert.match(html, /class="vn-game-footer"/);
+  }
+  assert.match(sceneHtml, /STORY Lv\. 3/);
+  assert.match(sceneHtml, /진행 <strong>1\/5<\/strong>/);
+  assert.match(endingHtml, /결말 <strong>1\/3<\/strong>/);
+  assert.doesNotMatch(sceneHtml, /data-action="(?:inventory|quest|settings|currency)"/);
+});
+
 test("비주얼노벨 결말은 manifest 배경을 재사용하고 결말 톤과 5\/5를 표시한다", () => {
   const html = getUiRenderer("visual-novel").renderEnding(story.scenes.E1, visualNovelEndingSession);
 
@@ -257,13 +276,16 @@ test("비주얼노벨 진행과 화자는 장면 계약에 맞춘다", () => {
   assert.deepEqual(getVisualNovelSpeaker(story.scenes.E1), { id: "ending", label: "결말" });
 });
 
-test("비주얼노벨 스타일은 반응형 무대, 화자 색상, ending overlay를 제공한다", () => {
+test("비주얼노벨 스타일은 게임 프레임, 화자 색상, ending overlay를 제공한다", () => {
   const styles = fs.readFileSync(path.join(root, "styles/visual-novel.css"), "utf8");
 
   assert.match(styles, /\[data-ui="visual-novel"\][^{]*\{[^}]*min-height:\s*100svh/);
   assert.match(styles, /\.vn-stage\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*58svh\)\s+minmax\(0,\s*42svh\)/);
   assert.match(styles, /\.vn-sprite\s*\{[^}]*max-height:\s*88%/);
-  assert.match(styles, /\.vn-dialogue\s*\{[^}]*background:\s*rgba\(20,\s*24,\s*31,\s*\.94\)/);
+  assert.match(styles, /\.vn-game-frame\s*\{[^}]*width:\s*min\(100%,\s*620px\)/);
+  assert.match(styles, /\.vn-title-plaque\s*\{[^}]*--vn-gold|\.vn-title-plaque\s*\{[^}]*border:\s*1px solid var\(--vn-gold\)/);
+  assert.match(styles, /\.vn-game-frame\s+\.vn-dialogue\s*\{[^}]*background:\s*linear-gradient/);
+  assert.match(styles, /\.vn-game-frame\s+\.vn-actions\s*\{[^}]*grid-template-columns:\s*repeat\(2/);
   assert.match(styles, /\.vn-nameplate--rabbit\s*\{[^}]*#c9364f/);
   assert.match(styles, /\.vn-nameplate--cat\s*\{[^}]*#7350a2/);
   assert.match(styles, /\.vn-nameplate--hatter\s*\{[^}]*#147aa0/);

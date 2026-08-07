@@ -137,7 +137,7 @@ export function renderChipResponse(state) {
   const response = state.chipResponse;
   return `<main class="story-screen chip-response-screen scene-${escapeHtml(scene.art)}">
     <div class="storybook-shell">
-      ${renderStorybookMasthead(state.session.slots.HERO, "대답")}
+      ${renderStorybookMasthead(state.session?.slots?.HERO ?? "앨리스", "대답")}
       <div class="storybook-scene-frame"><div class="scene-art" aria-hidden="true"></div></div>
       <article class="storybook-content">
       <p class="scene-kicker">네가 고른 말</p>

@@ -48,6 +48,33 @@ function renderTrail(progress) {
   ).join("")}</div>`;
 }
 
+function renderGameHud(session = null, slots = {}) {
+  const hero = personalize("{HERO}", slots) || "앨리스";
+  const level = Math.max(1, session?.path?.length ?? 1);
+  const vocabCount = session?.vocabTapped?.length ?? 0;
+  const endingCount = session?.endingsSeen?.length ?? 0;
+  return `<header class="vn-game-hud">
+    <div class="vn-avatar" aria-hidden="true">A</div>
+    <div class="vn-player"><strong>${escapeHtml(hero)}</strong><span>STORY Lv. ${escapeHtml(level)}</span></div>
+    <div class="vn-hud-stat"><span>낱말</span><strong>${escapeHtml(vocabCount)}</strong></div>
+    <div class="vn-hud-stat"><span>결말</span><strong>${escapeHtml(endingCount)}/3</strong></div>
+  </header>`;
+}
+
+function renderTitlePlaque(title, subtitle) {
+  return `<div class="vn-title-plaque"><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div>`;
+}
+
+function renderGameFooter(session = null, progress = 0) {
+  const vocabCount = session?.vocabTapped?.length ?? 0;
+  const endingCount = session?.endingsSeen?.length ?? 0;
+  return `<footer class="vn-game-footer" aria-label="모험 기록">
+    <span>진행 <strong>${escapeHtml(progress)}/5</strong></span>
+    <span>낱말 <strong>${escapeHtml(vocabCount)}</strong></span>
+    <span>결말 <strong>${escapeHtml(endingCount)}/3</strong></span>
+  </footer>`;
+}
+
 function renderVocabularyWords(words = []) {
   if (!words.length) return "";
 
@@ -81,7 +108,7 @@ function renderSceneActions(scene, slots) {
   return `<div class="vn-actions" aria-label="다음 장면"><button class="vn-choice" type="button" data-action="continue" data-next-scene="${escapeHtml(scene.nextSceneId)}">계속 읽기</button></div>`;
 }
 
-function renderStage(scene, dialogue, progress, endingTone = "") {
+function renderStage(scene, dialogue, progress, endingTone = "", session = null) {
   const backgroundKey = visualNovelAssets.sceneBackgrounds[scene.id];
   const background = visualNovelAssets.backgrounds[backgroundKey];
   const characterKey = visualNovelAssets.sceneCharacters[scene.id];
@@ -92,15 +119,21 @@ function renderStage(scene, dialogue, progress, endingTone = "") {
     ? `<div class="vn-background" style="background-image: url('${escapeHtml(background)}')">${character ? `<img class="vn-sprite" src="${escapeHtml(character)}" alt="">` : ""}</div>`
     : `<div class="vn-background"></div>`;
 
+  const slots = session?.slots ?? {};
   return `<main class="vn-shell" data-ui="visual-novel"${toneAttribute}>
-    <section class="vn-stage">
-      ${backdrop}
-      <article class="vn-dialogue">
+    <div class="vn-game-frame">
+      ${renderGameHud(session, slots)}
+      ${renderTitlePlaque(personalize(scene.title, slots), scene.type === "ending" ? "모험의 결말" : "이상한 나라의 모험")}
+      <section class="vn-stage">
+        <div class="vn-art-frame">${backdrop}</div>
+        <article class="vn-dialogue">
         <p class="vn-nameplate vn-nameplate--${speaker.id}">${escapeHtml(speaker.label)}</p>
         ${dialogue}
         ${renderTrail(progress)}
-      </article>
-    </section>
+        </article>
+      </section>
+      ${renderGameFooter(session, progress)}
+    </div>
   </main>`;
 }
 
@@ -126,11 +159,12 @@ export function renderSetup(slots = {}) {
       ${options.map(option => `<label><input type="radio" name="${slot}" value="${escapeHtml(option)}" data-action="set-slot" data-slot="${slot}"${personalize(`{${slot}}`, slots) === option ? " checked" : ""}>${escapeHtml(option)}</label>`).join("")}
     </fieldset>`).join("");
 
+  void setupBackground;
   return `<main class="vn-shell vn-setup" data-ui="visual-novel">
-    <section class="vn-stage">
-      <div class="vn-background" style="background-image: url('${escapeHtml(setupBackground)}')"></div>
-      <article class="vn-dialogue">
-        <h1>앨리스와 세 갈래 이상한 나라</h1>
+    <div class="vn-game-frame">
+      ${renderGameHud(null, slots)}
+      ${renderTitlePlaque("사용자 정보 입력", "앨리스의 모험을 준비해 주세요")}
+      <section class="vn-setup-panel">
         <form data-action="start">
           <label for="hero-name">이름</label>
           <input id="hero-name" type="text" name="HERO" value="${escapeHtml(hero)}" maxlength="6" autocomplete="off" inputmode="text" data-action="set-name">
@@ -138,8 +172,9 @@ export function renderSetup(slots = {}) {
           <button class="vn-choice" type="submit" data-action="start">이야기 시작</button>
         </form>
         ${renderTrail(0)}
-      </article>
-    </section>
+      </section>
+      ${renderGameFooter(null, 0)}
+    </div>
   </main>`;
 }
 
@@ -154,7 +189,7 @@ export function renderScene(scene, session, feedback = null) {
     ${renderVocabularyWords(scene.vocab)}
     ${renderSceneActions(scene, slots)}`;
 
-  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene));
+  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), "", session);
 }
 
 export function renderChipResponse(state) {
@@ -167,7 +202,7 @@ export function renderChipResponse(state) {
     <p class="vn-feedback" role="status">${escapeHtml(response.response ?? "")}</p>
     <button class="vn-choice" type="button" data-action="continue-chip">이야기 이어 보기</button>`;
 
-  return renderStage(scene, dialogue, 4);
+  return renderStage(scene, dialogue, 4, "", state.session);
 }
 
 export function renderEnding(scene, session) {
@@ -186,16 +221,21 @@ export function renderEnding(scene, session) {
     ${renderVocabularyWords(scene.vocab)}
     <button class="vn-choice" type="button" data-action="restart">다시 시작</button>`;
 
-  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), visualNovelAssets.endingTones[scene.id]);
+  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), visualNovelAssets.endingTones[scene.id], session);
 }
 
 export function renderRecovery() {
   return `<main class="vn-shell" data-ui="visual-novel">
-    <section class="vn-recovery" role="alert" aria-labelledby="recovery-title">
-      <h1 id="recovery-title">이야기를 이어 갈 수 없어요</h1>
-      <p>처음 장면부터 다시 시작해 볼까요?</p>
-      <button class="vn-choice" type="button" data-action="restart">다시 시작</button>
-    </section>
+    <div class="vn-game-frame">
+      ${renderGameHud()}
+      ${renderTitlePlaque("모험이 멈췄어요", "이야기를 다시 불러오지 못했어요")}
+      <section class="vn-recovery" role="alert" aria-labelledby="recovery-title">
+        <h1 id="recovery-title">이야기를 이어 갈 수 없어요</h1>
+        <p>처음 장면부터 다시 시작해 볼까요?</p>
+        <button class="vn-choice" type="button" data-action="restart">다시 시작</button>
+      </section>
+      ${renderGameFooter()}
+    </div>
   </main>`;
 }
 
