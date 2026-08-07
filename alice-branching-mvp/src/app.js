@@ -1,3 +1,8 @@
+import {
+  createBeats,
+  createMinimalStateStore,
+  normalizeMinimalState,
+} from "./beat.js";
 import { renderTemplate } from "./personalization.js";
 import {
   chooseChip,
@@ -10,14 +15,8 @@ import {
   visitScene,
 } from "./session.js";
 import { getScene, story } from "./story-data.js";
-import {
-  escapeHtml,
-  renderEnding,
-  renderRecovery,
-  renderScene,
-  renderSetup,
-  renderVocabularyPanel,
-} from "./ui.js";
+import { escapeHtml } from "./ui.js";
+import { createCompareLinks, getUiRenderer, parseUiVariant } from "./ui-variant.js";
 import { getVocabulary } from "./vocabulary.js";
 
 function baseState(session = null) {
@@ -177,15 +176,32 @@ export function restartStory(state) {
   return baseState(session);
 }
 
+export function advanceMinimalBeat(appState, minimalState, beatCount) {
+  const current = normalizeMinimalState(minimalState, appState.sceneId, beatCount);
+  return {
+    appState,
+    minimalState: {
+      ...current,
+      beatIndex: Math.min(current.beatIndex + 1, Math.max(beatCount - 1, 0)),
+    },
+  };
+}
+
 function clone(value) {
   return value === null || value === undefined ? value : JSON.parse(JSON.stringify(value));
 }
 
-export function createDebugGetters(getState) {
+export function createDebugGetters(
+  getState,
+  getUiVariant = () => "current",
+  getMinimalState = () => null,
+) {
   return Object.freeze({
     screen: () => getState().screen,
     sceneId: () => getState().sceneId,
     session: () => clone(getState().session),
+    uiVariant: () => clone(getUiVariant()),
+    minimalState: () => clone(getMinimalState()),
   });
 }
 
@@ -196,18 +212,20 @@ export function resetTransitionView(scrollTo, focusTarget) {
   focusTarget.focus({ preventScroll: true });
 }
 
-function renderChipResponse(state) {
-  const scene = getScene(state.sceneId);
-  const response = state.chipResponse;
-  return `<main class="story-screen chip-response-screen scene-${escapeHtml(scene.art)}">
-    <div class="scene-art" aria-hidden="true"></div>
-    <article>
-      <p class="scene-kicker">네가 고른 말</p>
-      <h1>${escapeHtml(response.label)}</h1>
-      <p class="chip-answer" role="status">${escapeHtml(response.response)}</p>
-      <button class="primary-action" type="button" data-action="continue-chip">이야기 이어 보기</button>
-    </article>
-  </main>`;
+const UI_LABELS = Object.freeze({
+  current: "현재형",
+  "visual-novel": "비주얼노벨",
+  minimal: "미니멀 텍스트",
+});
+
+export function renderCompareMenu(search, uiVariant) {
+  if (new URLSearchParams(search).get("compare") !== "1") return "";
+
+  const links = createCompareLinks(search).map(({ id, href }) => {
+    const current = id === uiVariant ? ' aria-current="page"' : "";
+    return `<a href="${escapeHtml(href)}"${current}>${UI_LABELS[id]}</a>`;
+  }).join("");
+  return `<nav class="compare-menu" aria-label="UI 비교">${links}</nav>`;
 }
 
 export function bindAppEvents(
@@ -215,6 +233,7 @@ export function bindAppEvents(
   getState,
   commit,
   readForm = form => Object.fromEntries(new FormData(form)),
+  { onNextBeat = () => {}, onRestart = () => {} } = {},
 ) {
   app.addEventListener("submit", event => {
     const form = event.target.closest('form[data-action="start"]');
@@ -241,6 +260,8 @@ export function bindAppEvents(
       }));
     } else if (action === "continue-chip") {
       commit(continueChip(state));
+    } else if (action === "next-beat") {
+      onNextBeat();
     } else if (action === "vocab") {
       commit(openVocabulary(state, control.dataset.word), false);
       app.querySelector(".vocabulary-panel button")?.focus();
@@ -251,29 +272,71 @@ export function bindAppEvents(
         .find(button => button.dataset.word === word)
         ?.focus();
     } else if (action === "restart") {
+      onRestart();
       commit(restartStory(state));
     }
   });
+}
+
+function getMinimalBeatContext(state) {
+  if (!["scene", "chip-response", "ending"].includes(state.screen)) return null;
+  const scene = getScene(state.sceneId);
+  if (!scene || !isUsableSession(state.session)) return null;
+
+  const body = state.screen === "chip-response" ? state.chipResponse?.response : scene.body;
+  return {
+    sceneId: scene.id,
+    beatCount: createBeats(personalized(body, state.session)).length,
+  };
 }
 
 function mountBrowserApp() {
   const app = document.querySelector("#app");
   if (!app) return;
 
+  const uiVariant = parseUiVariant(window.location.search);
+  const ui = getUiRenderer(uiVariant);
+  const minimalStore = createMinimalStateStore();
   const store = createSessionStore();
   let state = createAppState(store.load());
+  let minimalState = null;
+
+  const compareMenu = renderCompareMenu(window.location.search, uiVariant);
+  if (compareMenu) {
+    app.insertAdjacentHTML("beforebegin", compareMenu);
+    app.dataset.compare = "true";
+  }
+  app.dataset.ui = uiVariant;
+
+  function syncMinimalState() {
+    if (uiVariant !== "minimal") return;
+    const context = getMinimalBeatContext(state);
+    if (!context) {
+      minimalState = null;
+      return;
+    }
+    minimalState = minimalStore.load(context.sceneId, context.beatCount);
+    minimalStore.save(minimalState);
+  }
+
+  function renderWithUi(method, ...args) {
+    return uiVariant === "minimal"
+      ? ui[method](...args, { minimalState })
+      : ui[method](...args);
+  }
 
   function render(focusHeading = false) {
+    syncMinimalState();
     const scene = getScene(state.sceneId);
     let html;
-    if (state.screen === "setup") html = renderSetup(state.session?.slots);
-    else if (state.screen === "scene" && scene) html = renderScene(scene, state.session, state.feedback);
-    else if (state.screen === "chip-response" && scene) html = renderChipResponse(state);
-    else if (state.screen === "ending" && scene) html = renderEnding(scene, state.session);
-    else html = renderRecovery();
+    if (state.screen === "setup") html = renderWithUi("renderSetup", state.session?.slots);
+    else if (state.screen === "scene" && scene) html = renderWithUi("renderScene", scene, state.session, state.feedback);
+    else if (state.screen === "chip-response" && scene) html = renderWithUi("renderChipResponse", state);
+    else if (state.screen === "ending" && scene) html = renderWithUi("renderEnding", scene, state.session);
+    else html = renderWithUi("renderRecovery");
 
     const panel = state.vocabulary
-      ? renderVocabularyPanel(state.vocabulary.word, state.vocabulary.definition)
+      ? renderWithUi("renderVocabularyPanel", state.vocabulary.word, state.vocabulary.definition)
       : "";
     app.innerHTML = html + panel;
 
@@ -289,9 +352,27 @@ function mountBrowserApp() {
     render(focusHeading);
   }
 
-  bindAppEvents(app, () => state, commit);
+  bindAppEvents(app, () => state, commit, undefined, {
+    onNextBeat() {
+      if (uiVariant !== "minimal") return;
+      const context = getMinimalBeatContext(state);
+      if (!context) return;
+      const next = advanceMinimalBeat(state, minimalState, context.beatCount);
+      minimalState = next.minimalState;
+      minimalStore.save(minimalState);
+      render();
+    },
+    onRestart() {
+      minimalStore.clear();
+      minimalState = null;
+    },
+  });
 
-  window.__aliceStoryDebug = createDebugGetters(() => state);
+  window.__aliceStoryDebug = createDebugGetters(
+    () => state,
+    () => uiVariant,
+    () => minimalState,
+  );
   render();
 }
 

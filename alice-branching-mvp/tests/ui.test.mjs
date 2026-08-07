@@ -59,6 +59,20 @@ test("브라우저 셸은 앱, 스타일, 모듈 진입점을 연결한다", () 
   assert.match(html, /<noscript>/);
 });
 
+test("HTML 셸은 세 UI 변형 스타일을 연결한다", () => {
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+
+  for (const href of ["./styles/current.css", "./styles/visual-novel.css", "./styles/minimal-text.css"]) {
+    assert.match(html, new RegExp(`href="${href.replaceAll(".", "\\.")}"`));
+  }
+});
+
+test("비교 서버는 8082를 사용한다", () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+
+  assert.match(pkg.scripts.serve, /8082/);
+});
+
 test("화면 전환은 맨 위로 이동한 뒤 스크롤을 유지하며 제목에 초점을 둔다", async () => {
   const { resetTransitionView } = await import("../src/app.js");
   const calls = [];
@@ -215,17 +229,32 @@ test("존재하지 않는 활성 장면은 복구 화면으로 전환한다", ()
   assert.deepEqual(navigated.session.path, ["S00"]);
 });
 
-test("디버그 getter는 내부 세션을 바꿀 수 없는 복제본을 반환한다", () => {
+test("디버그 getter는 내부 세션과 minimal 상태를 바꿀 수 없는 복제본으로 반환한다", () => {
   let state = beginStory();
-  const debug = createDebugGetters(() => state);
+  const minimalState = { sceneId: "S00", beatIndex: 1 };
+  const debug = createDebugGetters(() => state, () => "minimal", () => minimalState);
   const snapshot = debug.session();
+  const minimalSnapshot = debug.minimalState();
   snapshot.path.push("BROKEN");
   snapshot.slots.HERO = "변조";
+  minimalSnapshot.beatIndex = 99;
 
   assert.equal(debug.screen(), "scene");
   assert.equal(debug.sceneId(), "S00");
+  assert.equal(debug.uiVariant(), "minimal");
   assert.deepEqual(debug.session().path, ["S00"]);
   assert.equal(debug.session().slots.HERO, "지민");
+  assert.deepEqual(debug.minimalState(), { sceneId: "S00", beatIndex: 1 });
+});
+
+test("next-beat는 스토리 세션을 바꾸지 않고 UI 상태만 한 칸 진행한다", async () => {
+  const { advanceMinimalBeat } = await import("../src/app.js");
+  const before = beginStory();
+  const after = advanceMinimalBeat(before, { sceneId: "S00", beatIndex: 0 }, 4);
+
+  assert.strictEqual(after.appState, before);
+  assert.strictEqual(after.appState.session, before.session);
+  assert.deepEqual(after.minimalState, { sceneId: "S00", beatIndex: 1 });
 });
 
 test("escapeHtml escapes all HTML-significant characters", () => {
@@ -365,6 +394,58 @@ test("위임된 submit과 continue 클릭은 순수 전이 경계를 호출한�
 
   assert.equal(state.sceneId, "B2");
   assert.equal(state.feedback, null);
+});
+
+test("위임된 next-beat 클릭은 스토리 상태를 commit하지 않고 UI 진행 handler를 호출한다", async () => {
+  const { bindAppEvents } = await import("../src/app.js");
+  const listeners = {};
+  const app = {
+    addEventListener(type, listener) { listeners[type] = listener; },
+    contains() { return true; },
+    querySelector() { return null; },
+    querySelectorAll() { return []; },
+  };
+  const state = beginStory();
+  let commits = 0;
+  let beatAdvances = 0;
+  bindAppEvents(
+    app,
+    () => state,
+    () => { commits += 1; },
+    undefined,
+    { onNextBeat: () => { beatAdvances += 1; } },
+  );
+
+  const control = { dataset: { action: "next-beat" } };
+  listeners.click({ target: { closest: () => control } });
+
+  assert.equal(beatAdvances, 1);
+  assert.equal(commits, 0);
+});
+
+test("위임된 restart 클릭은 setup 전환 전에 minimal 상태를 지운다", async () => {
+  const { bindAppEvents } = await import("../src/app.js");
+  const listeners = {};
+  const app = {
+    addEventListener(type, listener) { listeners[type] = listener; },
+    contains() { return true; },
+    querySelector() { return null; },
+    querySelectorAll() { return []; },
+  };
+  const state = beginStory();
+  const calls = [];
+  bindAppEvents(
+    app,
+    () => state,
+    nextState => { calls.push(nextState.screen); },
+    undefined,
+    { onRestart: () => { calls.push("clear-minimal"); } },
+  );
+
+  const control = { dataset: { action: "restart" } };
+  listeners.click({ target: { closest: () => control } });
+
+  assert.deepEqual(calls, ["clear-minimal", "setup"]);
 });
 
 test("칩 장면은 레이블과 응답 계약을 이스케이프해 제공한다", () => {

@@ -69,6 +69,40 @@ a:focus-visible {
   transform: translateY(0);
 }
 
+.compare-menu {
+  position: fixed;
+  z-index: 15;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  height: 44px;
+  align-items: stretch;
+  justify-content: center;
+  border-bottom: 1px solid #aaa1ad;
+  background: #fff;
+}
+
+.compare-menu a {
+  display: flex;
+  min-width: 0;
+  padding: 0 14px;
+  align-items: center;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.compare-menu a[aria-current="page"] {
+  box-shadow: inset 0 -3px var(--cherry);
+  background: #fff2b8;
+}
+
+#app[data-compare="true"] {
+  padding-top: 44px;
+}
+
 .story-screen {
   min-height: 100svh;
   display: grid;

@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { visualNovelAssets } from "../assets/visual-novel/manifest.js";
+import { renderCompareMenu } from "../src/app.js";
 import { createSession } from "../src/session.js";
 import { story } from "../src/story-data.js";
 import {
@@ -106,6 +107,30 @@ test("비교 링크는 compare=1과 다른 query를 보존한다", () => {
     { id: "visual-novel", href: "?ui=visual-novel&compare=1" },
     { id: "minimal", href: "?ui=minimal&compare=1" },
   ]);
+});
+
+test("비교 메뉴는 compare=1에서만 현재 UI를 표시한다", () => {
+  assert.equal(renderCompareMenu("?ui=minimal", "minimal"), "");
+
+  const html = renderCompareMenu("?ui=minimal&compare=1&session=keep", "minimal");
+  assert.match(html, /<nav class="compare-menu" aria-label="UI 비교">/);
+  assert.match(html, /href="\?ui=current&amp;compare=1&amp;session=keep"/);
+  assert.match(html, /href="\?ui=minimal&amp;compare=1&amp;session=keep"[^>]*aria-current="page"/);
+  assert.doesNotMatch(html, /href="\?ui=current[^>]*aria-current="page"/);
+});
+
+test("비교 메뉴 스타일은 고정 44px 높이와 UI root 여백을 제공한다", () => {
+  const styles = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+
+  assert.match(styles, /\.compare-menu\s*\{[^}]*position:\s*fixed/);
+  assert.match(styles, /\.compare-menu\s*\{[^}]*height:\s*44px/);
+  assert.match(styles, /#app\[data-compare="true"\]\s*\{[^}]*padding-top:\s*44px/);
+});
+
+test("current 변형 스타일은 current UI root를 정의한다", () => {
+  const styles = fs.readFileSync(path.join(root, "styles/current.css"), "utf8");
+
+  assert.match(styles, /\[data-ui="current"\]\s*\{[^}]*min-height:\s*100svh/);
 });
 
 test("current renderer는 기존 UI export를 그대로 제공한다", () => {
