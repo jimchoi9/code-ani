@@ -4,14 +4,28 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { visualNovelAssets } from "../assets/visual-novel/manifest.js";
+import { createSession } from "../src/session.js";
+import { story } from "../src/story-data.js";
 import {
   SUPPORTED_UI_IDS,
   createCompareLinks,
+  getVisualNovelProgress,
+  getVisualNovelSpeaker,
   getUiRenderer,
   parseUiVariant,
 } from "../src/ui-variant.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const visualNovelSession = {
+  ...createSession({ HERO: "지민", TREAT: "젤리", PET: "토끼", COLOR: "파랑" }),
+  path: ["S00", "S01", "A1"],
+};
+const visualNovelEndingSession = {
+  ...visualNovelSession,
+  path: ["S00", "S01", "A1", "E1"],
+  chipChoices: [{ sceneId: "A1", label: "이 길 끝에 뭐가 있어?" }],
+  endingsSeen: ["E1"],
+};
 
 const visualNovelAssetUrls = {
   backgrounds: {
@@ -113,6 +127,60 @@ test("current chip response renderer는 기존 상태 계약으로 장면을 렌
   assert.match(html, /scene-cheshire-tree/);
   assert.match(html, />질문<\/h1>/);
   assert.match(html, />대답<\/p>/);
+});
+
+test("비주얼노벨은 manifest 배경, 이름표, 캐릭터, 선택 카드와 5단계 트레일을 렌더링한다", () => {
+  const renderer = getUiRenderer("visual-novel");
+  const html = renderer.renderScene(story.scenes.A1, visualNovelSession, "나무 위 웃음소리로 간다");
+
+  assert.equal(renderer.id, "visual-novel");
+  assert.match(html, /data-ui="visual-novel"/);
+  assert.match(html, new RegExp(visualNovelAssets.backgrounds.cheshireTree.replace(".", "\\.")));
+  assert.match(html, new RegExp(visualNovelAssets.characters.cat.replace(".", "\\.")));
+  assert.match(html, /alt=""/);
+  assert.match(html, /체셔 고양이/);
+  assert.match(html, /class="vn-choice/);
+  assert.equal((html.match(/class="vn-trail-card/g) ?? []).length, 5);
+  assert.match(html, /aria-label="진행 3\/5"/);
+  assert.match(html, /data-action="choose-chip"/);
+  assert.match(html, /data-chip-label="이 길 끝에 뭐가 있어\?"/);
+});
+
+test("비주얼노벨 결말은 manifest 배경을 재사용하고 결말 톤과 5\/5를 표시한다", () => {
+  const html = getUiRenderer("visual-novel").renderEnding(story.scenes.E1, visualNovelEndingSession);
+
+  assert.match(html, new RegExp(visualNovelAssets.backgrounds.cheshireTree.replace(".", "\\.")));
+  assert.match(html, /data-ending-tone="curiosity"/);
+  assert.match(html, /aria-label="진행 5\/5"/);
+  assert.match(html, /data-action="restart"/);
+});
+
+test("비주얼노벨 진행과 화자는 장면 계약에 맞춘다", () => {
+  assert.equal(getVisualNovelProgress(visualNovelSession, story.scenes.S00), 1);
+  assert.equal(getVisualNovelProgress(visualNovelSession, story.scenes.A1), 3);
+  assert.equal(getVisualNovelProgress(visualNovelEndingSession, story.scenes.E1), 5);
+  assert.equal(getVisualNovelProgress(visualNovelSession, null), 0);
+  assert.deepEqual(getVisualNovelSpeaker(story.scenes.S00), { id: "rabbit", label: "하얀 토끼" });
+  assert.deepEqual(getVisualNovelSpeaker(story.scenes.A1), { id: "cat", label: "체셔 고양이" });
+  assert.deepEqual(getVisualNovelSpeaker(story.scenes.S02), { id: "narrator", label: "서술자" });
+  assert.deepEqual(getVisualNovelSpeaker(story.scenes.E1), { id: "ending", label: "결말" });
+});
+
+test("비주얼노벨 스타일은 반응형 무대, 화자 색상, ending overlay를 제공한다", () => {
+  const styles = fs.readFileSync(path.join(root, "styles/visual-novel.css"), "utf8");
+
+  assert.match(styles, /\[data-ui="visual-novel"\][^{]*\{[^}]*min-height:\s*100svh/);
+  assert.match(styles, /\.vn-stage\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*58svh\)\s+minmax\(0,\s*42svh\)/);
+  assert.match(styles, /\.vn-sprite\s*\{[^}]*max-height:\s*88%/);
+  assert.match(styles, /\.vn-dialogue\s*\{[^}]*background:\s*rgba\(20,\s*24,\s*31,\s*\.94\)/);
+  assert.match(styles, /\.vn-nameplate--rabbit\s*\{[^}]*#c9364f/);
+  assert.match(styles, /\.vn-nameplate--cat\s*\{[^}]*#7350a2/);
+  assert.match(styles, /\.vn-nameplate--hatter\s*\{[^}]*#147aa0/);
+  assert.match(styles, /\.vn-nameplate--caterpillar\s*\{[^}]*#3d8b57/);
+  assert.match(styles, /\[data-ending-tone="curiosity"\]\s+\.vn-background::after/);
+  assert.match(styles, /@media\s*\(min-width:\s*900px\)/);
+  assert.match(styles, /@media\s*\(hover:\s*hover\)/);
+  assert.doesNotMatch(styles, /assets\/visual-novel/);
 });
 
 test("비주얼노벨 manifest의 로컬 파일과 장면 매핑이 유효하다", () => {

@@ -1,4 +1,11 @@
 import { currentRenderer } from "./ui-variants/current.js";
+import {
+  getVisualNovelProgress,
+  getVisualNovelSpeaker,
+  visualNovelRenderer,
+} from "./ui-variants/visual-novel.js";
+
+export { getVisualNovelProgress, getVisualNovelSpeaker };
 
 export const SUPPORTED_UI_IDS = Object.freeze(["current", "visual-novel", "minimal"]);
 
@@ -18,5 +25,5 @@ export function createCompareLinks(search = "") {
 }
 
 export function getUiRenderer(id) {
-  return id === "current" ? currentRenderer : currentRenderer;
+  return id === "visual-novel" ? visualNovelRenderer : currentRenderer;
 }
