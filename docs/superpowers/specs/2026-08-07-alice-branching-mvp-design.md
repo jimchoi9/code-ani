@@ -1,125 +1,130 @@
-# Alice Branching MVP Design
+# 앨리스풍 분기형 MVP 설계
 
-## Goal
+## 목표
 
-Build a child-playable branching story demo in a new `alice-branching-mvp` folder. The demo tests whether children feel interested in a choice-based fantasy story where their selections seem to shape the story.
+새 `alice-branching-mvp` 폴더에 아이가 직접 플레이할 수 있는 분기형 스토리 데모를 만든다. 이 데모의 목적은 아이가 자기 선택이 이야기를 바꾸는 것처럼 느끼는지, 그리고 그런 선택형 판타지 이야기에 흥미를 보이는지 확인하는 것이다.
 
-This MVP prioritizes playability and quick observation over AI realism. It does not include free text input or live AI generation. The "my imagination came true" feeling comes from personalization slots, visible branch changes, and authored response chips.
+이번 MVP는 AI의 실제성보다 플레이 가능성과 빠른 관찰을 우선한다. 자유 입력과 실시간 AI 생성은 포함하지 않는다. "내 상상대로 이뤄진다"는 느낌은 개인화 슬롯, 눈에 보이는 분기 변화, 저작된 반응 칩으로 만든다.
 
-## Target Test
+## 검증 질문
 
-The demo should answer these questions:
+데모는 다음 질문에 답할 수 있어야 한다.
 
-- Does a child want to continue after the first personalized setup?
-- Does the child notice that their choices changed the story?
-- Does the child want to replay to see another ending?
-- Do vocabulary taps feel like a small reward rather than a reading interruption?
+- 아이가 첫 개인화 설정 이후 이야기를 계속 보고 싶어 하는가?
+- 아이가 자기 선택 때문에 이야기가 달라졌다고 알아차리는가?
+- 아이가 다른 결말을 보기 위해 다시 플레이하고 싶어 하는가?
+- 낱말 탭이 읽기 방해가 아니라 작은 보상처럼 느껴지는가?
 
-Success is qualitative first: the child finishes one run, talks about their choices, or asks to try another path. Quantitative signals are stored locally for later inspection.
+성공 기준은 우선 정성적으로 본다. 아이가 1회차를 끝까지 완료하거나, 자기가 고른 선택을 이야기하거나, 다른 길을 다시 해보고 싶어 하면 긍정 신호로 본다. 정량 신호는 나중에 확인할 수 있도록 로컬에 저장한다.
 
-## Scope
+## 범위
 
-Included:
+포함한다:
 
-- Alice-inspired fantasy story using the provided L1 manuscript as source material.
-- 5 to 7 playable screens per run, ending within about 5 minutes.
-- Prologue personalization slots:
-  - hero name
-  - favorite treat
-  - companion pet
-  - favorite color
-- Korean particle handling for simple personalized sentences.
-- First branch:
-  - open the small door and shrink
-  - eat the treat and grow
-- A second decision on the shrink path, while the grow path proceeds directly to one character encounter for the first MVP.
-- Three MVP endings:
-  - `E1` Wise Smile / curiosity
-  - `E3` Cheerful Friend / playfulness
-  - `E5` Confidence / self-assurance
-- Authored choice chips at former `[AI]` insertion points.
-- Tappable vocabulary words with inline definitions.
-- Local session state in `localStorage`, including selected slots, path, ending seen, chip choices, and tapped vocabulary.
-- Small ending collection display such as `1/3`.
+- 제공된 L1 원고를 기반으로 한 앨리스풍 판타지 이야기
+- 1회 플레이 기준 5~7개 화면, 약 5분 이내 완료
+- 프롤로그 개인화 슬롯
+  - 주인공 이름
+  - 좋아하는 간식
+  - 함께 갈 친구 동물
+  - 좋아하는 색
+- 간단한 개인화 문장을 위한 한국어 조사 처리
+- 1차 분기
+  - 작은 문을 열고 작아지기
+  - 간식을 먹고 커지기
+- 작아지는 경로에는 2차 선택을 제공하고, 커지는 경로는 첫 MVP에서 한 캐릭터 만남으로 바로 진행
+- MVP 결말 3종
+  - `E1` 지혜로운 웃음 / 호기심
+  - `E3` 유쾌한 친구 / 유쾌함
+  - `E5` 자신감 / 자기확신
+- 기존 `[AI]` 삽입 지점을 대체하는 저작 선택 칩
+- 탭하면 뜻이 나오는 낱말
+- `localStorage` 기반 로컬 세션 상태 저장
+  - 선택한 슬롯
+  - 지나온 경로
+  - 본 결말
+  - 고른 칩
+  - 탭한 낱말
+- `1/3` 같은 작은 결말 수집 표시
 
-Excluded:
+포함하지 않는다:
 
-- Free text input.
-- Live AI API calls.
-- AI guardrails, moderation, retries, and timeout fallback.
-- Parent-note analytics beyond the authored ending note.
-- Remote event tracking.
-- Account login or cross-device persistence.
+- 자유 입력
+- 실시간 AI API 호출
+- AI 가드레일, 모더레이션, 재시도, 타임아웃 폴백
+- 저작된 결말 노트 이상의 부모용 상세 분석
+- 원격 이벤트 전송
+- 계정 로그인이나 기기 간 저장 동기화
 
-## Story Shape
+## 스토리 구조
 
-The full manuscript supports six endings, but the MVP uses a focused subset to keep the first demo tight. The resulting branch shape is intentionally asymmetrical: the shrink path offers two encounters, and the grow path uses one encounter.
+전체 원고는 6개 결말까지 지원하지만, 첫 데모를 가볍게 유지하기 위해 MVP에서는 일부만 사용한다. 분기 모양은 의도적으로 비대칭이다. 작아지는 경로에는 두 만남을 제공하고, 커지는 경로에는 한 만남만 제공한다.
 
 ```text
-Prologue
-  -> S00 Rabbit Hole
-      -> S01 Magic Door
-          -> A1 Cheshire Cat -> E1 Wise Smile
-          -> A3 Tea Party    -> E3 Cheerful Friend
-      -> S02 Mysterious Treat
-          -> B2 Caterpillar  -> E5 Confidence
+프롤로그
+  -> S00 토끼굴
+      -> S01 마법의 문
+          -> A1 체셔 고양이 -> E1 지혜로운 웃음
+          -> A3 다과회      -> E3 유쾌한 친구
+      -> S02 신비한 간식
+          -> B2 애벌레      -> E5 자신감
 ```
 
-The unused manuscript branches remain useful future expansion material:
+사용하지 않는 원고 분기는 이후 확장 재료로 남긴다.
 
-- `A2` Caterpillar after shrinking
-- `B1` Cat after growing
-- `B3` Tea party after growing
+- `A2` 작아진 뒤 만나는 애벌레
+- `B1` 커진 뒤 만나는 고양이
+- `B3` 커진 뒤 만나는 다과회
 - `E2`, `E4`, `E6`
 
-## Interaction Design
+## 상호작용 설계
 
-### Prologue
+### 프롤로그
 
-The setup is presented as "story preparation" rather than a survey. Each slot gets one small screen or compact step:
+시작 설정은 설문이 아니라 "이야기 준비하기"처럼 보이게 한다. 각 슬롯은 하나의 작은 화면 또는 압축된 단계로 받는다.
 
-- Name input accepts Korean names from 2 to 6 characters.
-- Treat, pet, and color use large tap targets.
-- Defaults are used quietly if a value is missing or invalid.
+- 이름 입력은 한글 2~6자만 허용한다.
+- 간식, 동물, 색은 큰 탭 영역으로 고른다.
+- 값이 없거나 유효하지 않으면 아이 흐름을 막지 않고 기본값을 조용히 사용한다.
 
-### Story Screens
+### 이야기 화면
 
-Each screen includes:
+각 화면에는 다음 요소가 있다.
 
-- Scene title.
-- Illustrated stage area using CSS/SVG shapes or simple authored visual layers.
-- Story text with personalized slots already resolved.
-- Tappable vocabulary words.
-- 1 to 3 large choice buttons.
-- A small progress indicator.
+- 장면 제목
+- CSS/SVG 도형 또는 단순 저작 레이어로 만든 그림 영역
+- 개인화 슬롯이 적용된 이야기 본문
+- 탭 가능한 낱말
+- 1~3개의 큰 선택 버튼
+- 작은 진행 표시
 
-The demo should feel like a storybook first. Controls should be obvious but not crowded.
+데모는 먼저 이야기책처럼 느껴져야 한다. 조작은 분명해야 하지만 화면을 복잡하게 만들지 않는다.
 
-### Authored Response Chips
+### 저작 반응 칩
 
-Former `[AI]` insertion points become deterministic chip choices.
+기존 `[AI]` 삽입 지점은 결정론적인 선택 칩으로 바꾼다.
 
-Example for the Cheshire Cat:
+체셔 고양이 예시:
 
-- Prompt: `고양이가 물었어요. "너는 무엇이 제일 궁금해?"`
-- Chips:
+- 질문: `고양이가 물었어요. "너는 무엇이 제일 궁금해?"`
+- 칩:
   - `이 길 끝에 뭐가 있어?`
   - `너는 왜 웃고 있어?`
   - `여기서 나갈 수 있어?`
-- After choosing, an authored response appears and the scene continues.
+- 아이가 칩을 고르면 그 칩에 맞는 저작 응답이 나타나고 장면이 이어진다.
 
-The chosen chip is recorded as `child_choice_text` and shown again in the ending as:
+선택한 칩은 `child_choice_text`로 기록하고 결말에서 다시 보여준다.
 
 ```text
 네가 고양이에게 고른 말
 "이 길 끝에 뭐가 있어?"
 ```
 
-This keeps the ownership loop without exposing unreviewed child text.
+이렇게 하면 검수되지 않은 아이 문장을 노출하지 않으면서도, 아이가 "내가 말한 것이 이야기 안에 남았다"고 느끼는 소유감 루프를 만들 수 있다.
 
-## Data Model
+## 데이터 모델
 
-Use plain JavaScript modules so the project can run without a build step.
+빌드 과정 없이 실행할 수 있도록 일반 JavaScript 모듈을 사용한다.
 
 ```js
 story = {
@@ -132,7 +137,7 @@ story = {
 };
 ```
 
-Scene records:
+장면 레코드:
 
 ```js
 {
@@ -151,7 +156,7 @@ Scene records:
 }
 ```
 
-Session records:
+세션 레코드:
 
 ```js
 {
@@ -163,23 +168,23 @@ Session records:
 }
 ```
 
-## Personalization Rules
+## 개인화 규칙
 
-- Slot replacement is string-based.
-- Scene text should use at most two personalized slots per paragraph.
-- Name validation accepts only Hangul names with 2 to 6 characters.
-- Invalid names fall back to `앨리스`.
-- Particle selection supports the common pairs needed in the manuscript:
+- 슬롯 치환은 문자열 기반으로 처리한다.
+- 장면 본문은 한 문단에 개인화 슬롯을 최대 2개까지만 사용한다.
+- 이름 검증은 한글 2~6자만 통과시킨다.
+- 유효하지 않은 이름은 `앨리스`로 대체한다.
+- 원고에 필요한 기본 조사 쌍을 지원한다.
   - `이/가`
   - `은/는`
   - `을/를`
   - `와/과`
 
-## Vocabulary
+## 낱말
 
-Each implemented scene uses one or two vocabulary targets from the manuscript. A tapped word opens a small definition panel near the story text and adds the word to the local word pouch.
+구현하는 각 장면에는 원고의 목표 낱말을 1~2개 사용한다. 낱말을 탭하면 이야기 본문 근처에 작은 뜻풀이 패널을 열고, 해당 낱말을 로컬 낱말 주머니에 추가한다.
 
-The MVP should include these words at minimum:
+MVP에는 최소 다음 낱말을 포함한다.
 
 - 황급히
 - 먹음직스러운
@@ -190,9 +195,9 @@ The MVP should include these words at minimum:
 - 덤덤하게
 - 굳이
 
-## Architecture
+## 구조
 
-Use an independent static web app:
+독립적인 정적 웹 앱으로 만든다.
 
 ```text
 alice-branching-mvp/
@@ -213,46 +218,46 @@ alice-branching-mvp/
     └── session.test.mjs
 ```
 
-Responsibilities:
+모듈 책임:
 
-- `story-data.js`: authored scenes, choices, chips, endings, and vocabulary.
-- `personalization.js`: slot validation, fallback defaults, particle helpers, template rendering.
-- `session.js`: localStorage read/write and session updates.
-- `vocabulary.js`: word lookup and tapped-word tracking.
-- `ui.js`: DOM rendering helpers.
-- `app.js`: route current state through render and interaction handlers.
+- `story-data.js`: 저작 장면, 선택지, 칩, 결말, 낱말 데이터
+- `personalization.js`: 슬롯 검증, 기본값, 조사 헬퍼, 템플릿 렌더링
+- `session.js`: `localStorage` 읽기/쓰기와 세션 업데이트
+- `vocabulary.js`: 낱말 조회와 탭한 낱말 기록
+- `ui.js`: DOM 렌더링 헬퍼
+- `app.js`: 현재 상태를 렌더링과 상호작용 핸들러에 연결
 
-## Error Handling
+## 오류 처리
 
-- If localStorage is unavailable, keep state in memory for the current run.
-- If a scene id is missing, show a gentle restart screen.
-- If a slot is invalid, use the default without stopping the child.
-- If a vocabulary definition is missing, the word remains readable and no panel opens.
+- `localStorage`를 사용할 수 없으면 현재 실행 중에는 메모리 상태로 유지한다.
+- 장면 id를 찾을 수 없으면 부드러운 다시 시작 화면을 보여준다.
+- 슬롯 값이 유효하지 않으면 아이 흐름을 멈추지 않고 기본값을 사용한다.
+- 낱말 정의가 없으면 단어는 그대로 읽히고 패널만 열지 않는다.
 
-## Testing
+## 테스트
 
-Automated tests:
+자동 테스트:
 
-- Personalization replaces slots and selects Korean particles correctly.
-- Invalid names fall back to `앨리스`.
-- Story data has no dangling `nextSceneId` references.
-- Every MVP ending is reachable.
-- Session state records paths, endings, chip choices, and vocabulary taps.
+- 개인화가 슬롯을 치환하고 한국어 조사를 올바르게 선택한다.
+- 유효하지 않은 이름이 `앨리스`로 대체된다.
+- 스토리 데이터에 끊어진 `nextSceneId` 참조가 없다.
+- MVP 결말 3개가 모두 도달 가능하다.
+- 세션 상태가 경로, 결말, 칩 선택, 낱말 탭을 기록한다.
 
-Manual checks:
+수동 확인:
 
-- One run can complete in about 5 minutes.
-- Mobile width around 390px has no horizontal overflow.
-- All choice buttons are easy to tap.
-- Ending screen clearly repeats a previous chip choice.
-- Replay starts cleanly while preserving endings seen.
+- 1회 플레이를 약 5분 안에 끝낼 수 있다.
+- 390px 내외 모바일 폭에서 가로 스크롤이 생기지 않는다.
+- 모든 선택 버튼을 쉽게 탭할 수 있다.
+- 결말 화면이 이전에 고른 칩을 분명하게 다시 보여준다.
+- 다시 하기를 누르면 본 결말 목록은 유지하면서 새 플레이를 깔끔하게 시작한다.
 
-## Future Expansion
+## 이후 확장
 
-After observing children with the branching demo:
+분기형 데모를 아이에게 보여준 뒤 관찰 결과에 따라 다음을 추가한다.
 
-- Add the remaining three endings from the manuscript.
-- Add optional free text at one encounter.
-- Replace authored chip responses with mock AI.
-- Add real AI generation with input/output guardrails.
-- Add local export or parent review of session notes.
+- 원고에 있는 나머지 결말 3개 추가
+- 한 만남 장면에 선택형 자유 입력 추가
+- 저작 칩 응답을 mock AI로 대체
+- 입력/출력 가드레일을 포함한 실제 AI 생성 추가
+- 세션 노트 로컬 내보내기 또는 부모 리뷰 기능 추가
