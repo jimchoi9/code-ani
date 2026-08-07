@@ -13,6 +13,71 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
+const visualNovelAssetUrls = {
+  backgrounds: {
+    rabbitHole: [
+      "./assets/visual-novel/backgrounds/rabbit-hole.svg",
+      "./assets/visual-novel/backgrounds/rabbit-hole.webp",
+    ],
+    tinyGarden: [
+      "./assets/visual-novel/backgrounds/tiny-garden.svg",
+      "./assets/visual-novel/backgrounds/tiny-garden.webp",
+    ],
+    cheshireTree: [
+      "./assets/visual-novel/backgrounds/cheshire-tree.svg",
+      "./assets/visual-novel/backgrounds/cheshire-tree.webp",
+    ],
+    teaParty: [
+      "./assets/visual-novel/backgrounds/tea-party.svg",
+      "./assets/visual-novel/backgrounds/tea-party.webp",
+    ],
+    giantLand: [
+      "./assets/visual-novel/backgrounds/giant-land.svg",
+      "./assets/visual-novel/backgrounds/giant-land.webp",
+    ],
+    giantMushroom: [
+      "./assets/visual-novel/backgrounds/giant-mushroom.svg",
+      "./assets/visual-novel/backgrounds/giant-mushroom.webp",
+    ],
+  },
+  characters: {
+    rabbit: [
+      "./assets/visual-novel/characters/white-rabbit.svg",
+      "./assets/visual-novel/characters/white-rabbit.png",
+    ],
+    cat: [
+      "./assets/visual-novel/characters/cheshire-cat.svg",
+      "./assets/visual-novel/characters/cheshire-cat.png",
+    ],
+    hatter: [
+      "./assets/visual-novel/characters/mad-hatter.svg",
+      "./assets/visual-novel/characters/mad-hatter.png",
+    ],
+    caterpillar: [
+      "./assets/visual-novel/characters/caterpillar.svg",
+      "./assets/visual-novel/characters/caterpillar.png",
+    ],
+  },
+};
+
+function assertVisualNovelAssetUrls(assets) {
+  assert.deepEqual(Object.keys(assets.backgrounds), Object.keys(visualNovelAssetUrls.backgrounds));
+  assert.deepEqual(Object.keys(assets.characters), Object.keys(visualNovelAssetUrls.characters));
+
+  const urls = [
+    ...Object.values(assets.backgrounds),
+    ...Object.values(assets.characters),
+  ];
+  assert.equal(urls.length, 10);
+  assert.equal(new Set(urls).size, 10);
+
+  for (const [category, assetUrls] of Object.entries(visualNovelAssetUrls)) {
+    for (const [assetKey, allowedUrls] of Object.entries(assetUrls)) {
+      assert.ok(allowedUrls.includes(assets[category][assetKey]), `${category}.${assetKey}`);
+    }
+  }
+}
+
 test("지원 UI와 잘못된 query 폴백을 결정한다", () => {
   assert.deepEqual(SUPPORTED_UI_IDS, ["current", "visual-novel", "minimal"]);
   assert.equal(parseUiVariant("?ui=visual-novel"), "visual-novel");
@@ -50,15 +115,12 @@ test("current chip response renderer는 기존 상태 계약으로 장면을 렌
   assert.match(html, />대답<\/p>/);
 });
 
-test("비주얼노벨 mock manifest의 로컬 SVG 파일과 장면 매핑이 유효하다", () => {
-  const urls = [
-    ...Object.values(visualNovelAssets.backgrounds),
-    ...Object.values(visualNovelAssets.characters),
-  ];
+test("비주얼노벨 manifest의 로컬 파일과 장면 매핑이 유효하다", () => {
+  assertVisualNovelAssetUrls(visualNovelAssets);
 
-  assert.equal(urls.length, 10);
+  const urls = [...Object.values(visualNovelAssets.backgrounds), ...Object.values(visualNovelAssets.characters)];
   for (const url of urls) {
-    assert.match(url, /^\.\/assets\/visual-novel\/.+\.svg$/);
+    assert.match(url, /^\.\/assets\/visual-novel\//);
     assert.ok(fs.existsSync(path.join(root, url.replace(/^\.\//, ""))), url);
   }
 
@@ -78,6 +140,20 @@ test("비주얼노벨 mock manifest의 로컬 SVG 파일과 장면 매핑이 유
   assert.deepEqual(visualNovelAssets.endingTones, {
     E1: "curiosity", E3: "joy", E5: "confidence",
   });
+});
+
+test("비주얼노벨 manifest는 정확한 WebP/PNG production replacement URL을 허용한다", () => {
+  const productionAssets = {
+    ...visualNovelAssets,
+    backgrounds: Object.fromEntries(
+      Object.entries(visualNovelAssetUrls.backgrounds).map(([key, [, productionUrl]]) => [key, productionUrl]),
+    ),
+    characters: Object.fromEntries(
+      Object.entries(visualNovelAssetUrls.characters).map(([key, [, productionUrl]]) => [key, productionUrl]),
+    ),
+  };
+
+  assertVisualNovelAssetUrls(productionAssets);
 });
 
 test("비주얼노벨 production asset requirements는 열 개의 최종 파일을 명시한다", () => {

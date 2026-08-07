@@ -1,6 +1,6 @@
 # Visual Novel Production Asset Requirements
 
-These local SVGs are intentionally lightweight comparison mocks. Replace each mock URL in `manifest.js` with the final raster filename below only after the production asset has been approved. Keep the manifest keys and scene mappings unchanged.
+These local SVGs are intentionally lightweight comparison mocks. Replace each mock URL in `manifest.js` with the corresponding final raster URL below only after the production asset has been approved. Keep the manifest keys and scene mappings unchanged. The asset regression test accepts only each listed SVG mock URL or its listed WebP/PNG replacement URL, so no test assertion update is required during replacement; the final local raster file must exist before the test will pass.
 
 ## Backgrounds
 
@@ -27,3 +27,4 @@ These local SVGs are intentionally lightweight comparison mocks. Replace each mo
 - Final backgrounds must be browser-safe WebP files at a 16:10 aspect ratio; final sprites must be transparent PNG files with no baked backdrop.
 - Keep all ten final images self-contained and locally hosted. Do not introduce external image URLs.
 - The final set should share a soft watercolor children's-storybook medium, painterly paper texture, clear silhouettes, and bright, safe fantasy lighting.
+- For each approved final file: add it at the exact table filename, update only that manifest URL from `.svg` to its documented `.webp` or `.png` target, then run `node --test tests/ui-variants.test.mjs`. Do not change manifest keys or scene mappings.
