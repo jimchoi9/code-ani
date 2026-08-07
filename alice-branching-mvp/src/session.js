@@ -91,7 +91,15 @@ export function restartRun(session, now = isoNow()) {
   };
 }
 
-export function createSessionStore(storage = globalThis.localStorage) {
+export function createSessionStore(storage) {
+  if (storage === undefined) {
+    try {
+      storage = globalThis.localStorage;
+    } catch {
+      storage = null;
+    }
+  }
+
   let memory = null;
   let storageFailed = false;
 

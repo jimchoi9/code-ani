@@ -113,3 +113,21 @@ test("삭제 오류 뒤에는 오래된 저장소 값 대신 메모리를 사용
 
   assert.equal(store.load(), null);
 });
+
+test("기본 저장소 접근이 막혀도 메모리 폴백을 만든다", () => {
+  const originalDescriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    get() { throw new Error("SecurityError"); },
+  });
+
+  try {
+    const store = createSessionStore();
+    const session = createSession({}, start);
+    store.save(session);
+    assert.deepEqual(store.load(), session);
+  } finally {
+    if (originalDescriptor) Object.defineProperty(globalThis, "localStorage", originalDescriptor);
+    else delete globalThis.localStorage;
+  }
+});
