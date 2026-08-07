@@ -28,6 +28,7 @@ test("유효하지 않은 값은 기본값으로 바꾼다", () => {
 test("받침 유무에 맞는 조사를 고른다", () => {
   assert.equal(selectParticle("붕어빵", "을/를"), "을");
   assert.equal(selectParticle("젤리", "을/를"), "를");
+  assert.equal(selectParticle("곰", "은/는"), "은");
   assert.equal(selectParticle("강아지", "와/과"), "와");
   assert.equal(selectParticle("토끼", "이/가"), "가");
 });
@@ -38,4 +39,19 @@ test("슬롯과 조사 토큰을 함께 치환한다", () => {
     renderTemplate("{HERO}{은/는} {TREAT}{을/를} 골랐어요.", slots),
     "지민은 붕어빵을 골랐어요.",
   );
+});
+
+test("슬롯 바로 뒤의 고정 조사는 저작 오류로 거부한다", () => {
+  for (const template of [
+    "{HERO}는 출발했어요.",
+    "{HERO}가 웃었어요.",
+    "{HERO}를 불렀어요.",
+    "{PET}은 기다렸어요.",
+  ]) {
+    assert.throws(
+      () => renderTemplate(template, { HERO: "지민", PET: "토끼" }),
+      /조사 토큰/,
+      template,
+    );
+  }
 });

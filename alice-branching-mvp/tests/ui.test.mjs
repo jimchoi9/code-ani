@@ -108,6 +108,21 @@ test("설정에서 시작하면 S00을 방문하고 선택 피드백을 다음 �
   assert.deepEqual(branched.session.path, ["S00", "S01"]);
 });
 
+test("빈 이름은 폼에서 허용되고 기본 이름으로 정규화된다", () => {
+  const html = renderSetup(session.slots);
+  const nameInput = html.match(/<input(?=[^>]*\btype="text")(?=[^>]*\bname="HERO")[^>]*>/)?.[0];
+  const started = startStory(createAppState(), {
+    HERO: "",
+    TREAT: "젤리",
+    PET: "토끼",
+    COLOR: "분홍",
+  });
+
+  assert.ok(nameInput);
+  assert.doesNotMatch(nameInput, /\brequired\b/);
+  assert.equal(started.session.slots.HERO, "앨리스");
+});
+
 test("세 갈래 플레이가 칩 응답 화면을 거쳐 각각의 결말에 도달한다", () => {
   const routes = [
     { scenes: [["S01", "작은 문을 열어 본다"], ["A1", "나무 위 웃음소리로 간다"]], chip: ["이 길 끝에 뭐가 있어?", "재미있는 생각이구나.", "E1"], ending: "E1" },
@@ -275,7 +290,81 @@ test("nextSceneId만 있는 장면은 계속 읽기 동작을 제공한다", () 
   }, session);
 
   assert.match(html, /계속 읽기/);
-  assert.match(html, /data-action="choose"[^>]*data-next-scene="B2"/);
+  assert.match(html, /data-action="continue"[^>]*data-next-scene="B2"/);
+});
+
+test("필수 이어 읽기는 선택 피드백 없이 다음 장면으로 이동한다", async () => {
+  const { continueStory } = await import("../src/app.js");
+  assert.equal(typeof continueStory, "function");
+  const giant = choosePath(beginStory(), "S02", "젤리를 먹어 본다");
+  const continued = continueStory(giant, "B2");
+  const html = renderScene({
+    id: "B2",
+    type: "chip",
+    title: "버섯",
+    art: "giant-mushroom",
+    body: "본문",
+    vocab: [],
+    chips: [],
+  }, continued.session, continued.feedback);
+
+  assert.equal(continued.sceneId, "B2");
+  assert.equal(continued.feedback, null);
+  assert.doesNotMatch(html, /네가 고른 길/);
+  assert.doesNotMatch(html, /계속 읽기/);
+});
+
+test("현재 경로 길이가 초기 및 복원 장면의 순서가 된다", () => {
+  const initial = beginStory();
+  const restored = createAppState(choosePath(initial, "S01", "작은 문을 열어 본다").session);
+  const initialHtml = renderScene({
+    id: "S00", type: "story", title: "처음", art: "start", body: "본문", vocab: [],
+  }, initial.session);
+  const restoredHtml = renderScene({
+    id: "S01", type: "story", title: "다음", art: "next", body: "본문", vocab: [],
+  }, restored.session, restored.feedback);
+
+  assert.match(initialHtml, />1번째 장면</);
+  assert.match(restoredHtml, />2번째 장면</);
+});
+
+test("위임된 submit과 continue 클릭은 순수 전이 경계를 호출한다", async () => {
+  const { bindAppEvents } = await import("../src/app.js");
+  assert.equal(typeof bindAppEvents, "function");
+  const listeners = {};
+  const app = {
+    addEventListener(type, listener) { listeners[type] = listener; },
+    contains() { return true; },
+    querySelector() { return null; },
+    querySelectorAll() { return []; },
+  };
+  let state = createAppState();
+  bindAppEvents(
+    app,
+    () => state,
+    nextState => { state = nextState; },
+    () => ({ HERO: "", TREAT: "젤리", PET: "토끼", COLOR: "분홍" }),
+  );
+  const form = {};
+  let prevented = false;
+  listeners.submit({
+    target: { closest: selector => selector === 'form[data-action="start"]' ? form : null },
+    preventDefault() { prevented = true; },
+  });
+
+  assert.equal(prevented, true);
+  assert.equal(state.sceneId, "S00");
+  assert.equal(state.session.slots.HERO, "앨리스");
+
+  state = choosePath(state, "S02", "젤리를 먹어 본다");
+  const control = {
+    dataset: { action: "continue", nextScene: "B2" },
+    textContent: "계속 읽기",
+  };
+  listeners.click({ target: { closest: () => control } });
+
+  assert.equal(state.sceneId, "B2");
+  assert.equal(state.feedback, null);
 });
 
 test("칩 장면은 레이블과 응답 계약을 이스케이프해 제공한다", () => {

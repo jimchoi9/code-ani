@@ -122,6 +122,10 @@ export function choosePath(state, nextSceneId, selectedLabel = null) {
   };
 }
 
+export function continueStory(state, nextSceneId) {
+  return choosePath(state, nextSceneId, null);
+}
+
 export function selectChip(state, selection) {
   const scene = getScene(state.sceneId);
   if (!isUsableSession(state.session) || scene?.type !== "chip") return state;
@@ -206,6 +210,52 @@ function renderChipResponse(state) {
   </main>`;
 }
 
+export function bindAppEvents(
+  app,
+  getState,
+  commit,
+  readForm = form => Object.fromEntries(new FormData(form)),
+) {
+  app.addEventListener("submit", event => {
+    const form = event.target.closest('form[data-action="start"]');
+    if (!form) return;
+    event.preventDefault();
+    commit(startStory(getState(), readForm(form)));
+  });
+
+  app.addEventListener("click", event => {
+    const control = event.target.closest("[data-action]");
+    if (!control || !app.contains(control)) return;
+
+    const state = getState();
+    const action = control.dataset.action;
+    if (action === "choose") {
+      commit(choosePath(state, control.dataset.nextScene, control.textContent.trim()));
+    } else if (action === "continue") {
+      commit(continueStory(state, control.dataset.nextScene));
+    } else if (action === "choose-chip") {
+      commit(selectChip(state, {
+        label: control.dataset.chipLabel,
+        response: control.dataset.chipResponse,
+        nextSceneId: control.dataset.nextScene,
+      }));
+    } else if (action === "continue-chip") {
+      commit(continueChip(state));
+    } else if (action === "vocab") {
+      commit(openVocabulary(state, control.dataset.word), false);
+      app.querySelector(".vocabulary-panel button")?.focus();
+    } else if (action === "close-vocabulary") {
+      const word = state.vocabulary?.word;
+      commit(closeVocabulary(state), false);
+      [...app.querySelectorAll('[data-action="vocab"]')]
+        .find(button => button.dataset.word === word)
+        ?.focus();
+    } else if (action === "restart") {
+      commit(restartStory(state));
+    }
+  });
+}
+
 function mountBrowserApp() {
   const app = document.querySelector("#app");
   if (!app) return;
@@ -239,41 +289,7 @@ function mountBrowserApp() {
     render(focusHeading);
   }
 
-  app.addEventListener("submit", event => {
-    const form = event.target.closest('form[data-action="start"]');
-    if (!form) return;
-    event.preventDefault();
-    commit(startStory(state, Object.fromEntries(new FormData(form))));
-  });
-
-  app.addEventListener("click", event => {
-    const control = event.target.closest("[data-action]");
-    if (!control || !app.contains(control)) return;
-
-    const action = control.dataset.action;
-    if (action === "choose") {
-      commit(choosePath(state, control.dataset.nextScene, control.textContent.trim()));
-    } else if (action === "choose-chip") {
-      commit(selectChip(state, {
-        label: control.dataset.chipLabel,
-        response: control.dataset.chipResponse,
-        nextSceneId: control.dataset.nextScene,
-      }));
-    } else if (action === "continue-chip") {
-      commit(continueChip(state));
-    } else if (action === "vocab") {
-      commit(openVocabulary(state, control.dataset.word), false);
-      app.querySelector(".vocabulary-panel button")?.focus();
-    } else if (action === "close-vocabulary") {
-      const word = state.vocabulary?.word;
-      commit(closeVocabulary(state), false);
-      [...app.querySelectorAll('[data-action="vocab"]')]
-        .find(button => button.dataset.word === word)
-        ?.focus();
-    } else if (action === "restart") {
-      commit(restartStory(state));
-    }
-  });
+  bindAppEvents(app, () => state, commit);
 
   window.__aliceStoryDebug = createDebugGetters(() => state);
   render();

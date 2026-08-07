@@ -58,7 +58,7 @@ function renderSceneActions(scene, slots) {
   if (choices) return `<div class="actions" aria-label="다음 장면 고르기">${choices}</div>`;
   if (!scene.nextSceneId) return "";
 
-  return `<div class="actions" aria-label="다음 장면"><button class="choice" type="button" data-action="choose" data-next-scene="${escapeHtml(scene.nextSceneId)}">계속 읽기</button></div>`;
+  return `<div class="actions" aria-label="다음 장면"><button class="choice" type="button" data-action="continue" data-next-scene="${escapeHtml(scene.nextSceneId)}">계속 읽기</button></div>`;
 }
 
 export function renderSetup(slots) {
@@ -73,7 +73,7 @@ export function renderSetup(slots) {
     <header><h1>앨리스와 세 갈래 이상한 나라</h1></header>
     <form data-action="start">
       <label for="hero-name">이름</label>
-      <input id="hero-name" type="text" name="HERO" value="${escapeHtml(hero)}" maxlength="6" autocomplete="off" inputmode="text" data-action="set-name" required>
+      <input id="hero-name" type="text" name="HERO" value="${escapeHtml(hero)}" maxlength="6" autocomplete="off" inputmode="text" data-action="set-name">
       ${groups}
       <button type="submit" data-action="start">이야기 시작</button>
     </form>
@@ -82,7 +82,7 @@ export function renderSetup(slots) {
 
 export function renderScene(scene, session, feedback = null) {
   const slots = session.slots;
-  const sceneNumber = (session.path?.length ?? 0) + 1;
+  const sceneNumber = session.path?.length ?? 0;
   const feedbackMessage = feedback === null || feedback === undefined
     ? ""
     : `<p class="choice-feedback" role="status">네가 고른 길: ${escapeHtml(personalize(feedback, slots))}</p>`;
