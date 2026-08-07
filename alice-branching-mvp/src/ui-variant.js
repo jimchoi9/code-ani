@@ -1,4 +1,5 @@
 import { currentRenderer } from "./ui-variants/current.js";
+import { minimalTextRenderer } from "./ui-variants/minimal-text.js";
 import {
   getVisualNovelProgress,
   getVisualNovelSpeaker,
@@ -25,5 +26,7 @@ export function createCompareLinks(search = "") {
 }
 
 export function getUiRenderer(id) {
-  return id === "visual-novel" ? visualNovelRenderer : currentRenderer;
+  if (id === "visual-novel") return visualNovelRenderer;
+  if (id === "minimal") return minimalTextRenderer;
+  return currentRenderer;
 }

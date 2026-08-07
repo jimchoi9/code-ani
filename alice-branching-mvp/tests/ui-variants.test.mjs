@@ -129,6 +129,69 @@ test("current chip response renderer는 기존 상태 계약으로 장면을 렌
   assert.match(html, />대답<\/p>/);
 });
 
+test("미니멀 UI는 중간 beat에서 다음 표시만 보여준다", () => {
+  const renderer = getUiRenderer("minimal");
+  const html = renderer.renderScene(
+    story.scenes.S00,
+    visualNovelSession,
+    null,
+    { minimalState: { sceneId: "S00", beatIndex: 0 } },
+  );
+
+  assert.match(html, /data-ui="minimal"/);
+  assert.match(html, /data-action="next-beat"/);
+  assert.doesNotMatch(html, /data-action="choose"/);
+  assert.doesNotMatch(html, /낱말 살펴보기/);
+});
+
+test("미니멀 UI는 마지막 beat에서만 낱말과 선택지를 보여준다", () => {
+  const renderer = getUiRenderer("minimal");
+  const view = renderer.createView(story.scenes.S00, visualNovelSession, {
+    sceneId: "S00",
+    beatIndex: 999,
+  });
+  const html = renderer.renderScene(
+    story.scenes.S00,
+    visualNovelSession,
+    null,
+    { minimalState: { sceneId: "S00", beatIndex: view.beats.length - 1 } },
+  );
+
+  assert.equal(view.beatIndex, view.beats.length - 1);
+  assert.equal(view.isLastBeat, true);
+  assert.match(view.text, /지민 앞에는/);
+  assert.doesNotMatch(html, /data-action="next-beat"/);
+  assert.match(html, /data-action="vocab"/);
+  assert.match(html, /data-action="choose"/);
+});
+
+test("미니멀 결말은 N\/3 텍스트와 마지막 beat 이후 다시 시작을 제공한다", () => {
+  const html = getUiRenderer("minimal").renderEnding(
+    story.scenes.E1,
+    visualNovelEndingSession,
+    { minimalState: { sceneId: "E1", beatIndex: 999 } },
+  );
+
+  assert.match(html, /지금까지 만난 결말 1\/3/);
+  assert.match(html, /data-action="restart"/);
+});
+
+test("미니멀 스타일은 읽기 열, 장면 색조, 선택지와 motion 접근성을 제공한다", () => {
+  const styles = fs.readFileSync(path.join(root, "styles/minimal-text.css"), "utf8");
+
+  assert.match(styles, /\[data-ui="minimal"\][^{]*\{[^}]*min-height:\s*100svh/);
+  assert.match(styles, /\.minimal-reader\s*\{[^}]*width:\s*min\(68vw,\s*44rem\)/);
+  assert.match(styles, /\.minimal-reader\s*\{[^}]*padding-block:\s*20svh/);
+  assert.match(styles, /\.minimal-beat\s*\{[^}]*font:\s*400\s+clamp\(18px,\s*2\.1vw,\s*20px\)\/1\.95/);
+  assert.match(styles, /\.minimal-choice\s*\{[^}]*min-height:\s*48px/);
+  assert.match(styles, /\.minimal-next\s*\{[^}]*width:\s*48px/);
+  assert.match(styles, /\[data-ui="minimal"\]\[data-scene-id="S00"\][^{]*\{[^}]*--minimal-bg/);
+  assert.match(styles, /@media\s*\(max-width:\s*600px\)/);
+  assert.match(styles, /@media\s*\(prefers-reduced-motion:\s*no-preference\)/);
+  assert.match(styles, /@media\s*\(prefers-reduced-motion:\s*reduce\)/);
+  assert.doesNotMatch(styles, /url\(|assets\//);
+});
+
 test("비주얼노벨은 manifest 배경, 이름표, 캐릭터, 선택 카드와 5단계 트레일을 렌더링한다", () => {
   const renderer = getUiRenderer("visual-novel");
   const html = renderer.renderScene(story.scenes.A1, visualNovelSession, "나무 위 웃음소리로 간다");

@@ -1,0 +1,157 @@
+[data-ui="minimal"] {
+  min-height: 100svh;
+  color: #2d2c29;
+  background: var(--minimal-bg, #fbf8f1);
+}
+
+[data-ui="minimal"][data-scene-id="S00"] {
+  --minimal-bg: #fbf8f1;
+}
+
+[data-ui="minimal"][data-scene-id="S01"] {
+  --minimal-bg: #f7f8f0;
+}
+
+[data-ui="minimal"][data-scene-id="A1"],
+[data-ui="minimal"][data-scene-id="E1"] {
+  --minimal-bg: #f7f4f8;
+}
+
+[data-ui="minimal"][data-scene-id="A3"],
+[data-ui="minimal"][data-scene-id="E3"] {
+  --minimal-bg: #fbf5ef;
+}
+
+[data-ui="minimal"][data-scene-id="S02"],
+[data-ui="minimal"][data-scene-id="B2"],
+[data-ui="minimal"][data-scene-id="E5"] {
+  --minimal-bg: #f1f7f1;
+}
+
+.minimal-reader {
+  display: grid;
+  align-content: center;
+  gap: 24px;
+  width: min(68vw, 44rem);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding-block: 20svh;
+}
+
+.minimal-chapter {
+  margin: 0;
+  color: #8a8780;
+  font: 400 13px/1.4 Georgia, "Noto Serif KR", serif;
+}
+
+.minimal-beat {
+  margin: 0;
+  font: 400 clamp(18px, 2.1vw, 20px)/1.95 Georgia, "Noto Serif KR", serif;
+  letter-spacing: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.minimal-feedback,
+.minimal-trait,
+.minimal-ending-progress,
+.minimal-prompt {
+  margin: 0;
+  font: 400 16px/1.7 Georgia, "Noto Serif KR", serif;
+}
+
+.minimal-actions {
+  display: grid;
+}
+
+.minimal-choice {
+  min-height: 48px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  color: inherit;
+  background: transparent;
+  font: 400 16px/1.5 Georgia, "Noto Serif KR", serif;
+  letter-spacing: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.minimal-choice:focus-visible,
+.minimal-next:focus-visible,
+.minimal-vocabulary button:focus-visible {
+  outline: 2px solid #a7443c;
+  outline-offset: 3px;
+}
+
+.minimal-next {
+  justify-self: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: 400 24px/1 Georgia, "Noto Serif KR", serif;
+  cursor: pointer;
+}
+
+.minimal-vocabulary {
+  margin: 0;
+}
+
+.minimal-vocabulary h2 {
+  margin: 0 0 8px;
+  font: 400 13px/1.4 Georgia, "Noto Serif KR", serif;
+}
+
+.minimal-vocabulary ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.minimal-vocabulary button {
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+@keyframes minimal-cue {
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@media (max-width: 600px) {
+  .minimal-reader {
+    width: 88%;
+    padding-block: 18svh;
+  }
+}
+
+@media (hover: hover) {
+  .minimal-choice:hover {
+    border-bottom-width: 2px;
+    color: #a7443c;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .minimal-next {
+    animation: minimal-cue 1.8s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .minimal-next {
+    animation: none;
+  }
+}
