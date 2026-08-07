@@ -264,12 +264,36 @@ test("escapeHtml escapes all HTML-significant characters", () => {
 test("설정 화면은 이름과 세 선택 그룹을 제공한다", () => {
   const html = renderSetup(session.slots);
 
+  assert.match(html, /class="storybook-shell"/);
+  assert.match(html, /class="storybook-masthead"/);
+  assert.match(html, /class="storybook-scene-frame"/);
+  assert.match(html, /class="storybook-footer"/);
   assert.match(html, /<form[^>]*data-action="start"/);
   assert.match(html, /<input(?=[^>]*\btype="text")(?=[^>]*\bname="HERO")[^>]*>/);
   assert.match(html, /name="HERO"[^>]*maxlength="6"[^>]*autocomplete="off"[^>]*inputmode="text"/);
   assert.match(html, /data-slot="TREAT"/);
   assert.match(html, /data-slot="PET"/);
   assert.match(html, /data-slot="COLOR"/);
+});
+
+test("현재형 전체 화면은 실제 상태를 표시하는 공통 이야기책 프레임을 사용한다", () => {
+  const sceneHtml = renderScene({
+    id: "S00", type: "choice", title: "첫 장면", art: "rabbit-hole", body: "본문", vocab: [], choices: [],
+  }, { ...session, path: ["S00", "S01"], vocabTapped: ["황급히"] });
+  const endingHtml = renderEnding({
+    id: "E1", type: "ending", title: "결말", art: "cheshire-tree", body: "끝", vocab: [], trait: "호기심", sourceSceneId: "A1",
+  }, session);
+  const recoveryHtml = renderRecovery();
+
+  for (const html of [sceneHtml, endingHtml, recoveryHtml]) {
+    assert.match(html, /class="storybook-shell"/);
+    assert.match(html, /class="storybook-masthead"/);
+    assert.match(html, /class="storybook-footer"/);
+  }
+  assert.match(sceneHtml, /장면 <strong>2<\/strong>/);
+  assert.match(sceneHtml, /낱말 <strong>1<\/strong>/);
+  assert.match(endingHtml, /결말 <strong>1\/3<\/strong>/);
+  assert.doesNotMatch(sceneHtml, /<button[^>]*storybook/);
 });
 
 test("선택 장면은 개인화하고 prose 문단, 선택, 낱말을 안전하게 렌더링한다", () => {
