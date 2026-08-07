@@ -41,3 +41,18 @@ test("sessionStorage 오류 시 현재 탭 메모리로 복구한다", () => {
   store.save({ sceneId: "S00", beatIndex: 1 });
   assert.deepEqual(store.load("S00", 3), { sceneId: "S00", beatIndex: 1 });
 });
+
+test("저장된 beat 뒤 JSON parse 오류는 현재 장면의 처음으로 돌아간다", () => {
+  const values = new Map();
+  const storage = {
+    getItem(key) { return values.get(key) ?? null; },
+    setItem(key, value) { values.set(key, value); },
+    removeItem(key) { values.delete(key); },
+  };
+  const store = createMinimalStateStore(storage);
+
+  store.save({ sceneId: "S00", beatIndex: 2 });
+  values.set("alice-branching-mvp/minimal-ui-v1", "not json");
+
+  assert.deepEqual(store.load("S00", 4), { sceneId: "S00", beatIndex: 0 });
+});

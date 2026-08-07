@@ -53,6 +53,7 @@ export function createMinimalStateStore(storage) {
           const value = storage?.getItem(STORAGE_KEY);
           if (value !== null && value !== undefined) memory = JSON.parse(value);
         } catch {
+          memory = null;
           storageFailed = true;
         }
       }
