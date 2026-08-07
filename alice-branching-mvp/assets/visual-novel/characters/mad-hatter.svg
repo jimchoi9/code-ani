@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1400" role="img" aria-label="Mock Mad Hatter character sprite">
+  <g stroke="#3f4257" stroke-width="22" stroke-linejoin="round"><path d="M256 337h388l-47-244H305Z" fill="#4a7c91"/><path d="M178 357c10-93 527-93 544 0-43 66-483 66-544 0Z" fill="#d66e61"/><ellipse cx="450" cy="544" rx="211" ry="205" fill="#f0c398"/><path d="M247 754c-70 132-86 290-57 453h520c21-163 4-321-59-453-123 65-278 65-404 0Z" fill="#d4af59"/><path d="M330 759l120 121 120-121-120-83Z" fill="#6f78ae"/></g>
+  <g fill="#3f4257"><circle cx="373" cy="531" r="19"/><circle cx="526" cy="531" r="19"/></g><path d="M382 628q68 57 136 0" fill="none" stroke="#3f4257" stroke-width="18" stroke-linecap="round"/>
+  <text x="450" y="1320" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#3f4257">MOCK SPRITE / MAD HATTER</text>
+</svg>

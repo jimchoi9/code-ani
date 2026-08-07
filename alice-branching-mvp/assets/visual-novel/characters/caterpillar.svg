@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1400" role="img" aria-label="Mock blue caterpillar character sprite">
+  <g stroke="#36516c" stroke-width="22" stroke-linejoin="round"><path d="M248 1110c-65-53-49-164 41-183-81-64-42-194 70-193-30-108 99-156 166-76 65-80 195-32 165 77 104 13 141 127 70 192 81 33 94 135 26 184Z" fill="#6faed0"/><path d="M321 715c-41-158 38-260 125-260s169 105 128 260c-38 58-218 58-253 0Z" fill="#88c7da"/><path d="M364 452c-44-118-105-145-132-117-35 38 29 112 110 144M525 455c29-112 104-143 130-112 36 42-27 109-108 142" fill="#8dc7da"/></g>
+  <g fill="#36516c"><circle cx="399" cy="589" r="19"/><circle cx="500" cy="589" r="19"/></g><path d="M402 652q47 36 94 0" fill="none" stroke="#36516c" stroke-width="17" stroke-linecap="round"/><path d="M629 939c106-93 100-190 52-269" fill="none" stroke="#e6d680" stroke-width="24" stroke-linecap="round"/>
+  <text x="450" y="1320" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#36516c">MOCK SPRITE / CATERPILLAR</text>
+</svg>

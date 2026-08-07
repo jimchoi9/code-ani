@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Mock tea party background">
+  <rect width="1600" height="1000" fill="#f6dc9a"/>
+  <path d="M0 532c311-75 471 98 714 0s507-23 886-116v584H0Z" fill="#8dbb72"/>
+  <path d="M133 660 1444 570l89 203-1328 108Z" fill="#d97d5a"/>
+  <path d="M109 744 1517 649l15 84-1401 111Z" fill="#f8f0d1"/>
+  <g stroke="#546682" stroke-width="16" fill="#e7b55c"><circle cx="345" cy="565" r="58"/><circle cx="655" cy="528" r="74"/><circle cx="1005" cy="486" r="60"/><circle cx="1295" cy="451" r="66"/></g>
+  <g fill="#52648b"><path d="M565 660c0-85 130-85 130 0v55H565Z"/><path d="M1240 610c0-79 121-79 121 0v52h-121Z"/></g>
+  <g fill="#f3f1dc"><path d="M235 691c0-58 94-58 94 0v50h-94Z"/><path d="M825 617c0-61 98-61 98 0v51h-98Z"/></g>
+  <path d="M475 340 535 145l59 195Z" fill="#e7675d"/><rect x="470" y="325" width="132" height="42" fill="#5d557f"/>
+  <path d="M1470 300c-50 13-92 50-112 98l114 5c61 2 91-80 46-103-15-8-31-8-48 0Z" fill="#c28bc5"/>
+  <text x="54" y="80" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#634151">MOCK 04 / TEA PARTY</text>
+  <text x="54" y="118" font-family="Arial, sans-serif" font-size="21" fill="#634151">16:10 background comparison placeholder</text>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Mock giant land background">
+  <rect width="1600" height="1000" fill="#a7dcf3"/>
+  <circle cx="1325" cy="164" r="92" fill="#ffe17a"/>
+  <path d="M0 493 235 313l197 189 235-268 207 277 247-222 223 179 256-216v748H0Z" fill="#79a86e"/>
+  <path d="M0 630c210-100 463-26 620-100s221 5 402-44 326-114 578-80v594H0Z" fill="#57926c"/>
+  <path d="M275 1000c166-251 425-214 553-458 88-167-5-250 112-362 60-58 129-83 201-111-135 181-102 278-204 412-176 234-61 360-185 519Z" fill="#7fc9e5" stroke="#4d96ba" stroke-width="14"/>
+  <path d="M1065 365h165v135h-165Z" fill="#f4f1d0" stroke="#6d6282" stroke-width="14"/><path d="M1040 369l107-118 108 118Z" fill="#d76461"/><path d="M1105 296v-78h42v117" fill="#d76461"/>
+  <g fill="#efbe62"><circle cx="375" cy="628" r="45"/><circle cx="465" cy="597" r="55"/><circle cx="550" cy="646" r="47"/></g>
+  <text x="54" y="80" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#274a64">MOCK 05 / GIANT LAND</text>
+  <text x="54" y="118" font-family="Arial, sans-serif" font-size="21" fill="#274a64">16:10 background comparison placeholder</text>
+</svg>

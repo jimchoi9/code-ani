@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1400" role="img" aria-label="Mock Cheshire cat character sprite">
+  <g stroke="#3d365d" stroke-width="22" stroke-linejoin="round"><path d="M270 468 211 239l180 91 115-58 181-31-79 218" fill="#ad82c1"/><ellipse cx="450" cy="523" rx="260" ry="214" fill="#ad82c1"/><path d="M274 721c-53 178-23 350 11 471h330c42-142 59-316-12-471Z" fill="#8a69ad"/><path d="M310 896c124-89 269-89 386 3" fill="none" stroke="#e9d68d" stroke-width="39"/><path d="M579 939c126 8 198 88 120 132-79 45-167-16-120-132Z" fill="#8a69ad"/></g>
+  <g fill="#f1e98e" stroke="#3d365d" stroke-width="14"><circle cx="354" cy="500" r="32"/><circle cx="549" cy="500" r="32"/></g><path d="M332 587q118 125 236 0" fill="none" stroke="#fff8df" stroke-width="34" stroke-linecap="round"/>
+  <text x="450" y="1320" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#3d365d">MOCK SPRITE / CHESHIRE CAT</text>
+</svg>

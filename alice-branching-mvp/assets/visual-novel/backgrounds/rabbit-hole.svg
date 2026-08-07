@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Mock rabbit hole garden background">
+  <rect width="1600" height="1000" fill="#9bd8f1"/>
+  <path d="M0 530C220 460 360 550 550 505S930 420 1160 500s290-24 440-50v550H0Z" fill="#83bd67"/>
+  <path d="M0 690c270-120 400-16 620-80s352-164 620-41 260-36 360-12v443H0Z" fill="#5e9d54"/>
+  <circle cx="1260" cy="175" r="88" fill="#ffe27a"/>
+  <path d="M275 850C460 625 590 580 760 580c154 0 271 69 407 270Z" fill="#d8a176"/>
+  <ellipse cx="760" cy="808" rx="210" ry="128" fill="#3d2c47"/>
+  <ellipse cx="760" cy="778" rx="141" ry="76" fill="#161725"/>
+  <g fill="#ef6d66"><circle cx="180" cy="608" r="40"/><circle cx="220" cy="575" r="31"/><circle cx="139" cy="573" r="28"/></g>
+  <g fill="#fff4d2"><circle cx="1250" cy="665" r="33"/><circle cx="1300" cy="625" r="25"/><circle cx="1351" cy="671" r="31"/></g>
+  <g fill="none" stroke="#f7d052" stroke-width="13"><circle cx="400" cy="230" r="45"/><path d="M400 230l18-22M400 230v28M400 230l-24 14"/></g>
+  <text x="54" y="80" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#27364a">MOCK 01 / RABBIT HOLE</text>
+  <text x="54" y="118" font-family="Arial, sans-serif" font-size="21" fill="#27364a">16:10 background comparison placeholder</text>
+</svg>

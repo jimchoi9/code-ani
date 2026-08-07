@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Mock giant mushroom background">
+  <rect width="1600" height="1000" fill="#b5d5d1"/>
+  <path d="M0 570c264-80 410 81 618 22s345-167 577-68 248-5 405-65v541H0Z" fill="#557e72"/>
+  <path d="M98 1000V600c0-167 215-182 296-12 20 44 23 84 21 129H98Z" fill="#e4bf92"/>
+  <path d="M16 628C89 335 398 327 485 628Z" fill="#d75e67"/><g fill="#f8e5be"><circle cx="165" cy="515" r="32"/><circle cx="267" cy="432" r="43"/><circle cx="353" cy="542" r="27"/></g>
+  <path d="M1120 1000V520c0-201 231-213 316-14 23 55 26 105 23 153h-339Z" fill="#e9c998"/>
+  <path d="M1034 547c85-330 414-294 514 0Z" fill="#8d70ba"/><g fill="#ecddad"><circle cx="1162" cy="425" r="37"/><circle cx="1284" cy="358" r="42"/><circle cx="1390" cy="451" r="29"/></g>
+  <g fill="none" stroke="#e3f6e0" stroke-width="15" opacity=".8"><ellipse cx="800" cy="640" rx="360" ry="125"/><ellipse cx="800" cy="640" rx="260" ry="84"/></g>
+  <text x="54" y="80" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#294b54">MOCK 06 / GIANT MUSHROOM</text>
+  <text x="54" y="118" font-family="Arial, sans-serif" font-size="21" fill="#294b54">16:10 background comparison placeholder</text>
+</svg>

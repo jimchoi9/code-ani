@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Mock Cheshire tree background">
+  <rect width="1600" height="1000" fill="#8d9fd4"/>
+  <path d="M0 610c330-163 465 44 730-73s402-117 870-6v469H0Z" fill="#598f78"/>
+  <path d="M316 1000c70-264 143-472 303-601 124-100 271-91 358 39 48 74 84 120 183 160-132 7-223 60-262 170-35 96-47 147-47 232Z" fill="#553d5f"/>
+  <path d="M588 650C465 514 316 447 137 417c170-103 349-96 507 18 98 70 166 111 268 89-55 100-124 151-232 151Z" fill="#3f3453"/>
+  <g fill="#75559a"><circle cx="344" cy="342" r="123"/><circle cx="531" cy="296" r="156"/><circle cx="713" cy="336" r="139"/><circle cx="873" cy="284" r="113"/></g>
+  <path d="M1030 320c95-68 202-16 220 92 8 49-15 114-67 150-21-67-73-101-153-104Z" fill="#edf5cb"/>
+  <path d="M1085 400c38 38 89 38 126 0" fill="none" stroke="#5a3f89" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="1102" cy="367" r="11" fill="#5a3f89"/><circle cx="1199" cy="367" r="11" fill="#5a3f89"/>
+  <g fill="#c8f2dc"><circle cx="1300" cy="620" r="10"/><circle cx="1360" cy="570" r="7"/><circle cx="1410" cy="686" r="13"/></g>
+  <text x="54" y="80" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#242d56">MOCK 03 / CHESHIRE TREE</text>
+  <text x="54" y="118" font-family="Arial, sans-serif" font-size="21" fill="#242d56">16:10 background comparison placeholder</text>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1400" role="img" aria-label="Mock white rabbit character sprite">
+  <g stroke="#334864" stroke-width="22" stroke-linejoin="round"><path d="M289 350C150 117 182 43 280 60c107 17 130 222 137 292M546 346C600 106 707 52 769 123c61 71-41 238-169 266" fill="#f8f4e7"/><ellipse cx="450" cy="508" rx="232" ry="216" fill="#f8f4e7"/><path d="M305 705c-75 129-93 303-73 508h438c27-204 0-378-76-508Z" fill="#86b9d7"/><path d="M348 717l102 122 102-122-102-81Z" fill="#e86965"/><ellipse cx="450" cy="1132" rx="292" ry="66" fill="#dfe9ef" opacity=".7"/></g>
+  <g fill="#334864"><circle cx="372" cy="493" r="19"/><circle cx="529" cy="493" r="19"/><path d="M425 570q25 22 50 0" fill="none" stroke="#334864" stroke-width="15" stroke-linecap="round"/></g>
+  <text x="450" y="1320" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#334864">MOCK SPRITE / WHITE RABBIT</text>
+</svg>

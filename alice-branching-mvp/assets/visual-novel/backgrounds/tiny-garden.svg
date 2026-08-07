@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Mock tiny garden background">
+  <rect width="1600" height="1000" fill="#b4e9e0"/>
+  <circle cx="220" cy="180" r="120" fill="#f9dd65" opacity=".8"/><circle cx="1385" cy="194" r="102" fill="#c6a4dd" opacity=".5"/>
+  <path d="M0 690C230 570 380 680 610 574s385 52 580-30 275-86 410-15v471H0Z" fill="#62aa68"/>
+  <g stroke="#4e9260" stroke-width="18" fill="none"><path d="M188 785c-45-242 13-432 76-571"/><path d="M1372 785c8-266-51-430-116-563"/><path d="M420 840c-11-233-52-349-112-441"/></g>
+  <g fill="#f3797c"><circle cx="264" cy="232" r="93"/><circle cx="177" cy="294" r="78"/><circle cx="348" cy="314" r="80"/></g>
+  <g fill="#8e74c4"><circle cx="1240" cy="300" r="85"/><circle cx="1370" cy="299" r="92"/><circle cx="1305" cy="190" r="70"/></g>
+  <path d="M675 885V556c0-76 54-127 127-127s127 51 127 127v329Z" fill="#e7b65e" stroke="#765448" stroke-width="19"/>
+  <circle cx="802" cy="644" r="17" fill="#4a5b78"/><path d="M760 522l42-105 42 105Z" fill="#d5675b"/>
+  <g fill="#eaf9ff"><circle cx="510" cy="400" r="10"/><circle cx="1080" cy="475" r="12"/><circle cx="1140" cy="545" r="8"/><circle cx="550" cy="525" r="8"/></g>
+  <text x="54" y="80" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#234857">MOCK 02 / TINY GARDEN</text>
+  <text x="54" y="118" font-family="Arial, sans-serif" font-size="21" fill="#234857">16:10 background comparison placeholder</text>
+</svg>
