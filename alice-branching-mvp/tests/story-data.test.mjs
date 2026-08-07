@@ -10,6 +10,23 @@ function destinations(scene) {
   ];
 }
 
+function endingRoutes(sceneId, scenes = [], chipResponseScreens = 0) {
+  const scene = getScene(sceneId);
+  const visitedScenes = [...scenes, scene];
+  if (scene.type === "ending") return [{ scenes: visitedScenes, chipResponseScreens }];
+
+  const transitions = [
+    ...(scene.choices ?? []).map(item => ({ nextSceneId: item.nextSceneId, chipResponseScreens: 0 })),
+    ...(scene.chips ?? []).map(item => ({ nextSceneId: item.nextSceneId, chipResponseScreens: story.screenCounts.chipResponse })),
+    ...(scene.nextSceneId ? [{ nextSceneId: scene.nextSceneId, chipResponseScreens: 0 }] : []),
+  ];
+  return transitions.flatMap(item => endingRoutes(
+    item.nextSceneId,
+    visitedScenes,
+    chipResponseScreens + item.chipResponseScreens,
+  ));
+}
+
 test("모든 장면 연결은 존재하는 장면을 가리킨다", () => {
   for (const scene of Object.values(story.scenes)) {
     for (const id of destinations(scene)) assert.ok(getScene(id), `${scene.id} -> ${id}`);
@@ -26,6 +43,15 @@ test("S00에서 세 MVP 결말에 도달할 수 있다", () => {
     queue.push(...destinations(getScene(id)));
   }
   assert.deepEqual([...reached].filter(id => id.startsWith("E")).sort(), ["E1", "E3", "E5"]);
+});
+
+test("모든 결말 경로는 칩 응답 화면을 포함해 5~7개 화면이다", () => {
+  assert.deepEqual(story.screenCounts, { setup: 1, chipResponse: 1 });
+  for (const route of endingRoutes(story.startSceneId)) {
+    const screenCount = story.screenCounts.setup + route.scenes.length + route.chipResponseScreens;
+    assert.equal(route.chipResponseScreens, 1, route.scenes.map(scene => scene.id).join(" -> "));
+    assert.ok(screenCount >= 5 && screenCount <= 7, `${route.scenes.map(scene => scene.id).join(" -> ")}: ${screenCount}`);
+  }
 });
 
 test("모든 장면은 제목, 아트 키, 본문과 1~2개 낱말을 가진다", () => {

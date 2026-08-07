@@ -3,6 +3,7 @@ export const story = {
   title: "앨리스와 세 갈래 이상한 나라",
   startSceneId: "S00",
   sceneOrder: ["S00", "S01", "A1", "A3", "S02", "B2", "E1", "E3", "E5"],
+  screenCounts: { setup: 1, chipResponse: 1 },
   scenes: {
     S00: {
       id: "S00",
