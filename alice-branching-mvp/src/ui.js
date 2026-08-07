@@ -1,4 +1,5 @@
 import { renderTemplate } from "./personalization.js";
+import { getScene } from "./story-data.js";
 
 const SLOT_OPTIONS = {
   TREAT: ["케이크", "쿠키", "젤리", "붕어빵"],
@@ -96,6 +97,20 @@ export function renderScene(scene, session, feedback = null) {
       <div class="story-copy">${renderParagraphs(scene.body, slots)}</div>
       ${renderVocabularyWords(scene.vocab)}
       ${renderSceneActions(scene, slots)}
+    </article>
+  </main>`;
+}
+
+export function renderChipResponse(state) {
+  const scene = getScene(state.sceneId);
+  const response = state.chipResponse;
+  return `<main class="story-screen chip-response-screen scene-${escapeHtml(scene.art)}">
+    <div class="scene-art" aria-hidden="true"></div>
+    <article>
+      <p class="scene-kicker">네가 고른 말</p>
+      <h1>${escapeHtml(response.label)}</h1>
+      <p class="chip-answer" role="status">${escapeHtml(response.response)}</p>
+      <button class="primary-action" type="button" data-action="continue-chip">이야기 이어 보기</button>
     </article>
   </main>`;
 }
