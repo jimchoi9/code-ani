@@ -169,3 +169,69 @@ Result: all exit 0, no errors.
 ### Fix round concerns
 
 - Browser QA was not run in this fix round. The controller should confirm a transition from the bottom of a long mobile scene visibly returns to the new scene art/title and that keyboard focus lands on the heading without moving away from the top.
+
+## Fix Round 2
+
+### Finding addressed
+
+Fix Round 1 correctly used the standard `behavior: "auto"` value, but the document still declared `html { scroll-behavior: smooth; }`. For programmatic scrolling, `auto` follows the computed CSS scroll behavior, so the transition could still animate instead of resetting immediately. This corrects the earlier report assumption that `auto` alone guaranteed an immediate reset.
+
+### Regression RED
+
+Command:
+
+```sh
+cd alice-branching-mvp && node --test tests/ui.test.mjs
+```
+
+Result: exit 1, 21 tests 중 20 pass / 1 fail.
+
+Expected failure:
+
+```text
+The html rule was expected not to match /scroll-behavior:\s*smooth/
+Input: html { background: var(--paper); scroll-behavior: smooth; }
+```
+
+### Fix
+
+- Removed the unused global `scroll-behavior: smooth` declaration from `html`.
+- Kept `resetTransitionView` on the standard `{ behavior: "auto" }` option, which now resolves immediately under the default CSS behavior.
+- Kept the reduced-motion override unchanged; no smooth transition behavior was added elsewhere.
+
+### GREEN
+
+Focused command:
+
+```sh
+cd alice-branching-mvp && node --test tests/ui.test.mjs
+```
+
+Result: exit 0, 21 tests / 21 pass / 0 fail.
+
+Full command:
+
+```sh
+cd alice-branching-mvp && npm test
+```
+
+Result: exit 0, 40 tests / 40 pass / 0 fail.
+
+Additional verification:
+
+```sh
+git diff --check
+```
+
+Result: exit 0, no output.
+
+### Files and self-review
+
+- `alice-branching-mvp/styles.css`: removed the global smooth-scroll policy.
+- `alice-branching-mvp/tests/ui.test.mjs`: added a regression contract that rejects global smooth scrolling while transition resets use `auto`.
+- Confirmed no nonstandard scroll behavior value was introduced.
+- Confirmed this round does not change scene state, focus ordering, reduced-motion rules, or unrelated visual behavior.
+
+### Fix round concerns
+
+- Browser QA was not run in this fix round. The controller should still confirm the bottom-of-scene transition visibly snaps to the next screen top in a normal-motion browser profile.

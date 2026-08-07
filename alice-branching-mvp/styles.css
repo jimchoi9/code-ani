@@ -20,7 +20,6 @@
 
 html {
   background: var(--paper);
-  scroll-behavior: smooth;
 }
 
 body {

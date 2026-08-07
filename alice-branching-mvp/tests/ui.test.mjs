@@ -77,6 +77,10 @@ test("화면 전환은 맨 위로 이동한 뒤 스크롤을 유지하며 제목
   ]);
 });
 
+test("전역 문서는 화면 전환의 즉시 스크롤을 부드럽게 바꾸지 않는다", () => {
+  assert.doesNotMatch(cssRule("html"), /scroll-behavior:\s*smooth/);
+});
+
 test("이름 입력과 스킵 링크는 44px 이상 상호작용 영역을 가진다", () => {
   assert.ok(minimumHeight(cssRule('.setup-screen input[type="text"]')) >= 44);
   assert.ok(minimumHeight(cssRule(".skip-link")) >= 44);
