@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getScene, story } from "../src/story-data.js";
+import { estimateRouteSeconds, getScene, story } from "../src/story-data.js";
 import { getVocabulary, recordVocabulary } from "../src/vocabulary.js";
 
 function destinations(scene) {
@@ -51,6 +51,26 @@ test("모든 결말 경로는 칩 응답 화면을 포함해 5~7개 화면이다
     const screenCount = story.screenCounts.setup + route.scenes.length + route.chipResponseScreens;
     assert.equal(route.chipResponseScreens, 1, route.scenes.map(scene => scene.id).join(" -> "));
     assert.ok(screenCount >= 5 && screenCount <= 7, `${route.scenes.map(scene => scene.id).join(" -> ")}: ${screenCount}`);
+  }
+});
+
+test("모든 결말 경로의 읽기 추정은 5분 이내다", () => {
+  assert.deepEqual(story.readingModel, {
+    charactersPerMinute: 450,
+    setupSeconds: 20,
+    chipResponseSeconds: 15,
+  });
+  for (const route of endingRoutes(story.startSceneId)) {
+    for (const scene of route.scenes) {
+      const authoredCharacterCount = scene.body.replace(/\s/g, "").length;
+      assert.equal(
+        scene.estimatedReadSeconds,
+        Math.ceil(authoredCharacterCount * 60 / story.readingModel.charactersPerMinute),
+        scene.id,
+      );
+    }
+    const estimatedSeconds = estimateRouteSeconds(route);
+    assert.ok(estimatedSeconds <= 300, `${route.scenes.map(scene => scene.id).join(" -> ")}: ${estimatedSeconds} seconds`);
   }
 });
 

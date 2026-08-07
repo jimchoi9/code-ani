@@ -4,6 +4,8 @@ export const story = {
   startSceneId: "S00",
   sceneOrder: ["S00", "S01", "A1", "A3", "S02", "B2", "E1", "E3", "E5"],
   screenCounts: { setup: 1, chipResponse: 1 },
+  // Guided reading for grades 2-3: non-whitespace body characters at 450 per minute, rounded up.
+  readingModel: { charactersPerMinute: 450, setupSeconds: 20, chipResponseSeconds: 15 },
   scenes: {
     S00: {
       id: "S00",
@@ -23,6 +25,7 @@ export const story = {
 아래로. 아래로. 아주 오랫동안 떨어졌어요.
 
 벽에는 낡은 지도와 빈 새장이 스쳐 지나갔어요. 어디선가 달콤한 냄새도 났어요. 마침내 발이 폭신한 바닥에 닿았을 때, {HERO} 앞에는 두 가지가 놓여 있었어요. 손바닥만 한 작은 문 하나, 그리고 먹음직스러운 {TREAT} 한 조각이었어요.`,
+      estimatedReadSeconds: 55,
       vocab: ["황급히", "먹음직스러운"],
       choices: [
         { label: "작은 문을 열어 본다", nextSceneId: "S01" },
@@ -47,6 +50,7 @@ export const story = {
 정원 저쪽에서 세 가지 소리가 바람을 타고 들려왔어요.
 
 나무 위에서 나는 낮은 웃음소리. 버섯 쪽에서 들리는 느릿한 콧노래. 그리고 멀리서 들리는 시끌시끌한 찻잔 소리였어요.`,
+      estimatedReadSeconds: 44,
       vocab: ["낯선", "흐드러지게"],
       choices: [
         { label: "나무 위 웃음소리로 간다", nextSceneId: "A1" },
@@ -75,6 +79,7 @@ export const story = {
 '모르는 것도 괜찮아. 가 보면 알게 되겠지.'
 
 고양이는 마지막으로 한 번 더 웃었어요. 그러더니 꼬리부터 서서히 사라지기 시작했어요. 마지막에는 웃는 입만 남았다가, 그것마저 공기 속으로 녹아 없어졌어요.`,
+      estimatedReadSeconds: 51,
       vocab: ["서서히", "의미심장하게"],
       prompt: "고양이가 물었어요. \"너는 무엇이 제일 궁금해?\"",
       chips: [
@@ -105,6 +110,7 @@ export const story = {
 산토끼가 갑자기 찻잔을 세 칸 옆으로 밀었어요. 모자장수도 따라서 자리를 옮겼어요. 여기서는 차를 마실 때마다 자리를 바꾸는 게 규칙이었어요.
 
 {HERO}는 처음엔 이상하다고 생각했어요. 그런데 규칙을 하나씩 알게 되니까, 점점 재미있어졌어요. 세 번째로 자리를 옮길 때는 {HERO}가 먼저 찻잔을 밀었어요. 모자장수와 산토끼가 크게 웃었어요.`,
+      estimatedReadSeconds: 57,
       vocab: ["엄중하게", "어리둥절했어요"],
       prompt: "모자장수가 물었어요. \"그럼 너는 어떤 시계를 갖고 싶어?\"",
       chips: [
@@ -131,6 +137,7 @@ export const story = {
 이상한 나라가 발밑에 펼쳐졌어요. {HERO}는 이제 이상한 나라를 훤히 내려다볼 수 있었어요. 강도 보이고, 하얀 성도 보이고, 알록달록한 정원도 보였어요. {PET}은 {HERO}의 신발 위에 폴짝 올라앉았어요.
 
 발밑으로 구불구불한 길 세 갈래가 서로 다른 쪽으로 뻗어 있었어요.`,
+      estimatedReadSeconds: 45,
       vocab: ["장식되어", "훤히"],
       nextSceneId: "B2",
     },
@@ -158,6 +165,7 @@ export const story = {
 굳이 모습을 바꾸지 않아도 괜찮았어요. 커다란 몸으로는 멀리까지 볼 수 있고, 강 건너편도 한 번에 건널 수 있으니까요. {PET}도 {HERO}의 어깨에 올라앉아 신나게 꼬리를 흔들었어요.
 
 애벌레는 그 모습을 보고 아주 조금, 웃었어요.`,
+      estimatedReadSeconds: 51,
       vocab: ["덤덤하게", "굳이"],
       prompt: "애벌레가 물었어요. \"커진 몸으로 제일 하고 싶은 일이 뭐니?\"",
       chips: [
@@ -182,6 +190,7 @@ export const story = {
 그때 발밑이 가벼워졌어요. {HERO}의 몸이 두둥실 떠오르기 시작했어요. 토끼굴 위로, 위로. 눈을 떠 보니 {HERO}는 다시 정원 나무 그늘에 앉아 있었어요.
 
 손에는 언니가 읽어 주던 책이 그대로 놓여 있었어요. 그런데 이번에는, 그림도 없고 대화도 없는 그 책이 조금 궁금해졌어요.`,
+      estimatedReadSeconds: 36,
       vocab: ["두둥실"],
       trait: "호기심",
       choiceRecall: "네가 고양이에게 한 말",
@@ -204,6 +213,7 @@ export const story = {
 {HERO}가 손을 흔들자 정원이 스르르 흐려졌어요. 눈을 떠 보니 다시 나무 그늘이었어요.
 
 {HERO}는 아직도 웃음이 남아 있었어요. 이상한 것도 즐거울 수 있다는 걸 알게 되었어요.`,
+      estimatedReadSeconds: 31,
       vocab: ["덩달아"],
       trait: "유쾌함",
       choiceRecall: "네가 모자장수에게 한 말",
@@ -226,6 +236,7 @@ export const story = {
 해가 기울 때쯤 {HERO}는 언덕 위에 앉아 이상한 나라를 내려다보았어요. 그리고 천천히 눈을 감았어요.
 
 다시 정원 나무 그늘이었어요. 몸은 원래대로 돌아왔지만, 마음은 아까보다 조금 더 커진 것 같았어요.`,
+      estimatedReadSeconds: 34,
       vocab: ["성큼성큼"],
       trait: "자기확신",
       choiceRecall: "네가 애벌레에게 한 말",
@@ -237,4 +248,10 @@ export const story = {
 
 export function getScene(sceneId) {
   return story.scenes[sceneId] ?? null;
+}
+
+export function estimateRouteSeconds(route) {
+  return story.readingModel.setupSeconds
+    + route.scenes.reduce((seconds, scene) => seconds + scene.estimatedReadSeconds, 0)
+    + route.chipResponseScreens * story.readingModel.chipResponseSeconds;
 }
