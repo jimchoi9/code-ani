@@ -56,3 +56,22 @@ test("저장된 beat 뒤 JSON parse 오류는 현재 장면의 처음으로 돌�
 
   assert.deepEqual(store.load("S00", 4), { sceneId: "S00", beatIndex: 0 });
 });
+
+test("sessionStorage getItem 오류 뒤에는 현재 탭의 beat를 유지한다", () => {
+  const values = new Map();
+  let blocked = false;
+  const storage = {
+    getItem(key) {
+      if (blocked) throw new Error("blocked");
+      return values.get(key) ?? null;
+    },
+    setItem(key, value) { values.set(key, value); },
+    removeItem(key) { values.delete(key); },
+  };
+  const store = createMinimalStateStore(storage);
+
+  store.save({ sceneId: "S00", beatIndex: 1 });
+  blocked = true;
+
+  assert.deepEqual(store.load("S00", 3), { sceneId: "S00", beatIndex: 1 });
+});
