@@ -36,6 +36,17 @@ const session = {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
+function cssRule(selector) {
+  const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+  const start = css.indexOf(`${selector} {`);
+  assert.notEqual(start, -1, `${selector} rule is missing`);
+  return css.slice(start, css.indexOf("}", start));
+}
+
+function minimumHeight(rule) {
+  return Number(rule.match(/min-height:\s*(\d+)px/)?.[1] ?? 0);
+}
+
 test("브라우저 셸은 앱, 스타일, 모듈 진입점을 연결한다", () => {
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 
@@ -46,6 +57,29 @@ test("브라우저 셸은 앱, 스타일, 모듈 진입점을 연결한다", () 
   assert.match(html, /href="\.\/styles\.css"/);
   assert.match(html, /type="module" src="\.\/src\/app\.js"/);
   assert.match(html, /<noscript>/);
+});
+
+test("화면 전환은 맨 위로 이동한 뒤 스크롤을 유지하며 제목에 초점을 둔다", async () => {
+  const { resetTransitionView } = await import("../src/app.js");
+  const calls = [];
+  const heading = {
+    setAttribute(name, value) { calls.push(["attribute", name, value]); },
+    focus(options) { calls.push(["focus", options]); },
+  };
+
+  assert.equal(typeof resetTransitionView, "function");
+  resetTransitionView(options => calls.push(["scroll", options]), heading);
+
+  assert.deepEqual(calls, [
+    ["scroll", { top: 0, left: 0, behavior: "auto" }],
+    ["attribute", "tabindex", "-1"],
+    ["focus", { preventScroll: true }],
+  ]);
+});
+
+test("이름 입력과 스킵 링크는 44px 이상 상호작용 영역을 가진다", () => {
+  assert.ok(minimumHeight(cssRule('.setup-screen input[type="text"]')) >= 44);
+  assert.ok(minimumHeight(cssRule(".skip-link")) >= 44);
 });
 
 function beginStory() {
@@ -183,6 +217,7 @@ test("설정 화면은 이름과 세 선택 그룹을 제공한다", () => {
   const html = renderSetup(session.slots);
 
   assert.match(html, /<form[^>]*data-action="start"/);
+  assert.match(html, /<input(?=[^>]*\btype="text")(?=[^>]*\bname="HERO")[^>]*>/);
   assert.match(html, /name="HERO"[^>]*maxlength="6"[^>]*autocomplete="off"[^>]*inputmode="text"/);
   assert.match(html, /data-slot="TREAT"/);
   assert.match(html, /data-slot="PET"/);

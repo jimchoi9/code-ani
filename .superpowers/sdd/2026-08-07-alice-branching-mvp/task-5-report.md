@@ -96,3 +96,76 @@ Result: both exit 0, no output.
 
 - Browser QA was intentionally not performed, per controller instruction. The controller still needs to inspect 390x844 and 1280x800 layouts, play all three routes, and visually confirm each CSS scene prop and absence of overlap.
 - CSS artwork uses layered gradients and simple shapes only; final visual balance depends on the controller's browser review across the requested viewports.
+
+## Fix Round 1
+
+### Findings addressed
+
+- Long mobile scenes retained the previous page's scroll offset because transition rendering focused the new heading with `preventScroll` but never reset the document scroll position.
+- The name input relied on the browser's default text type, so it did not match the explicit `input[type="text"]` CSS selector and rendered below the intended target height.
+- The skip link relied on padding and measured just below the 44px target threshold.
+
+### Regression RED
+
+Command:
+
+```sh
+cd alice-branching-mvp && node --test tests/ui.test.mjs
+```
+
+Result: exit 1, 20 tests 중 17 pass / 3 fail.
+
+Expected failures:
+
+```text
+resetTransitionView actual 'undefined', expected 'function'
+assert.ok(minimumHeight(cssRule(".skip-link")) >= 44)
+setup HTML did not match an input with type="text" and name="HERO"
+```
+
+### Fix
+
+- Added the pure `resetTransitionView(scrollTo, focusTarget)` helper. It calls `scrollTo({ top: 0, left: 0, behavior: "auto" })` first, then focuses the heading with `{ preventScroll: true }` so focus cannot restore the previous offset.
+- Connected the helper only to full-screen transitions; vocabulary panel open/close keeps its local focus-return behavior.
+- Added explicit `type="text"` to the setup name input, activating its existing 52px minimum-height rule.
+- Made the skip link a flex target with an explicit 44px minimum height.
+
+### GREEN
+
+Focused command:
+
+```sh
+cd alice-branching-mvp && node --test tests/ui.test.mjs
+```
+
+Result: exit 0, 20 tests / 20 pass / 0 fail.
+
+Full command:
+
+```sh
+cd alice-branching-mvp && npm test
+```
+
+Result: exit 0, 39 tests / 39 pass / 0 fail.
+
+Additional verification:
+
+```sh
+cd alice-branching-mvp && node --check src/app.js && node --check src/ui.js
+git diff --check
+```
+
+Result: all exit 0, no errors.
+
+### Files and self-review
+
+- `alice-branching-mvp/src/app.js`: extracted and wired the deterministic transition scroll/focus helper.
+- `alice-branching-mvp/src/ui.js`: added the explicit name-input type.
+- `alice-branching-mvp/styles.css`: guaranteed the skip-link target height.
+- `alice-branching-mvp/tests/ui.test.mjs`: covered transition call order/options, explicit input type, and both 44px minimum-height contracts without a DOM dependency.
+- Confirmed `behavior: "auto"` does not introduce smooth motion and preserves the reduced-motion contract.
+- Confirmed scene numbering and browser-level automation remain deferred as requested.
+
+### Fix round concerns
+
+- Browser QA was not run in this fix round. The controller should confirm a transition from the bottom of a long mobile scene visibly returns to the new scene art/title and that keyboard focus lands on the heading without moving away from the top.

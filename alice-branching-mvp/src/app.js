@@ -185,6 +185,13 @@ export function createDebugGetters(getState) {
   });
 }
 
+export function resetTransitionView(scrollTo, focusTarget) {
+  scrollTo({ top: 0, left: 0, behavior: "auto" });
+  if (!focusTarget) return;
+  focusTarget.setAttribute("tabindex", "-1");
+  focusTarget.focus({ preventScroll: true });
+}
+
 function renderChipResponse(state) {
   const scene = getScene(state.sceneId);
   const response = state.chipResponse;
@@ -222,8 +229,7 @@ function mountBrowserApp() {
 
     if (focusHeading) {
       const heading = app.querySelector("main h1");
-      heading?.setAttribute("tabindex", "-1");
-      heading?.focus({ preventScroll: true });
+      resetTransitionView(options => window.scrollTo(options), heading);
     }
   }
 

@@ -73,7 +73,7 @@ export function renderSetup(slots) {
     <header><h1>앨리스와 세 갈래 이상한 나라</h1></header>
     <form data-action="start">
       <label for="hero-name">이름</label>
-      <input id="hero-name" name="HERO" value="${escapeHtml(hero)}" maxlength="6" autocomplete="off" inputmode="text" data-action="set-name" required>
+      <input id="hero-name" type="text" name="HERO" value="${escapeHtml(hero)}" maxlength="6" autocomplete="off" inputmode="text" data-action="set-name" required>
       ${groups}
       <button type="submit" data-action="start">이야기 시작</button>
     </form>
