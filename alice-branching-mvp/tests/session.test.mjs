@@ -3,6 +3,8 @@ import test from "node:test";
 import {
   applyStoryEffect,
   chooseChip,
+  collectRoseStamp,
+  collectTraitFragment,
   completeRun,
   createSession,
   createSessionStore,
@@ -28,6 +30,18 @@ test("이야기 선택 상태를 세션과 현재 실행에 함께 기록한다"
   assert.deepEqual(session.runs[0].storyState, session.storyState);
 });
 
+test("성향 조각과 장미 도장은 각각 한 번만 수집한다", () => {
+  let session = createSession({}, start);
+  session = collectTraitFragment(session, "E2");
+  session = collectTraitFragment(session, "E2");
+  session = collectRoseStamp(session, "E2:TRUTH");
+  session = collectRoseStamp(session, "E2:TRUTH");
+  session = collectRoseStamp(session, "E2:TURN");
+
+  assert.deepEqual(session.traitFragmentsSeen, ["E2"]);
+  assert.deepEqual(session.roseStampsSeen, ["E2:TRUTH", "E2:TURN"]);
+});
+
 test("경로, 칩, 낱말, 결말과 완료 시각을 기록한다", () => {
   let session = createSession({ HERO: "지민" }, start);
   session = visitScene(session, "S00");
@@ -43,9 +57,12 @@ test("경로, 칩, 낱말, 결말과 완료 시각을 기록한다", () => {
 });
 
 test("다시 하기는 수집 기록을 유지하고 새 실행을 연다", () => {
-  const completed = completeRun(applyStoryEffect(createSession({}, start), { encounterId: "A1" }), "E1", start);
+  const collected = collectRoseStamp(collectTraitFragment(createSession({}, start), "E1"), "E1:TRUTH");
+  const completed = completeRun(applyStoryEffect(collected, { encounterId: "A1" }), "E1", start);
   const replay = restartRun(completed, "2026-08-07T10:05:00.000Z");
   assert.deepEqual(replay.endingsSeen, ["E1"]);
+  assert.deepEqual(replay.traitFragmentsSeen, ["E1"]);
+  assert.deepEqual(replay.roseStampsSeen, ["E1:TRUTH"]);
   assert.equal(replay.runs[0].replayed, true);
   assert.equal(replay.runs.length, 2);
   assert.deepEqual(replay.path, []);

@@ -17,6 +17,7 @@ const progressByScene = Object.freeze({
   B1: 3,
   B2: 3,
   B3: 3,
+  FRAGMENT: 4,
   C1: 5,
   C2: 6,
   E1: 7,
@@ -43,6 +44,12 @@ const storyFragments = Object.freeze({
   E4: { name: "침착함의 조각", tone: "composure", mark: "◇" },
   E5: { name: "자신감의 조각", tone: "confidence", mark: "★" },
   E6: { name: "친화력의 조각", tone: "warmth", mark: "♥" },
+});
+
+const roseStamps = Object.freeze({
+  TRUTH: { name: "하얀 장미 도장", shortName: "하양", art: "spot_truth", mark: "○" },
+  SHIELD: { name: "붉은 장미 도장", shortName: "빨강", art: "spot_shield", mark: "●" },
+  TURN: { name: "반쯤 물든 장미 도장", shortName: "반쪽", art: "spot_turn", mark: "◐" },
 });
 
 const endingTones = Object.freeze(Object.fromEntries(
@@ -108,20 +115,30 @@ function renderGameFooter(session = null, progress = 0) {
 }
 
 function renderStoryReward(reward) {
-  const fragment = storyFragments[reward?.endingId];
-  if (!fragment) return "";
+  const fragment = storyFragments[reward?.fragmentId ?? reward?.endingId];
+  const rose = roseStamps[reward?.variation];
+  if (reward?.kind === "rose" && !rose) return "";
+  if (reward?.kind !== "rose" && !fragment) return "";
+  const tone = reward.kind === "rose" ? "rose" : fragment.tone;
+  const mark = reward.kind === "rose"
+    ? renderArtPlaceholder(rose.art, "vn-reward-stamp-art")
+    : `<span class="vn-reward-mark" aria-hidden="true">${fragment.mark}</span>`;
+  const title = reward.kind === "rose" ? rose.name : fragment.name;
+  const progress = reward.kind === "rose"
+    ? `장미 도장 <strong>${escapeHtml(reward.count)}/18</strong>`
+    : `이야기 조각 <strong>${escapeHtml(reward.count)}/6</strong>`;
   const particles = Array.from({ length: 12 }, (_, index) => (
     `<i class="vn-reward-particle" data-particle="${index}" aria-hidden="true"></i>`
   )).join("");
-  return `<section class="vn-reward-overlay" data-reward-tone="${fragment.tone}" role="dialog" aria-modal="true" aria-labelledby="vn-reward-title">
+  return `<section class="vn-reward-overlay" data-reward-tone="${tone}" role="dialog" aria-modal="true" aria-labelledby="vn-reward-title">
     <div class="vn-reward-rays" aria-hidden="true"></div>
     <div class="vn-reward-particles">${particles}</div>
     <div class="vn-reward-impact" aria-hidden="true"></div>
     <div class="vn-reward-card">
-      <p class="vn-reward-kicker">새로운 보물을 발견했어요</p>
-      <span class="vn-reward-mark" aria-hidden="true">${fragment.mark}</span>
-      <h2 id="vn-reward-title">${fragment.name}</h2>
-      <p>이야기 조각 <strong>${escapeHtml(reward.count)}/6</strong></p>
+      <p class="vn-reward-kicker">${reward.kind === "rose" ? "선택의 흔적을 남겼어요" : "새로운 보물을 발견했어요"}</p>
+      ${mark}
+      <h2 id="vn-reward-title">${title}</h2>
+      <p>${progress}</p>
     </div>
     <p class="vn-reward-hint">화면을 누르면 연출을 건너뛸 수 있어요</p>
     <button type="button" data-action="dismiss-reward">보물 확인하기</button>
@@ -425,7 +442,7 @@ export function renderEnding(scene, session, context = {}) {
     <div class="vn-copy">${renderParagraphs(scene.body, slots)}</div>
     ${variationSpot}
     ${recall}
-    <p class="vn-trait">너의 이야기 조각: ${escapeHtml(personalize(scene.trait, slots))}</p>
+    <p class="vn-trait">주머니 속 ${escapeHtml(personalize(scene.trait, slots))}의 조각이 반짝였어요.</p>
     <p class="vn-ending-progress" aria-label="결말 수집 상태">${escapeHtml(endingCount)}/6</p>
     ${renderVocabularyWords(scene.vocab)}
     ${endingActions}`;
@@ -436,10 +453,22 @@ export function renderEnding(scene, session, context = {}) {
 export function renderComplete(session, endingScene, context = {}) {
   const slots = session?.slots ?? {};
   const endings = session?.endingsSeen ?? [];
-  const fragments = endings.map(id => storyFragments[id]).filter(Boolean);
+  const collectedFragmentIds = session?.traitFragmentsSeen ?? endings;
+  const fragments = collectedFragmentIds.map(id => storyFragments[id]).filter(Boolean);
   const fragmentList = fragments.length
     ? `<ul class="vn-complete-fragments">${fragments.map(fragment => `<li><span aria-hidden="true">${fragment.mark}</span>${escapeHtml(fragment.name)}</li>`).join("")}</ul>`
     : `<p class="vn-complete-empty">첫 번째 이야기 조각을 만났어요.</p>`;
+  const collectedStamps = new Set(session?.roseStampsSeen ?? []);
+  const roseCollection = `<section class="vn-rose-collection" aria-labelledby="vn-rose-title">
+    <h2 id="vn-rose-title">장미 정원 도감</h2>
+    <p>${escapeHtml(collectedStamps.size)}/18개의 선택을 기록했어요.</p>
+    <div class="vn-rose-grid">${Object.keys(storyFragments).flatMap(endingId => (
+      Object.entries(roseStamps).map(([variation, rose]) => {
+        const collected = collectedStamps.has(`${endingId}:${variation}`);
+        return `<span class="vn-rose-cell${collected ? " is-collected" : ""}" title="${escapeHtml(`${storyFragments[endingId].name} · ${rose.name}`)}"><i aria-hidden="true">${rose.mark}</i>${rose.shortName}</span>`;
+      })
+    )).join("")}</div>
+  </section>`;
   const facilitator = context.testCompleted
     ? `<div class="vn-facilitator-status" role="status">
         <strong>테스트 기록을 저장했어요</strong>
@@ -453,6 +482,7 @@ export function renderComplete(session, endingScene, context = {}) {
   const dialogue = `<h1>모험 완료!</h1>
     <p class="vn-complete-message">${escapeHtml(personalize("{HERO}{은/는} 오늘 멋진 선택으로 이야기를 완성했어요.", slots))}</p>
     ${fragmentList}
+    ${roseCollection}
     <p class="vn-ending-progress">만난 결말 <strong>${escapeHtml(endings.length)}/6</strong></p>
     <section class="vn-facilitator-panel" aria-label="진행자용 테스트 도구">
       <p class="vn-facilitator-label">진행자용</p>

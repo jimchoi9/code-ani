@@ -7,6 +7,8 @@ import { renderTemplate } from "./personalization.js";
 import {
   applyStoryEffect,
   chooseChip,
+  collectRoseStamp,
+  collectTraitFragment,
   completeRun,
   createSession,
   createSessionStore,
@@ -15,7 +17,7 @@ import {
   updateSlots,
   visitScene,
 } from "./session.js";
-import { getScene, resolveScene, story } from "./story-data.js";
+import { ENDING_BY_ENCOUNTER, getScene, resolveScene, story } from "./story-data.js";
 import { createTestModeStore } from "./test-mode.js";
 import { escapeHtml } from "./ui.js";
 import { createCompareLinks, getUiRenderer } from "./ui-variant.js";
@@ -139,9 +141,17 @@ export function choosePath(state, nextSceneId, selectedLabel = null, choiceId = 
     session = applyStoryEffect(session, choice.effect);
   }
 
-  session = nextScene.type === "ending"
-    ? completeRun(session, nextScene.id)
-    : visitScene(session, nextScene.id);
+  if (nextScene.id === "FRAGMENT") {
+    const fragmentId = ENDING_BY_ENCOUNTER[session.storyState?.encounterId];
+    if (fragmentId) session = collectTraitFragment(session, fragmentId);
+  }
+  if (nextScene.type === "ending") {
+    const variation = session.storyState?.endingVariation;
+    if (variation) session = collectRoseStamp(session, `${nextScene.id}:${variation}`);
+    session = completeRun(session, nextScene.id);
+  } else {
+    session = visitScene(session, nextScene.id);
+  }
   return {
     ...state,
     screen: nextScene.type === "ending" ? "ending" : "scene",
@@ -234,13 +244,20 @@ export function returnToEnding(state) {
 }
 
 export function createStoryReward(previousState, nextState) {
+  if (nextState?.sceneId === "FRAGMENT") {
+    const fragmentId = ENDING_BY_ENCOUNTER[nextState.session?.storyState?.encounterId];
+    const before = previousState?.session?.traitFragmentsSeen ?? [];
+    const after = nextState.session?.traitFragmentsSeen ?? [];
+    if (!fragmentId || before.includes(fragmentId) || !after.includes(fragmentId)) return null;
+    return { kind: "trait", fragmentId, count: after.length };
+  }
   if (nextState?.screen !== "ending" || !nextState.sceneId) return null;
-  if (previousState?.session?.endingsSeen?.includes(nextState.sceneId)) return null;
-  if (!nextState.session?.endingsSeen?.includes(nextState.sceneId)) return null;
-  return {
-    endingId: nextState.sceneId,
-    count: nextState.session.endingsSeen.length,
-  };
+  const variation = nextState.session?.storyState?.endingVariation;
+  const stampId = variation ? `${nextState.sceneId}:${variation}` : null;
+  const before = previousState?.session?.roseStampsSeen ?? [];
+  const after = nextState.session?.roseStampsSeen ?? [];
+  if (!stampId || before.includes(stampId) || !after.includes(stampId)) return null;
+  return { kind: "rose", endingId: nextState.sceneId, variation, stampId, count: after.length };
 }
 
 export function advanceMinimalBeat(appState, minimalState, beatCount) {

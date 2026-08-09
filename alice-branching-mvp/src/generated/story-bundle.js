@@ -21,6 +21,7 @@ export const storyGraph = deepFreeze({
     "B1",
     "B2",
     "B3",
+    "FRAGMENT",
     "C1",
     "C2",
     "E1",
@@ -48,6 +49,19 @@ export const storyGraph = deepFreeze({
     "B3": "E6"
   },
   "contentSelectors": {
+    "FRAGMENT": {
+      "fragmentBody": {
+        "stateKey": "encounterId",
+        "cases": {
+          "A1": "E1",
+          "A2": "E2",
+          "A3": "E3",
+          "B1": "E4",
+          "B2": "E5",
+          "B3": "E6"
+        }
+      }
+    },
     "C1": {
       "catMeeting": {
         "stateKey": "encounterId",
@@ -177,6 +191,20 @@ export const storyGraph = deepFreeze({
     }
   },
   "presentationSelectors": {
+    "FRAGMENT": {
+      "art": {
+        "stateKey": "encounterId",
+        "cases": {
+          "A1": "door_cat_meet",
+          "A2": "door_caterpillar_meet",
+          "A3": "door_hatter_meet",
+          "B1": "cake_cat_meet",
+          "B2": "cake_caterpillar_meet",
+          "B3": "cake_hatter_meet"
+        },
+        "default": "mist_hill_grin"
+      }
+    },
     "C2": {
       "art": {
         "stateKey": "encounterId",
@@ -327,15 +355,15 @@ export const storyGraph = deepFreeze({
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -345,15 +373,15 @@ export const storyGraph = deepFreeze({
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -363,15 +391,15 @@ export const storyGraph = deepFreeze({
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -381,15 +409,15 @@ export const storyGraph = deepFreeze({
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -399,15 +427,15 @@ export const storyGraph = deepFreeze({
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -417,17 +445,22 @@ export const storyGraph = deepFreeze({
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
+    },
+    "FRAGMENT": {
+      "type": "story",
+      "art": "mist_hill_grin",
+      "nextSceneId": "C1"
     },
     "C1": {
       "type": "choice",
@@ -834,6 +867,40 @@ export const storyLevels = deepFreeze({
           "곧 아주 이상한 다과회가 열렸어요. 손톱만 한 찻잔과 조롱박 찻잔이 나란히 놓였어요. {HERO}{은/는} 손가락 하나로 조심조심 차를 마셨어요.",
           "처음 만난 친구들이었는데, 어느새 다 같이 웃고 있었어요. 이제 {HERO}{은/는} 이상한 나라에서 혼자가 아니었어요."
         ]
+      },
+      "FRAGMENT": {
+        "title": "네가 발견한 이야기 조각",
+        "body": [
+          {
+            "block": "fragmentBody"
+          },
+          "주머니 속에 간직하자 조각이 따뜻하게 반짝였어요. 마음이 한결 든든해졌어요. 모험은 아직 끝나지 않았어요."
+        ],
+        "vocab": [
+          "한결"
+        ],
+        "blocks": {
+          "fragmentBody": {
+            "E1": [
+              "모르는 것을 그냥 지나치지 않은 {HERO}에게 호기심의 조각이 찾아왔어요."
+            ],
+            "E2": [
+              "자기 마음을 천천히 들여다본 {HERO}에게 신중함의 조각이 찾아왔어요."
+            ],
+            "E3": [
+              "이상한 규칙도 즐겁게 받아들인 {HERO}에게 유쾌함의 조각이 찾아왔어요."
+            ],
+            "E4": [
+              "복잡한 길 앞에서도 차분했던 {HERO}에게 침착함의 조각이 찾아왔어요."
+            ],
+            "E5": [
+              "자기 생각을 믿고 말한 {HERO}에게 자신감의 조각이 찾아왔어요."
+            ],
+            "E6": [
+              "서로에게 맞는 방법을 함께 찾은 {HERO}에게 친화력의 조각이 찾아왔어요."
+            ]
+          }
+        }
       },
       "C1": {
         "title": "안개 언덕 — 안개 속의 웃음",

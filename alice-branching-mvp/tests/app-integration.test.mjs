@@ -4,6 +4,7 @@ import { createMinimalStateStore } from "../src/beat.js";
 import {
   choosePath,
   continueChip,
+  continueStory,
   createAppState,
   selectChip,
   startStory,
@@ -23,9 +24,10 @@ function beginStory() {
 function reachA1Ending() {
   let state = choosePath(beginStory(), "S01", "작은 문을 열어 본다", "shrink");
   state = choosePath(state, "A1", "나무 위 웃음소리로 간다", "A1");
-  state = selectChip(state, { label: "이 길 끝에 뭐가 있어?", nextSceneId: "C1" });
+  state = selectChip(state, { label: "이 길 끝에 뭐가 있어?", nextSceneId: "FRAGMENT" });
   const chipResponse = state;
   state = continueChip(state);
+  state = continueStory(state, "C1");
   state = choosePath(state, "C2", "붓질 소리를 따라 담장 쪽으로 간다", "secret");
   const ending = choosePath(state, "E1", "하얀 장미였다고 사실대로 말한다", "truth");
   return { chipResponse, ending };

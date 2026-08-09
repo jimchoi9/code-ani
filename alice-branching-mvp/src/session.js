@@ -35,8 +35,24 @@ export function createSession(slots = {}, now = isoNow()) {
     chipChoices: [],
     vocabTapped: [],
     endingsSeen: [],
+    traitFragmentsSeen: [],
+    roseStampsSeen: [],
     storyState: {},
     runs: [run(`run-${now}`, now)],
+  };
+}
+
+export function collectTraitFragment(session, fragmentId) {
+  return {
+    ...session,
+    traitFragmentsSeen: appendOnce(session.traitFragmentsSeen ?? [], fragmentId),
+  };
+}
+
+export function collectRoseStamp(session, stampId) {
+  return {
+    ...session,
+    roseStampsSeen: appendOnce(session.roseStampsSeen ?? [], stampId),
   };
 }
 

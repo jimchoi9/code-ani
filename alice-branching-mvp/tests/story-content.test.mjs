@@ -165,7 +165,7 @@ test("교차 파일 검증은 잘못된 결말 매핑과 조건부 삽화를 거
 test("저장소의 hard 원고는 공통 그래프를 완전히 채운다", async () => {
   const sources = await loadStorySources(projectRoot);
 
-  assert.equal(Object.keys(sources.graph.scenes).length, 17);
+  assert.equal(Object.keys(sources.graph.scenes).length, 18);
   assert.deepEqual(Object.keys(sources.levels), ["hard"]);
   assert.equal(Object.keys(sources.levels.hard.vocabulary).length, 28);
   assert.doesNotThrow(() => validateStorySources(sources));

@@ -27,6 +27,8 @@ const visualNovelEndingSession = {
   path: ["S00", "S01", "A1", "E1"],
   chipChoices: [{ sceneId: "A1", label: "이 길 끝에 뭐가 있어?" }],
   endingsSeen: ["E1"],
+  traitFragmentsSeen: ["E1"],
+  roseStampsSeen: ["E1:TRUTH"],
 };
 
 test("지원 UI와 잘못된 query 폴백을 결정한다", () => {
@@ -283,6 +285,9 @@ test("비주얼노벨 테스트 완료 화면은 아이의 성취와 진행자 �
   assert.doesNotMatch(complete, /class="vn-nameplate/);
   assert.doesNotMatch(complete, /class="vn-kicker"/);
   assert.match(complete, /호기심의 조각/);
+  assert.match(complete, /장미 정원 도감/);
+  assert.equal((complete.match(/class="vn-rose-cell/g) ?? []).length, 18);
+  assert.equal((complete.match(/class="vn-rose-cell is-collected/g) ?? []).length, 1);
   assert.match(complete, /진행자용 테스트 도구/);
   assert.match(complete, /data-action="complete-test"/);
   assert.match(complete, /data-action="back-to-ending"/);
@@ -291,12 +296,12 @@ test("비주얼노벨 테스트 완료 화면은 아이의 성취와 진행자 �
   assert.doesNotMatch(saved, /data-action="complete-test"/);
 });
 
-test("새 결말 보상은 결말별 이야기 조각 카드와 열두 개의 빛 조각을 렌더링한다", () => {
+test("중간 보상은 만남별 성향 조각 카드와 열두 개의 빛 조각을 렌더링한다", () => {
   const renderer = getUiRenderer("visual-novel");
-  const rewarded = renderer.renderEnding(story.scenes.E1, visualNovelEndingSession, {
-    storyReward: { endingId: "E1", count: 1 },
+  const rewarded = renderer.renderScene(resolveScene("FRAGMENT", visualNovelEndingSession), visualNovelEndingSession, null, {
+    storyReward: { kind: "trait", fragmentId: "E1", count: 1 },
   });
-  const restored = renderer.renderEnding(story.scenes.E1, visualNovelEndingSession);
+  const restored = renderer.renderScene(resolveScene("FRAGMENT", visualNovelEndingSession), visualNovelEndingSession, null);
 
   assert.match(rewarded, /class="vn-reward-overlay"[^>]*data-reward-tone="curiosity"/);
   assert.match(rewarded, /호기심의 조각/);
@@ -304,6 +309,17 @@ test("새 결말 보상은 결말별 이야기 조각 카드와 열두 개의 �
   assert.equal((rewarded.match(/class="vn-reward-particle"/g) ?? []).length, 12);
   assert.match(rewarded, /data-action="dismiss-reward"/);
   assert.doesNotMatch(restored, /vn-reward-overlay/);
+});
+
+test("결말 보상은 마지막 답변에 맞는 장미 도장을 렌더링한다", () => {
+  const renderer = getUiRenderer("visual-novel");
+  const rewarded = renderer.renderEnding(resolveScene("E1", visualNovelEndingSession), visualNovelEndingSession, {
+    storyReward: { kind: "rose", endingId: "E1", variation: "TRUTH", stampId: "E1:TRUTH", count: 1 },
+  });
+
+  assert.match(rewarded, /하얀 장미 도장/);
+  assert.match(rewarded, /장미 도장 <strong>1\/18<\/strong>/);
+  assert.match(rewarded, /data-art-key="spot_truth"/);
 });
 
 test("비주얼노벨 결말은 실제 삽화와 결말 톤과 7\/7을 표시한다", () => {

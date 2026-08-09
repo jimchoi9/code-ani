@@ -41,8 +41,8 @@ test("모든 장면 연결은 존재하는 장면을 가리킨다", () => {
   }
 });
 
-test("마스터 원고의 17개 노드와 여섯 결말 매핑을 가진다", () => {
-  const ids = ["S00", "S01", "S02", "A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "E1", "E2", "E3", "E4", "E5", "E6"];
+test("마스터 원고의 18개 노드와 여섯 결말 매핑을 가진다", () => {
+  const ids = ["S00", "S01", "S02", "A1", "A2", "A3", "B1", "B2", "B3", "FRAGMENT", "C1", "C2", "E1", "E2", "E3", "E4", "E5", "E6"];
   assert.deepEqual(story.sceneOrder, ids);
   assert.deepEqual(Object.keys(story.scenes).sort(), [...ids].sort());
   assert.deepEqual(ENDING_BY_ENCOUNTER, {
@@ -97,11 +97,12 @@ test("작아진 길과 커진 길은 각각 세 만남을 제공한다", () => {
   assert.deepEqual(story.scenes.S02.choices.map(choice => choice.nextSceneId), ["B1", "B2", "B3"]);
 });
 
-test("여섯 만남은 칩 응답 뒤 공통 수렴부로 이동한다", () => {
+test("여섯 만남은 칩 응답 뒤 성향 조각을 거쳐 공통 수렴부로 이동한다", () => {
   for (const id of Object.keys(ENDING_BY_ENCOUNTER)) {
     assert.equal(story.scenes[id].type, "chip");
-    assert.deepEqual(new Set(story.scenes[id].chips.map(chip => chip.nextSceneId)), new Set(["C1"]));
+    assert.deepEqual(new Set(story.scenes[id].chips.map(chip => chip.nextSceneId)), new Set(["FRAGMENT"]));
   }
+  assert.equal(story.scenes.FRAGMENT.nextSceneId, "C1");
   assert.deepEqual(story.scenes.C1.choices.map(choice => choice.nextSceneId), ["C2", "C2"]);
 });
 
@@ -144,6 +145,7 @@ test("모든 장면은 원고의 이미지 키를 사용하고 색상 슬롯이 
     S00: "start_rabbit_hole", S01: "door_shrink", S02: "cake_grow",
     A1: "door_cat_meet", A2: "door_caterpillar_meet", A3: "door_hatter_meet",
     B1: "cake_cat_meet", B2: "cake_caterpillar_meet", B3: "cake_hatter_meet",
+    FRAGMENT: "mist_hill_grin",
     C1: "mist_hill_grin", C2: "queen_garden_trial_small",
     E1: "end_curiosity", E2: "end_prudence", E3: "end_cheer",
     E4: "end_composure", E5: "end_selftrust", E6: "end_warmth",

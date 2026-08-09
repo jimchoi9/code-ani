@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   choosePath,
   continueChip,
+  continueStory,
   createAppState,
   createDebugGetters,
   openVocabulary,
@@ -130,8 +131,9 @@ function beginStory() {
 function reachA1Ending() {
   let state = choosePath(beginStory(), "S01", "작은 문을 열어 본다", "shrink");
   state = choosePath(state, "A1", "나무 위 웃음소리로 간다", "A1");
-  state = selectChip(state, { label: "이 길 끝에 뭐가 있어?", nextSceneId: "C1" });
+  state = selectChip(state, { label: "이 길 끝에 뭐가 있어?", nextSceneId: "FRAGMENT" });
   state = continueChip(state);
+  state = continueStory(state, "C1");
   state = choosePath(state, "C2", "붓질 소리를 따라 담장 쪽으로 간다", "secret");
   return choosePath(state, "E1", "하얀 장미였다고 사실대로 말한다", "truth");
 }
@@ -179,7 +181,7 @@ test("여섯 만남이 공통 수렴부와 정원 선택을 거쳐 각각의 결
     state = choosePath(state, ...route.encounter);
     state = selectChip(state, {
       label: route.chip,
-      nextSceneId: "C1",
+      nextSceneId: "FRAGMENT",
     });
 
     assert.equal(state.screen, "chip-response");
@@ -188,6 +190,9 @@ test("여섯 만남이 공통 수렴부와 정원 선택을 거쳐 각각의 결
     assert.deepEqual(state.session.chipChoices, [{ sceneId: state.sceneId, label: route.chip }]);
 
     state = continueChip(state);
+    assert.equal(state.sceneId, "FRAGMENT");
+    assert.deepEqual(state.session.traitFragmentsSeen, [route.ending]);
+    state = continueStory(state, "C1");
     assert.equal(state.sceneId, "C1");
     state = choosePath(state, "C2", "붓질 소리를 따라 담장 쪽으로 간다", "secret");
     state = choosePath(state, route.ending, "하얀 장미였다고 사실대로 말한다", "truth");
@@ -207,7 +212,7 @@ test("새로고침 상태 복원은 활성 장면과 칩 응답을 유지한다"
   const restoredScene = createAppState(sceneState.session);
   const chipState = selectChip(choosePath(sceneState, "A1", "나무 위 웃음소리로 간다", "A1"), {
     label: "너는 왜 웃고 있어?",
-    nextSceneId: "C1",
+    nextSceneId: "FRAGMENT",
   });
   const restoredChip = createAppState(chipState.session);
 
@@ -219,7 +224,7 @@ test("새로고침 상태 복원은 활성 장면과 칩 응답을 유지한다"
   assert.equal(restoredChip.chipResponse.label, "너는 왜 웃고 있어?");
   assert.match(restoredChip.chipResponse.response, /^그건 나도 궁금했어/);
   assert.match(restoredChip.chipResponse.response, /모르는 것도 괜찮아/);
-  assert.equal(restoredChip.chipResponse.nextSceneId, "C1");
+  assert.equal(restoredChip.chipResponse.nextSceneId, "FRAGMENT");
 });
 
 test("낱말은 패널을 열고 현재 실행에 중복 없이 기록된다", () => {
@@ -259,16 +264,36 @@ test("다른 결말 보기는 수집 결말을 유지하고 새 실행으로 첫
   assert.equal(replayed.session.runs[0].replayed, true);
 });
 
-test("이야기 조각 보상은 처음 수집한 결말 전환에서만 생성된다", async () => {
+test("성향 조각 보상은 FRAGMENT에 처음 진입할 때만 생성된다", async () => {
   const { createStoryReward } = await import("../src/app.js");
-  const firstEnding = reachA1Ending();
-  const before = { ...firstEnding, screen: "scene", sceneId: "C2", session: { ...firstEnding.session, endingsSeen: [] } };
-  const alreadyCollected = { ...before, session: { ...before.session, endingsSeen: ["E1"] } };
+  const started = beginStory();
+  const before = { ...started, sceneId: "A1", session: { ...started.session, storyState: { encounterId: "A1" } } };
+  const after = choosePath(before, "FRAGMENT");
+  const alreadyCollected = { ...before, session: { ...before.session, traitFragmentsSeen: ["E1"] } };
 
-  assert.deepEqual(createStoryReward(before, firstEnding), { endingId: "E1", count: 1 });
-  assert.equal(createStoryReward(alreadyCollected, firstEnding), null);
-  assert.equal(createStoryReward(firstEnding, firstEnding), null);
-  assert.equal(createStoryReward(before, { ...firstEnding, screen: "scene" }), null);
+  assert.deepEqual(createStoryReward(before, after), { kind: "trait", fragmentId: "E1", count: 1 });
+  assert.equal(createStoryReward(alreadyCollected, after), null);
+});
+
+test("장미 도장 보상은 결말과 정원 답변 조합별로 생성된다", async () => {
+  const { createStoryReward } = await import("../src/app.js");
+  const ending = reachA1Ending();
+  const stampId = `E1:${ending.session.storyState.endingVariation}`;
+  const before = {
+    ...ending,
+    screen: "scene",
+    sceneId: "C2",
+    session: { ...ending.session, roseStampsSeen: [] },
+  };
+
+  assert.deepEqual(createStoryReward(before, ending), {
+    kind: "rose",
+    endingId: "E1",
+    variation: ending.session.storyState.endingVariation,
+    stampId,
+    count: 1,
+  });
+  assert.equal(createStoryReward({ ...before, session: { ...before.session, roseStampsSeen: [stampId] } }, ending), null);
 });
 
 test("존재하지 않는 활성 장면은 복구 화면으로 전환한다", () => {

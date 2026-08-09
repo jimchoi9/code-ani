@@ -12,6 +12,7 @@
     "B1",
     "B2",
     "B3",
+    "FRAGMENT",
     "C1",
     "C2",
     "E1",
@@ -39,6 +40,15 @@
     "B3": "E6"
   },
   "contentSelectors": {
+    "FRAGMENT": {
+      "fragmentBody": {
+        "stateKey": "encounterId",
+        "cases": {
+          "A1": "E1", "A2": "E2", "A3": "E3",
+          "B1": "E4", "B2": "E5", "B3": "E6"
+        }
+      }
+    },
     "C1": {
       "catMeeting": {
         "stateKey": "encounterId",
@@ -168,6 +178,16 @@
     }
   },
   "presentationSelectors": {
+    "FRAGMENT": {
+      "art": {
+        "stateKey": "encounterId",
+        "cases": {
+          "A1": "door_cat_meet", "A2": "door_caterpillar_meet", "A3": "door_hatter_meet",
+          "B1": "cake_cat_meet", "B2": "cake_caterpillar_meet", "B3": "cake_hatter_meet"
+        },
+        "default": "mist_hill_grin"
+      }
+    },
     "C2": {
       "art": {
         "stateKey": "encounterId",
@@ -318,15 +338,15 @@
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -336,15 +356,15 @@
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -354,15 +374,15 @@
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -372,15 +392,15 @@
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -390,15 +410,15 @@
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
     },
@@ -408,17 +428,22 @@
       "chips": [
         {
           "id": "chip-1",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-2",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         },
         {
           "id": "chip-3",
-          "nextSceneId": "C1"
+          "nextSceneId": "FRAGMENT"
         }
       ]
+    },
+    "FRAGMENT": {
+      "type": "story",
+      "art": "mist_hill_grin",
+      "nextSceneId": "C1"
     },
     "C1": {
       "type": "choice",
