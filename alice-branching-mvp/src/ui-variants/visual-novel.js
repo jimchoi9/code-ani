@@ -419,8 +419,7 @@ export function renderEnding(scene, session, context = {}) {
         <button class="vn-choice" type="button" data-action="finish-adventure">오늘 모험 마치기</button>
       </div>`
     : `<button class="vn-choice" type="button" data-action="restart">다시 시작</button>`;
-  const dialogue = `<p class="vn-kicker">이야기의 끝</p>
-    <h1>${escapeHtml(personalize(scene.title, slots))}</h1>
+  const dialogue = `<h1>${escapeHtml(personalize(scene.title, slots))}</h1>
     <div class="vn-copy">${renderParagraphs(scene.body, slots)}</div>
     ${variationSpot}
     ${recall}

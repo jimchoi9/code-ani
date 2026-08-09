@@ -298,6 +298,8 @@ test("비주얼노벨 결말은 실제 삽화와 결말 톤과 7\/7을 표시한
 
   assert.match(html, /src="\.\/assets\/visual-novel\/endings\/end_curiosity\.jpg"/);
   assert.match(html, /data-art-key="end_curiosity"/);
+  assert.match(html, /vn-nameplate--ending">결말<\/p>/);
+  assert.doesNotMatch(html, /<p class="vn-kicker">이야기의 끝<\/p>/);
   assert.match(html, /data-ending-tone="curiosity"/);
   assert.match(html, /aria-label="진행 7\/7"/);
   assert.match(html, /data-action="restart"/);
