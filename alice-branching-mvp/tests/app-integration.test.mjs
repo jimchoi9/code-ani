@@ -257,7 +257,7 @@ test("처음으로는 테스트 진행을 모두 지우고 선택 UI를 유지�
   assert.equal(renderers["visual-novel"].calls.at(-1).name, "renderSetup");
 });
 
-test("처음으로는 진행 중 온보딩의 메모리 상태도 비운다", async () => {
+test("처음으로 뒤 이전 온보딩 타이머는 새 참가자 상태를 오염시키지 않는다", async () => {
   const { mountBrowserApp } = await import("../src/app.js");
   const renderers = {
     minimal: createRenderer("minimal"),
@@ -271,7 +271,8 @@ test("처음으로는 진행 중 온보딩의 메모리 상태도 비운다", as
     onboarding: { step: "name", answers: {} },
   });
   const originalFormData = globalThis.FormData;
-  environment.windowRef.setTimeout = () => {};
+  const timers = [];
+  environment.windowRef.setTimeout = callback => timers.push(callback);
   globalThis.FormData = class FormDataDouble {
     constructor(form) { this.entries = Object.entries(form.values); }
     [Symbol.iterator]() { return this.entries[Symbol.iterator](); }
@@ -288,6 +289,7 @@ test("처음으로는 진행 중 온보딩의 메모리 상태도 비운다", as
     });
     environment.app.submit(formControl("onboarding-answer", { ANSWER: "지민" }));
     assert.equal(renderers["visual-novel"].calls.at(-1).args.at(-1).onboardingTyping, true);
+    assert.equal(timers.length, 1);
 
     environment.app.click(actionControl("return-to-start"));
 
@@ -301,6 +303,22 @@ test("처음으로는 진행 중 온보딩의 메모리 상태도 비운다", as
     environment.app.submit(formControl("onboarding-answer", { ANSWER: "민지" }));
     assert.equal(testStore.events.length, eventsBeforeAnswer + 1);
     assert.equal(testStore.events.at(-1).type, "onboarding_answered");
+    assert.equal(timers.length, 2);
+
+    const rendersBeforeStaleReply = renderers["visual-novel"].calls.length;
+    assert.equal(testStore.load().onboarding, undefined);
+    timers[0]();
+
+    assert.equal(renderers["visual-novel"].calls.at(-1).args.at(-1).onboardingTyping, true);
+    assert.equal(testStore.load().onboarding, undefined);
+    assert.equal(renderers["visual-novel"].calls.length, rendersBeforeStaleReply);
+
+    timers[1]();
+    assert.deepEqual(testStore.load().onboarding, {
+      step: "snack",
+      answers: { HERO: "민지" },
+    });
+    assert.equal(renderers["visual-novel"].calls.at(-1).args.at(-1).onboardingTyping, false);
   } finally {
     globalThis.FormData = originalFormData;
   }

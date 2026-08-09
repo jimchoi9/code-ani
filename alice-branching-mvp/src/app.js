@@ -487,6 +487,7 @@ export function mountBrowserApp({
   let storyReward = null;
   let onboarding = activeTest?.onboarding ?? null;
   let onboardingTyping = false;
+  let onboardingGeneration = 0;
   if (activeTest && state.screen === "setup") state = { ...state, screen: "onboarding" };
 
   app.dataset.ui = uiVariant;
@@ -575,6 +576,12 @@ export function mountBrowserApp({
     render(focusHeading);
   }
 
+  function resetOnboardingState() {
+    onboardingGeneration += 1;
+    onboarding = null;
+    onboardingTyping = false;
+  }
+
   bindAppEvents(app, () => state, commit, undefined, {
     onNextBeat() {
       if (uiVariant !== "minimal") return;
@@ -593,8 +600,7 @@ export function mountBrowserApp({
       store.clear();
       minimalStore.clear();
       testStore.clear();
-      onboarding = null;
-      onboardingTyping = false;
+      resetOnboardingState();
       return createAppState();
     },
     getSelectionText: () => windowRef.getSelection?.()?.toString() ?? "",
@@ -602,6 +608,7 @@ export function mountBrowserApp({
       if (!testMode) return startStory(state, values);
       store.clear();
       minimalStore.clear();
+      resetOnboardingState();
       testStore.start(values.PARTICIPANT_ID);
       return startStory(createAppState(), values);
     },
@@ -609,6 +616,7 @@ export function mountBrowserApp({
       if (!testMode) return;
       store.clear();
       minimalStore.clear();
+      resetOnboardingState();
       testStore.start(values.PARTICIPANT_ID);
       testStore.record("onboarding_started");
       onboarding = testStore.load()?.onboarding ?? { step: "name", answers: {} };
@@ -625,7 +633,9 @@ export function mountBrowserApp({
       onboarding = next;
       onboardingTyping = true;
       render();
+      const replyGeneration = onboardingGeneration;
       const finishReply = () => {
+        if (replyGeneration !== onboardingGeneration) return;
         onboardingTyping = false;
         testStore.saveOnboarding(onboarding);
         render(true, false);
@@ -646,6 +656,7 @@ export function mountBrowserApp({
       store.clear();
       minimalStore.clear();
       testStore.clear();
+      resetOnboardingState();
       return createAppState();
     },
     onTestDownload(currentState) {
@@ -664,8 +675,7 @@ export function mountBrowserApp({
       store.clear();
       minimalStore.clear();
       testStore.clear();
-      onboarding = null;
-      onboardingTyping = false;
+      resetOnboardingState();
       return createAppState();
     },
     onDismissReward(control) {
