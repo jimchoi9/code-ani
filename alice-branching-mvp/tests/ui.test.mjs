@@ -108,6 +108,11 @@ test("이름 입력과 스킵 링크는 44px 이상 상호작용 영역을 가�
   assert.ok(minimumHeight(cssRule(".skip-link")) >= 44);
 });
 
+test("처음으로 버튼은 44px 이상 상호작용 영역을 가진다", () => {
+  const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+  assert.match(css, /\.test-home-button,\s*\.test-settings-link\s*\{[^}]*min-height:\s*44px/s);
+});
+
 function beginStory() {
   return startStory(createAppState(), {
     HERO: "지민",

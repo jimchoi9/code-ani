@@ -310,7 +310,10 @@ export function renderCompareMenu(search, uiVariant) {
 }
 
 export function renderTestNavigation() {
-  return '<nav class="test-navigation" aria-label="테스트 설정"><a class="test-settings-link" href="./settings.html">UI 설정</a></nav>';
+  return `<nav class="test-navigation" aria-label="테스트 설정">
+    <button class="test-home-button" type="button" data-action="return-to-start">← 처음으로</button>
+    <a class="test-settings-link" href="./settings.html">UI 설정</a>
+  </nav>`;
 }
 
 export function renderTestEndingActions() {
@@ -332,6 +335,7 @@ export function bindAppEvents(
     onStart = (values, state) => startStory(state, values),
     onStoryEvent = () => {},
     onOtherEnding = state => replayForAnotherEnding(state),
+    onReturnToStart = state => state,
     onTestReset = state => state,
     onTestDownload = () => {},
     onTestComplete = () => {},
@@ -404,6 +408,8 @@ export function bindAppEvents(
       onStoryEvent("story_restarted", { sceneId: state.sceneId });
       onRestart();
       commit(restartStory(state));
+    } else if (action === "return-to-start") {
+      commit(onReturnToStart(state));
     } else if (action === "other-ending") {
       onStoryEvent("story_replayed", { sceneId: state.sceneId });
       commit(onOtherEnding(state));

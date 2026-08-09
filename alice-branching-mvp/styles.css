@@ -108,8 +108,11 @@ a:focus-visible {
   z-index: 40;
   top: 12px;
   right: 12px;
+  display: flex;
+  gap: 8px;
 }
 
+.test-home-button,
 .test-settings-link {
   display: inline-flex;
   min-height: 44px;
@@ -120,9 +123,14 @@ a:focus-visible {
   border: 1px solid rgb(255 255 255 / 45%);
   border-radius: 999px;
   box-shadow: 0 4px 16px rgb(36 34 53 / 24%);
+  font: inherit;
   font-size: 14px;
   font-weight: 800;
   text-decoration: none;
+}
+
+.test-home-button {
+  cursor: pointer;
 }
 
 .test-ending-actions {

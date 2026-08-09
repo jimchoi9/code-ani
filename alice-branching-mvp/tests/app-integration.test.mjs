@@ -170,6 +170,40 @@ function readerSurface() {
   return reader;
 }
 
+test("공통 테스트 헤더는 처음으로 버튼과 UI 설정 링크를 제공한다", async () => {
+  const { renderTestNavigation } = await import("../src/app.js");
+  const html = renderTestNavigation();
+
+  assert.match(html, /data-action="return-to-start"/);
+  assert.match(html, />← 처음으로<\/button>/);
+  assert.match(html, /href="\.\/settings\.html"/);
+});
+
+test("위임된 처음으로 클릭은 전용 초기화 상태를 commit한다", async () => {
+  const { bindAppEvents } = await import("../src/app.js");
+  const app = createAppElement();
+  const commits = [];
+  let resetCalls = 0;
+
+  bindAppEvents(
+    app,
+    beginStory,
+    state => commits.push(state),
+    undefined,
+    {
+      onReturnToStart() {
+        resetCalls += 1;
+        return createAppState();
+      },
+    },
+  );
+
+  app.click(actionControl("return-to-start"));
+
+  assert.equal(resetCalls, 1);
+  assert.equal(commits.at(-1).screen, "setup");
+});
+
 test("mounted app은 선택 renderer로 모든 화면과 낱말 panel을 dispatch한다", async () => {
   const { mountBrowserApp } = await import("../src/app.js");
   const started = beginStory();
