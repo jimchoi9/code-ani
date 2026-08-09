@@ -474,7 +474,7 @@ test("온보딩 확인은 선택한 쉬운 레벨로 이야기 세션을 시작�
     onboarding: {
       step: "confirm",
       answers: slots,
-      ageGroup: "9살 이하",
+      age: 9,
       level: "easy",
     },
   });
@@ -493,6 +493,79 @@ test("온보딩 확인은 선택한 쉬운 레벨로 이야기 세션을 시작�
   assert.equal(environment.windowRef.__aliceStoryDebug.session().level, "easy");
   assert.equal(storyStore.saves.at(-1).level, "easy");
   assert.match(renderers.minimal.calls.at(-1).args[0].body, /그림도 없고 말도 없는 책/);
+});
+
+test("잘못된 나이는 답변 이벤트 없이 오류를 저장하고 유효한 나이는 진행한다", async () => {
+  const { mountBrowserApp } = await import("../src/app.js");
+  const renderers = {
+    minimal: createRenderer("minimal"),
+    "visual-novel": createRenderer("visual-novel"),
+  };
+  renderers["visual-novel"].renderTestTools = () => "";
+  const environment = createEnvironment("?test=1");
+  const testStore = createTestStore({
+    participantId: "C10",
+    events: [],
+    onboarding: { step: "age", answers: { HERO: "지민" } },
+  });
+  const originalFormData = globalThis.FormData;
+  globalThis.FormData = class {
+    constructor(form) { this.entries = Object.entries(form.values); }
+    [Symbol.iterator]() { return this.entries[Symbol.iterator](); }
+  };
+
+  try {
+    mountBrowserApp({
+      ...environment,
+      sessionStore: createStoryStore(null),
+      testStore,
+      minimalStore: createMinimalStateStore(createStorage()),
+      preferenceStore: { load: () => "minimal" },
+      getRenderer: id => renderers[id],
+    });
+
+    environment.app.submit(formControl("onboarding-answer", { ANSWER: "0" }));
+    assert.equal(testStore.events.filter(event => event.type === "onboarding_answered").length, 0);
+    assert.equal(testStore.load().onboarding.step, "age");
+    assert.equal(testStore.load().onboarding.validationError, "나이는 1 이상의 숫자로 입력해 줘.");
+    assert.equal(renderers["visual-novel"].calls.at(-1).args[0].onboardingTyping, false);
+
+    environment.app.submit(formControl("onboarding-answer", { ANSWER: "9" }));
+    assert.equal(testStore.events.filter(event => event.type === "onboarding_answered").length, 1);
+    assert.equal(testStore.load().onboarding.age, 9);
+    assert.equal(testStore.load().onboarding.level, "easy");
+    assert.equal(testStore.load().onboarding.step, "snack");
+  } finally {
+    globalThis.FormData = originalFormData;
+  }
+});
+
+test("10살 입력으로 완료한 온보딩은 어려운 원고를 시작한다", async () => {
+  const { mountBrowserApp } = await import("../src/app.js");
+  const renderers = {
+    minimal: createRenderer("minimal"),
+    "visual-novel": createRenderer("visual-novel"),
+  };
+  renderers["visual-novel"].renderTestTools = () => "";
+  const environment = createEnvironment("?test=1");
+  const testStore = createTestStore({
+    participantId: "C12",
+    events: [],
+    onboarding: { step: "confirm", answers: slots, age: 10, level: "hard" },
+  });
+
+  mountBrowserApp({
+    ...environment,
+    sessionStore: createStoryStore(null),
+    testStore,
+    minimalStore: createMinimalStateStore(createStorage()),
+    preferenceStore: { load: () => "minimal" },
+    getRenderer: id => renderers[id],
+  });
+  environment.app.click(actionControl("onboarding-confirm"));
+
+  assert.equal(environment.windowRef.__aliceStoryDebug.session().level, "hard");
+  assert.match(renderers.minimal.calls.at(-1).args[0].body, /그림도 없고 주고받는 말도 없었어요/);
 });
 
 test("테스트 JSON 다운로드는 참가자 파일명과 직렬화된 payload를 사용한다", async () => {

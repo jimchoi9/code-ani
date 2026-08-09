@@ -65,7 +65,7 @@ const speakerByScene = Object.freeze({
 
 const onboardingQuestions = Object.freeze({
   name: { prompt: "늦었다, 늦었어! 그런데 넌 누구니? 이름을 알려 줘.", placeholder: "내 이름 쓰기", suggestions: [] },
-  age: { prompt: "너는 몇 살이야?", placeholder: "", suggestions: ["9살 이하", "10살 이상"], selectionOnly: true },
+  age: { prompt: "너는 몇 살이야?", placeholder: "나이 숫자로 쓰기", suggestions: [], inputType: "number" },
   snack: { prompt: "모험 가방에 어떤 간식을 넣을까?", placeholder: "먹고 싶은 간식 쓰기", suggestions: ["케이크", "쿠키", "젤리", "붕어빵"] },
   friend: { prompt: "마지막 질문이야. 함께 모험할 친구는 누구야?", placeholder: "함께 갈 친구 쓰기", suggestions: ["강아지", "고양이", "토끼", "거북이"] },
 });
@@ -352,11 +352,14 @@ export function renderSetup(slots = {}, context = {}) {
 export function renderOnboarding(context = {}) {
   const onboarding = context.onboarding ?? { step: "name", answers: {} };
   const answers = onboarding.answers ?? {};
+  const ageLabel = Number.isInteger(onboarding.age)
+    ? `${onboarding.age}살`
+    : String(onboarding.ageGroup ?? "");
   const turns = [{ role: "rabbit", text: onboardingQuestions.name.prompt }];
   if (answers.HERO) turns.push({ role: "child", text: answers.HERO });
   if (answers.HERO && onboarding.step !== "name") turns.push({ role: "rabbit", text: onboardingQuestions.age.prompt });
-  if (onboarding.ageGroup) turns.push({ role: "child", text: onboarding.ageGroup });
-  if (onboarding.ageGroup && !["name", "age"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.snack.prompt });
+  if (ageLabel) turns.push({ role: "child", text: ageLabel });
+  if (ageLabel && !["name", "age"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.snack.prompt });
   if (answers.TREAT) turns.push({ role: "child", text: answers.TREAT });
   if (answers.TREAT && ["friend", "confirm"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.friend.prompt });
   if (answers.PET) turns.push({ role: "child", text: answers.PET });
@@ -375,7 +378,7 @@ export function renderOnboarding(context = {}) {
     composer = `<div class="vn-chat-typing" role="status" aria-label="시계토끼가 답장을 쓰는 중"><span></span><span></span><span></span></div>`;
   } else if (onboarding.step === "confirm") {
     composer = `<div class="vn-chat-confirm">
-      <p><strong>${escapeHtml(answers.HERO)}</strong>, <strong>${escapeHtml(onboarding.ageGroup)}</strong>이고 <strong>${escapeHtml(answers.TREAT)}</strong>을 챙겨 <strong>${escapeHtml(answers.PET)}</strong>와 함께 가는 거구나!</p>
+      <p><strong>${escapeHtml(answers.HERO)}</strong>, <strong>${escapeHtml(ageLabel)}</strong>이고 <strong>${escapeHtml(answers.TREAT)}</strong>을 챙겨 <strong>${escapeHtml(answers.PET)}</strong>와 함께 가는 거구나!</p>
       <button class="vn-choice" type="button" data-action="onboarding-confirm" data-focus-target>이대로 출발!</button>
     </div>`;
   } else {
@@ -383,11 +386,18 @@ export function renderOnboarding(context = {}) {
     const suggestions = question.suggestions.length
       ? `<div class="vn-chat-suggestions" aria-label="추천 답장">${question.suggestions.map(value => `<button type="button" data-action="onboarding-suggestion" data-value="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div>`
       : "";
-    composer = question.selectionOnly ? suggestions : `${suggestions}<form class="vn-chat-composer" data-action="onboarding-answer">
+    const isAge = question.inputType === "number";
+    const error = onboarding.validationError
+      ? `<p class="vn-chat-error" id="onboarding-error" role="alert">${escapeHtml(onboarding.validationError)}</p>`
+      : "";
+    const ageAttributes = isAge
+      ? ' type="number" min="1" step="1" inputmode="numeric" aria-describedby="onboarding-error"'
+      : ` maxlength="${onboarding.step === "name" ? "6" : "12"}"`;
+    composer = `${suggestions}<form class="vn-chat-composer" data-action="onboarding-answer"${isAge ? " novalidate" : ""}>
       <label class="sr-only" for="onboarding-answer">${escapeHtml(question.placeholder)}</label>
-      <input id="onboarding-answer" name="ANSWER" maxlength="${onboarding.step === "name" ? "6" : "12"}" placeholder="${escapeHtml(question.placeholder)}" autocomplete="off" required data-focus-target>
+      <input id="onboarding-answer" name="ANSWER"${ageAttributes} placeholder="${escapeHtml(question.placeholder)}" autocomplete="off" required data-focus-target>
       <button type="submit" aria-label="답장 보내기">➜</button>
-    </form>`;
+    </form>${error}`;
   }
 
   return `<main class="vn-shell vn-onboarding" data-ui="visual-novel">

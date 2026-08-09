@@ -65,7 +65,7 @@ test("채팅 온보딩 답변과 현재 질문을 저장하고 복원한다", ()
   store.saveOnboarding({
     step: "friend",
     answers: { HERO: "지민", TREAT: "젤리" },
-    ageGroup: "9살 이하",
+    age: 9,
     level: "easy",
   });
 
@@ -73,9 +73,29 @@ test("채팅 온보딩 답변과 현재 질문을 저장하고 복원한다", ()
   assert.deepEqual(restored.onboarding, {
     step: "friend",
     answers: { HERO: "지민", TREAT: "젤리" },
+    age: 9,
+    level: "easy",
+  });
+});
+
+test("잘못된 나이 오류와 기존 나이대 데이터도 저장하고 복원한다", () => {
+  const storage = storageDouble();
+  const store = createTestModeStore(storage, () => "2026-08-09T10:00:00.000Z");
+  store.start("C04");
+  store.saveOnboarding({
+    step: "age",
+    answers: { HERO: "지민" },
+    validationError: "나이는 1 이상의 숫자로 입력해 줘.",
+  });
+  assert.equal(store.load().onboarding.validationError, "나이는 1 이상의 숫자로 입력해 줘.");
+
+  store.saveOnboarding({
+    step: "confirm",
+    answers: { HERO: "지민", TREAT: "젤리", PET: "토끼" },
     ageGroup: "9살 이하",
     level: "easy",
   });
+  assert.equal(store.load().onboarding.ageGroup, "9살 이하");
 });
 
 test("내보내기 스냅샷은 테스트 기록과 이야기 세션을 복제한다", () => {

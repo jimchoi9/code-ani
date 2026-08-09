@@ -244,7 +244,7 @@ test("시계토끼 온보딩은 누적 대화와 추천 답장과 직접 입력�
   const renderer = getUiRenderer("visual-novel");
   const chat = renderer.renderOnboarding({
     testMode: true,
-    onboarding: { step: "friend", answers: { HERO: "지민", TREAT: "젤리" }, ageGroup: "9살 이하", level: "easy" },
+    onboarding: { step: "friend", answers: { HERO: "지민", TREAT: "젤리" }, age: 9, level: "easy" },
   });
   const age = renderer.renderOnboarding({
     testMode: true,
@@ -255,22 +255,40 @@ test("시계토끼 온보딩은 누적 대화와 추천 답장과 직접 입력�
     onboardingTyping: true,
     onboarding: { step: "snack", answers: { HERO: "지민" } },
   });
+  const invalidAge = renderer.renderOnboarding({
+    testMode: true,
+    onboarding: {
+      step: "age",
+      answers: { HERO: "지민" },
+      validationError: "나이는 1 이상의 숫자로 입력해 줘.",
+    },
+  });
   const confirm = renderer.renderOnboarding({
     testMode: true,
-    onboarding: { step: "confirm", answers: { HERO: "지민", PET: "토끼", TREAT: "젤리" }, ageGroup: "9살 이하", level: "easy" },
+    onboarding: { step: "confirm", answers: { HERO: "지민", PET: "토끼", TREAT: "젤리" }, age: 9, level: "easy" },
+  });
+  const legacyConfirm = renderer.renderOnboarding({
+    testMode: true,
+    onboarding: { step: "confirm", answers: { HERO: "민지", PET: "고양이", TREAT: "쿠키" }, ageGroup: "9살 이하", level: "easy" },
   });
 
   assert.match(chat, /시계토끼/);
-  assert.match(chat, /지민.*너는 몇 살이야.*9살 이하.*모험 가방에 어떤 간식을 넣을까.*젤리.*마지막 질문이야\. 함께 모험할 친구는 누구야/s);
+  assert.match(chat, /지민.*너는 몇 살이야.*9살.*모험 가방에 어떤 간식을 넣을까.*젤리.*마지막 질문이야\. 함께 모험할 친구는 누구야/s);
   assert.match(chat, /data-value="토끼"/);
   assert.doesNotMatch(chat, /좋아하는 색|data-value="파랑"/);
   assert.match(chat, /data-action="onboarding-answer"/);
   assert.match(typing, /vn-chat-typing/);
   assert.doesNotMatch(typing, /추천 답장/);
   assert.match(age, /너는 몇 살이야/);
-  assert.match(age, /data-value="9살 이하"/);
-  assert.match(age, /data-value="10살 이상"/);
-  assert.match(confirm, /지민.*9살 이하.*젤리.*토끼/s);
+  assert.match(age, /type="number"/);
+  assert.match(age, /min="1"/);
+  assert.match(age, /step="1"/);
+  assert.match(age, /inputmode="numeric"/);
+  assert.match(age, /novalidate/);
+  assert.doesNotMatch(age, /data-value="9살 이하"|data-value="10살 이상"/);
+  assert.match(invalidAge, /role="alert">나이는 1 이상의 숫자로 입력해 줘\./);
+  assert.match(confirm, /지민.*9살.*젤리.*토끼/s);
+  assert.match(legacyConfirm, /민지.*9살 이하.*쿠키.*고양이/s);
   assert.match(confirm, /data-action="onboarding-confirm"/);
 });
 

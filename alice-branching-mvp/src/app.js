@@ -60,10 +60,7 @@ function personalized(value, session) {
 
 const ONBOARDING_STEPS = Object.freeze({
   name: { slot: "HERO", next: "age", maxLength: 6 },
-  age: {
-    next: "snack",
-    levels: Object.freeze({ "9살 이하": "easy", "10살 이상": "hard" }),
-  },
+  age: { next: "snack" },
   snack: { slot: "TREAT", next: "friend", maxLength: 12 },
   friend: { slot: "PET", next: "confirm", maxLength: 12 },
 });
@@ -72,16 +69,20 @@ export function answerOnboarding(onboarding, value) {
   const current = onboarding ?? { step: "name", answers: {} };
   const config = ONBOARDING_STEPS[current.step];
   if (!config) return current;
-  if (config.levels) {
-    const ageGroup = String(value ?? "").trim();
-    const level = config.levels[ageGroup];
-    if (!level) return current;
-    return { ...current, step: config.next, ageGroup, level };
+  if (current.step === "age") {
+    const normalized = String(value ?? "").trim();
+    const age = Number(normalized);
+    if (!normalized || !Number.isInteger(age) || age < 1) {
+      return { ...current, validationError: "나이는 1 이상의 숫자로 입력해 줘." };
+    }
+    const { validationError: _validationError, ageGroup: _ageGroup, ...validCurrent } = current;
+    return { ...validCurrent, step: config.next, age, level: age <= 9 ? "easy" : "hard" };
   }
   const answer = String(value ?? "").trim().slice(0, config.maxLength);
   if (!answer) return current;
+  const { validationError: _validationError, ...validCurrent } = current;
   return {
-    ...current,
+    ...validCurrent,
     step: config.next,
     answers: { ...(current.answers ?? {}), [config.slot]: answer },
   };
@@ -667,12 +668,18 @@ export function mountBrowserApp({
       const previousStep = onboarding.step;
       const next = answerOnboarding(onboarding, value);
       if (next === onboarding) return;
+      if (next.validationError) {
+        onboarding = next;
+        testStore.saveOnboarding(onboarding);
+        render(true, false);
+        return;
+      }
       const slot = ONBOARDING_STEPS[previousStep].slot ?? null;
       testStore.record("onboarding_answered", {
         step: previousStep,
         slot,
-        value: slot ? next.answers[slot] : next.ageGroup,
-        ...(previousStep === "age" ? { level: next.level } : {}),
+        value: slot ? next.answers[slot] : next.age,
+        ...(previousStep === "age" ? { age: next.age, level: next.level } : {}),
       });
       onboarding = next;
       onboardingTyping = true;
@@ -691,6 +698,7 @@ export function mountBrowserApp({
       if (!testMode || onboarding?.step !== "confirm") return;
       testStore.record("onboarding_completed", {
         answers: onboarding.answers,
+        age: onboarding.age,
         ageGroup: onboarding.ageGroup,
         level: onboarding.level,
       });

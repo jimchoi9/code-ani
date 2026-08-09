@@ -90,8 +90,10 @@ export function createTestModeStore(storage, now = () => new Date().toISOString(
         onboarding: {
           step: String(onboarding?.step ?? "name"),
           answers: clone(onboarding?.answers ?? {}),
+          ...(Number.isInteger(onboarding?.age) ? { age: onboarding.age } : {}),
           ...(onboarding?.ageGroup ? { ageGroup: String(onboarding.ageGroup) } : {}),
           ...(onboarding?.level ? { level: String(onboarding.level) } : {}),
+          ...(onboarding?.validationError ? { validationError: String(onboarding.validationError) } : {}),
         },
       };
       persist(next);
