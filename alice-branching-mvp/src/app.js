@@ -28,6 +28,7 @@ function baseState(session = null) {
     feedback: null,
     chipResponse: null,
     vocabulary: null,
+    testCompleted: false,
   };
 }
 
@@ -187,6 +188,21 @@ export function replayForAnotherEnding(state) {
   };
 }
 
+export function finishAdventure(state) {
+  if (state?.screen !== "ending" || !isUsableSession(state.session)) return state;
+  return { ...state, screen: "complete", vocabulary: null, testCompleted: false };
+}
+
+export function markTestComplete(state) {
+  if (state?.screen !== "complete") return state;
+  return { ...state, testCompleted: true };
+}
+
+export function returnToEnding(state) {
+  if (state?.screen !== "complete") return state;
+  return { ...state, screen: "ending", testCompleted: false };
+}
+
 export function createStoryReward(previousState, nextState) {
   if (nextState?.screen !== "ending" || !nextState.sceneId) return null;
   if (previousState?.session?.endingsSeen?.includes(nextState.sceneId)) return null;
@@ -278,6 +294,7 @@ export function bindAppEvents(
     onTestReset = state => state,
     onTestDownload = () => {},
     onTestComplete = () => {},
+    onNewParticipant = state => state,
     onDismissReward = () => {},
   } = {},
 ) {
@@ -346,9 +363,16 @@ export function bindAppEvents(
       commit(onTestReset(state));
     } else if (action === "test-download") {
       onTestDownload(state);
-    } else if (action === "test-complete") {
+    } else if (action === "finish-adventure") {
+      commit(finishAdventure(state));
+    } else if (action === "complete-test") {
       onStoryEvent("test_completed", { sceneId: state.sceneId });
-      onTestComplete(control, state);
+      onTestComplete(state);
+      commit(markTestComplete(state), false);
+    } else if (action === "new-participant") {
+      commit(onNewParticipant(state));
+    } else if (action === "back-to-ending") {
+      commit(returnToEnding(state));
     } else if (action === "dismiss-reward") {
       onDismissReward(control);
     }
@@ -417,6 +441,7 @@ export function mountBrowserApp({
       participantId: record?.participantId ?? "",
       eventCount: record?.events?.length ?? 0,
       storyReward,
+      testCompleted: state.testCompleted,
     };
   }
 
@@ -445,12 +470,13 @@ export function mountBrowserApp({
     else if (state.screen === "scene" && scene) html = renderWithUi("renderScene", scene, state.session, state.feedback);
     else if (state.screen === "chip-response" && scene) html = renderWithUi("renderChipResponse", state);
     else if (state.screen === "ending" && scene) html = renderWithUi("renderEnding", scene, state.session);
+    else if (state.screen === "complete" && scene && typeof ui.renderComplete === "function") html = renderWithUi("renderComplete", state.session, scene);
     else html = renderWithUi("renderRecovery");
 
     const panel = state.vocabulary
       ? renderWithUi("renderVocabularyPanel", state.vocabulary.word, state.vocabulary.definition)
       : "";
-    const testTools = testMode && typeof ui.renderTestTools === "function"
+    const testTools = testMode && state.screen !== "complete" && typeof ui.renderTestTools === "function"
       ? ui.renderTestTools(testContext())
       : "";
     app.innerHTML = html + panel + testTools;
@@ -516,9 +542,17 @@ export function mountBrowserApp({
       const participantId = payload.participant?.participantId ?? "unknown";
       downloadJson(documentRef, windowRef, payload, `moriai-${participantId}.json`);
     },
-    onTestComplete(control) {
-      control.textContent = "테스트 완료";
-      control.disabled = true;
+    onTestComplete(currentState) {
+      if (!testMode) return;
+      const payload = testStore.exportSnapshot(currentState.session);
+      const participantId = payload.participant?.participantId ?? "unknown";
+      downloadJson(documentRef, windowRef, payload, `moriai-${participantId}.json`);
+    },
+    onNewParticipant() {
+      store.clear();
+      minimalStore.clear();
+      testStore.clear();
+      return createAppState();
     },
     onDismissReward(control) {
       control.closest(".vn-reward-overlay")?.remove();

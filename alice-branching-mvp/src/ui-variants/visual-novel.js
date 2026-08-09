@@ -329,8 +329,8 @@ export function renderEnding(scene, session, context = {}) {
   const endingCount = session?.endingsSeen?.length ?? 0;
   const endingActions = context.testMode
     ? `<div class="vn-test-ending-actions">
-        <button class="vn-choice" type="button" data-action="other-ending">다른 결말 보러 가기</button>
-        <button class="vn-choice" type="button" data-action="test-complete">오늘은 여기까지</button>
+        <button class="vn-choice" type="button" data-action="other-ending">다른 결말도 찾아볼래!</button>
+        <button class="vn-choice" type="button" data-action="finish-adventure">오늘 모험 마치기</button>
       </div>`
     : `<button class="vn-choice" type="button" data-action="restart">다시 시작</button>`;
   const dialogue = `<p class="vn-kicker">이야기의 끝</p>
@@ -343,6 +343,37 @@ export function renderEnding(scene, session, context = {}) {
     ${endingActions}`;
 
   return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), visualNovelAssets.endingTones[scene.id], session, context);
+}
+
+export function renderComplete(session, endingScene, context = {}) {
+  const slots = session?.slots ?? {};
+  const endings = session?.endingsSeen ?? [];
+  const fragments = endings.map(id => storyFragments[id]).filter(Boolean);
+  const fragmentList = fragments.length
+    ? `<ul class="vn-complete-fragments">${fragments.map(fragment => `<li><span aria-hidden="true">${fragment.mark}</span>${escapeHtml(fragment.name)}</li>`).join("")}</ul>`
+    : `<p class="vn-complete-empty">첫 번째 이야기 조각을 만났어요.</p>`;
+  const facilitator = context.testCompleted
+    ? `<div class="vn-facilitator-status" role="status">
+        <strong>테스트 기록을 저장했어요</strong>
+        <p>다음 참가자를 준비할 수 있습니다.</p>
+        <button class="vn-choice" type="button" data-action="new-participant">새 참가자 시작</button>
+      </div>`
+    : `<div class="vn-facilitator-actions">
+        <button class="vn-choice" type="button" data-action="complete-test">기록 저장하고 테스트 완료</button>
+        <button class="vn-text-action" type="button" data-action="back-to-ending">이야기로 돌아가기</button>
+      </div>`;
+  const dialogue = `<p class="vn-kicker">오늘의 모험</p>
+    <h1>모험 완료!</h1>
+    <p class="vn-complete-message">${escapeHtml(personalize("{HERO}{은/는} 오늘 멋진 선택으로 이야기를 완성했어요.", slots))}</p>
+    ${fragmentList}
+    <p class="vn-ending-progress">만난 결말 <strong>${escapeHtml(endings.length)}/3</strong></p>
+    <section class="vn-facilitator-panel" aria-label="진행자용 테스트 도구">
+      <p class="vn-facilitator-label">진행자용</p>
+      ${facilitator}
+    </section>`;
+
+  const completeScene = { ...endingScene, title: "오늘의 모험" };
+  return renderStage(completeScene, dialogue, 5, visualNovelAssets.endingTones[endingScene?.id], session, context);
 }
 
 export function renderRecovery(context = {}) {
@@ -388,6 +419,7 @@ export const visualNovelRenderer = Object.freeze({
   renderScene,
   renderChipResponse,
   renderEnding,
+  renderComplete,
   renderRecovery,
   renderVocabularyPanel,
   renderTestTools,

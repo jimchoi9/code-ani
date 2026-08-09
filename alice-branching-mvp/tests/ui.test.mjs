@@ -291,6 +291,20 @@ test("next-beat는 스토리 세션을 바꾸지 않고 UI 상태만 한 칸 진
   assert.deepEqual(after.minimalState, { sceneId: "S00", beatIndex: 1 });
 });
 
+test("모험 마치기는 결말 세션을 보존한 완료 화면으로 전환한다", async () => {
+  const { finishAdventure } = await import("../src/app.js");
+  const ending = continueChip(selectChip(
+    choosePath(choosePath(beginStory(), "S01"), "A1"),
+    { label: "이 길 끝에 뭐가 있어?", nextSceneId: "E1" },
+  ));
+  const complete = finishAdventure(ending);
+
+  assert.equal(complete.screen, "complete");
+  assert.strictEqual(complete.session, ending.session);
+  assert.equal(complete.sceneId, "E1");
+  assert.equal(complete.testCompleted, false);
+});
+
 test("escapeHtml escapes all HTML-significant characters", () => {
   assert.equal(escapeHtml("&<>\"'"), "&amp;&lt;&gt;&quot;&#039;");
 });

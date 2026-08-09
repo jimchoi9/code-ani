@@ -87,6 +87,7 @@ function createRenderer(id = "test") {
     renderScene: render("renderScene"),
     renderChipResponse: render("renderChipResponse"),
     renderEnding: render("renderEnding"),
+    renderComplete: render("renderComplete"),
     renderRecovery: render("renderRecovery"),
     renderVocabularyPanel: render("renderVocabularyPanel"),
   };
@@ -309,6 +310,45 @@ test("테스트 JSON 다운로드는 참가자 파일명과 직렬화된 payload
   ]);
   assert.deepEqual(calls.at(-2), ["click", "blob:test", "moriai-C01.json"]);
   assert.deepEqual(calls.at(-1), ["revoke", "blob:test"]);
+});
+
+test("테스트 종료는 아이 완료 화면 뒤 기록을 저장하고 새 참가자로 초기화한다", async () => {
+  const { mountBrowserApp } = await import("../src/app.js");
+  const atChip = choosePath(choosePath(beginStory(), "S01"), "A1");
+  const ending = continueChip(selectChip(atChip, {
+    label: "이 길 끝에 뭐가 있어?",
+    nextSceneId: "E1",
+  }));
+  const renderer = createRenderer("visual-novel");
+  renderer.renderTestTools = () => "";
+  const environment = createEnvironment("?test=1");
+  const storyStore = createStoryStore(ending.session);
+  const testStore = createTestStore({ participantId: "C02", events: [] });
+  const downloads = [];
+
+  mountBrowserApp({
+    ...environment,
+    sessionStore: storyStore,
+    testStore,
+    minimalStore: createMinimalStateStore(createStorage()),
+    getRenderer: () => renderer,
+    downloadJson(documentRef, windowRef, payload, filename) {
+      downloads.push({ payload, filename });
+    },
+  });
+
+  environment.app.click(actionControl("finish-adventure"));
+  assert.equal(environment.windowRef.__aliceStoryDebug.screen(), "complete");
+  assert.equal(renderer.calls.at(-1).name, "renderComplete");
+
+  environment.app.click(actionControl("complete-test"));
+  assert.equal(testStore.events.at(-1).type, "test_completed");
+  assert.equal(downloads[0].filename, "moriai-C02.json");
+  assert.equal(renderer.calls.at(-1).args.at(-1).testCompleted, true);
+
+  environment.app.click(actionControl("new-participant"));
+  assert.equal(environment.windowRef.__aliceStoryDebug.screen(), "setup");
+  assert.equal(testStore.load(), null);
 });
 
 test("mounted minimal은 beat를 저장·복원하고 story session 변경 없이 reset한다", async () => {

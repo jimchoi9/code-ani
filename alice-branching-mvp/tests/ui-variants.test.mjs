@@ -268,13 +268,38 @@ test("테스트 모드 비주얼노벨만 참가자 코드와 진행자 도구�
   assert.match(setup, /name="PARTICIPANT_ID"/);
   assert.match(setup, /pattern="\[A-Za-z0-9_-\]\+"/);
   assert.match(ending, /data-action="other-ending"/);
-  assert.match(ending, /data-action="test-complete"/);
+  assert.match(ending, /다른 결말도 찾아볼래!/);
+  assert.match(ending, /data-action="finish-adventure"/);
   assert.match(tools, />C01</);
   assert.match(tools, /이벤트 7개/);
   assert.match(tools, /data-action="test-download"/);
   assert.match(tools, /data-action="test-reset"/);
   assert.doesNotMatch(normalSetup, /PARTICIPANT_ID/);
-  assert.doesNotMatch(normalEnding, /other-ending|test-complete/);
+  assert.doesNotMatch(normalEnding, /other-ending|finish-adventure/);
+});
+
+test("비주얼노벨 테스트 완료 화면은 아이의 성취와 진행자 작업을 분리한다", () => {
+  const renderer = getUiRenderer("visual-novel");
+  const complete = renderer.renderComplete(visualNovelEndingSession, story.scenes.E1, {
+    testMode: true,
+    participantId: "C01",
+    testCompleted: false,
+  });
+  const saved = renderer.renderComplete(visualNovelEndingSession, story.scenes.E1, {
+    testMode: true,
+    participantId: "C01",
+    testCompleted: true,
+  });
+
+  assert.match(complete, /모험 완료!/);
+  assert.match(complete, /오늘의 모험/);
+  assert.match(complete, /호기심의 조각/);
+  assert.match(complete, /진행자용 테스트 도구/);
+  assert.match(complete, /data-action="complete-test"/);
+  assert.match(complete, /data-action="back-to-ending"/);
+  assert.match(saved, /테스트 기록을 저장했어요/);
+  assert.match(saved, /data-action="new-participant"/);
+  assert.doesNotMatch(saved, /data-action="complete-test"/);
 });
 
 test("새 결말 보상은 결말별 이야기 조각 카드와 열두 개의 빛 조각을 렌더링한다", () => {
