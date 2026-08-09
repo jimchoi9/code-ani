@@ -326,6 +326,8 @@ test("비주얼노벨 스타일은 게임 프레임, 화자 색상, ending overl
   assert.match(styles, /\.vn-title-plaque\s*\{[^}]*--vn-gold|\.vn-title-plaque\s*\{[^}]*border:\s*1px solid var\(--vn-gold\)/);
   assert.match(styles, /\.vn-game-frame\s+\.vn-dialogue\s*\{[^}]*background:\s*linear-gradient/);
   assert.match(styles, /\.vn-game-frame\s+\.vn-actions\s*\{[^}]*grid-template-columns:\s*repeat\(2/);
+  assert.match(styles, /\.vn-game-frame\s+\.vn-choice\s*\{[^}]*border:\s*1px solid #5bd6ed[^}]*background:\s*linear-gradient\(180deg,\s*#179dd0,\s*#0872aa\)/);
+  assert.doesNotMatch(styles, /\.vn-game-frame\s+\.vn-choice:nth-child\(even\)/);
   assert.match(styles, /\.vn-nameplate--rabbit\s*\{[^}]*#c9364f/);
   assert.match(styles, /\.vn-nameplate--cat\s*\{[^}]*#7350a2/);
   assert.match(styles, /\.vn-nameplate--hatter\s*\{[^}]*#147aa0/);
