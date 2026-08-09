@@ -1,3 +1,5 @@
+import { normalizeUiPreference } from "./ui-preference.js";
+
 const STORAGE_KEY = "alice-branching-mvp/test-v1";
 
 const INITIAL_ONBOARDING = Object.freeze({ step: "name", answers: {} });
@@ -18,7 +20,7 @@ export function normalizeParticipantId(value) {
     .slice(0, 12);
 }
 
-export function createTestModeStore(storage, now = () => new Date().toISOString()) {
+export function createTestModeStore(storage, now = () => new Date().toISOString(), uiId = "visual-novel") {
   if (storage === undefined) {
     try {
       storage = globalThis.localStorage;
@@ -60,7 +62,7 @@ export function createTestModeStore(storage, now = () => new Date().toISOString(
     const event = {
       type,
       participantId: current.participantId,
-      ui: "visual-novel",
+      ui: normalizeUiPreference(uiId),
       timestamp,
       elapsedMs: Math.max(0, Date.parse(timestamp) - Date.parse(current.startedAt)),
       ...clone(details),

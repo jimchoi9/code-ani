@@ -188,7 +188,9 @@ test("mounted app은 선택 renderer로 모든 화면과 낱말 panel을 dispatc
     mountBrowserApp({
       ...environment,
       sessionStore: createStoryStore(session),
+      testStore: createTestStore(session === null ? null : { participantId: "C01", events: [] }),
       minimalStore: createMinimalStateStore(createStorage()),
+      preferenceStore: { load: () => "visual-novel" },
       getRenderer: id => {
         assert.equal(id, "visual-novel");
         return renderer;
@@ -203,7 +205,9 @@ test("mounted app은 선택 renderer로 모든 화면과 낱말 panel을 dispatc
   mountBrowserApp({
     ...environment,
     sessionStore,
+    testStore: createTestStore({ participantId: "C01", events: [] }),
     minimalStore: createMinimalStateStore(createStorage()),
+    preferenceStore: { load: () => "visual-novel" },
     getRenderer: () => renderer,
   });
   environment.app.click(actionControl("vocab", { word: "황급히" }));
@@ -216,79 +220,64 @@ test("mounted app은 선택 renderer로 모든 화면과 낱말 panel을 dispatc
   assert.deepEqual(environment.app.focusCalls.at(-1), ["close"]);
 });
 
-test("query UI 전환 mount는 같은 story session을 renderer와 분리해 유지한다", async () => {
+test("메인은 저장된 세 UI 각각으로 테스트 이야기를 렌더링한다", async () => {
   const { mountBrowserApp } = await import("../src/app.js");
   const baseline = beginStory().session;
-  const sessionStore = createStoryStore(baseline);
-  const resolvedIds = [];
 
-  const currentEnvironment = createEnvironment("?ui=current&compare=1");
-  mountBrowserApp({
-    ...currentEnvironment,
-    sessionStore,
-    minimalStore: createMinimalStateStore(createStorage()),
-    getRenderer: id => {
-      resolvedIds.push(id);
-      return createRenderer(id);
-    },
-  });
-  const currentSession = currentEnvironment.windowRef.__aliceStoryDebug.session();
+  for (const selectedUi of ["current", "visual-novel", "minimal"]) {
+    const renderers = Object.fromEntries(["current", "visual-novel", "minimal"].map(id => [id, createRenderer(id)]));
+    renderers["visual-novel"].renderTestTools = () => '<aside data-test-tools="true"></aside>';
+    const environment = createEnvironment("");
+    mountBrowserApp({
+      ...environment,
+      sessionStore: createStoryStore(baseline),
+      testStore: createTestStore({
+        participantId: "C01",
+        events: [],
+        onboarding: { step: "complete", answers: slots },
+      }),
+      minimalStore: createMinimalStateStore(createStorage()),
+      preferenceStore: { load: () => selectedUi },
+      getRenderer: id => renderers[id],
+    });
 
-  const minimalEnvironment = createEnvironment("?ui=minimal&compare=1");
-  mountBrowserApp({
-    ...minimalEnvironment,
-    sessionStore,
-    minimalStore: createMinimalStateStore(createStorage()),
-    getRenderer: id => {
-      resolvedIds.push(id);
-      return createRenderer(id);
-    },
-  });
-  const minimalSession = minimalEnvironment.windowRef.__aliceStoryDebug.session();
-
-  assert.deepEqual(resolvedIds, ["current", "minimal"]);
-  assert.deepEqual(currentSession, baseline);
-  assert.deepEqual(minimalSession, baseline);
-  assert.deepEqual(minimalSession.runs, baseline.runs);
-  assert.deepEqual(minimalSession.path, ["S00"]);
-  assert.equal(sessionStore.saves.length, 0);
-  assert.equal(currentEnvironment.app.dataset.compare, "true");
-  assert.equal(minimalEnvironment.app.dataset.compare, "true");
-  assert.equal(currentEnvironment.app.dataset.ui, "current");
-  assert.equal(minimalEnvironment.app.dataset.ui, "minimal");
+    assert.equal(environment.app.dataset.ui, selectedUi);
+    assert.equal(environment.app.dataset.testMode, "true");
+    assert.equal(renderers[selectedUi].calls[0]?.name, "renderScene");
+    assert.match(environment.app.innerHTML, /data-test-tools="true"/);
+    assert.match(environment.app.innerHTML, /href="\.\/settings\.html"/);
+    assert.deepEqual(environment.windowRef.__aliceStoryDebug.session(), baseline);
+  }
 });
 
-test("test=1 mount는 비주얼노벨을 강제하고 비교 메뉴 없이 테스트 context를 전달한다", async () => {
+test("저장된 UI는 기존 query보다 우선하고 비교 메뉴를 표시하지 않는다", async () => {
   const { mountBrowserApp } = await import("../src/app.js");
-  const renderer = createRenderer("visual-novel");
-  renderer.renderTestTools = context => `<aside data-test-tools="${context.participantId}"></aside>`;
+  const renderers = Object.fromEntries(["current", "visual-novel", "minimal"].map(id => [id, createRenderer(id)]));
+  renderers["visual-novel"].renderTestTools = () => "";
   const environment = createEnvironment("?ui=current&compare=1&test=1");
-  const testStore = createTestStore();
 
   mountBrowserApp({
     ...environment,
     sessionStore: createStoryStore(beginStory().session),
-    testStore,
+    testStore: createTestStore({ participantId: "C01", events: [] }),
     minimalStore: createMinimalStateStore(createStorage()),
-    getVariant: () => "current",
-    getRenderer: id => {
-      assert.equal(id, "visual-novel");
-      return renderer;
-    },
+    preferenceStore: { load: () => "minimal" },
+    getRenderer: id => renderers[id],
   });
 
-  assert.equal(environment.app.dataset.ui, "visual-novel");
+  assert.equal(environment.app.dataset.ui, "minimal");
   assert.equal(environment.app.dataset.testMode, "true");
   assert.equal(environment.app.inserted.length, 0);
-  assert.equal(renderer.calls[0].name, "renderSetup");
-  assert.equal(renderer.calls[0].args[1].testMode, true);
-  assert.match(environment.app.innerHTML, /data-test-tools=""/);
+  assert.equal(renderers.minimal.calls[0].name, "renderScene");
 });
 
 test("진행 중인 채팅 온보딩은 저장된 질문과 답변으로 복원한다", async () => {
   const { mountBrowserApp } = await import("../src/app.js");
-  const renderer = createRenderer("visual-novel");
-  renderer.renderTestTools = () => "";
+  const renderers = {
+    minimal: createRenderer("minimal"),
+    "visual-novel": createRenderer("visual-novel"),
+  };
+  renderers["visual-novel"].renderTestTools = () => "";
   const environment = createEnvironment("?test=1");
   const testStore = createTestStore({
     participantId: "C05",
@@ -301,12 +290,14 @@ test("진행 중인 채팅 온보딩은 저장된 질문과 답변으로 복원�
     sessionStore: createStoryStore(null),
     testStore,
     minimalStore: createMinimalStateStore(createStorage()),
-    getRenderer: () => renderer,
+    preferenceStore: { load: () => "minimal" },
+    getRenderer: id => renderers[id],
   });
 
   assert.equal(environment.windowRef.__aliceStoryDebug.screen(), "onboarding");
-  assert.equal(renderer.calls[0].name, "renderOnboarding");
-  assert.deepEqual(renderer.calls[0].args[0].onboarding, {
+  assert.equal(renderers.minimal.calls.length, 0);
+  assert.equal(renderers["visual-novel"].calls[0].name, "renderOnboarding");
+  assert.deepEqual(renderers["visual-novel"].calls[0].args[0].onboarding, {
     step: "color",
     answers: { HERO: "지민", PET: "토끼" },
   });
@@ -353,8 +344,11 @@ test("테스트 JSON 다운로드는 참가자 파일명과 직렬화된 payload
 test("테스트 종료는 아이 완료 화면 뒤 기록을 저장하고 새 참가자로 초기화한다", async () => {
   const { mountBrowserApp } = await import("../src/app.js");
   const { ending } = reachA1Ending();
-  const renderer = createRenderer("visual-novel");
-  renderer.renderTestTools = () => "";
+  const renderers = {
+    current: createRenderer("current"),
+    "visual-novel": createRenderer("visual-novel"),
+  };
+  renderers["visual-novel"].renderTestTools = () => "";
   const environment = createEnvironment("?test=1");
   const storyStore = createStoryStore(ending.session);
   const testStore = createTestStore({ participantId: "C02", events: [] });
@@ -365,24 +359,30 @@ test("테스트 종료는 아이 완료 화면 뒤 기록을 저장하고 새 �
     sessionStore: storyStore,
     testStore,
     minimalStore: createMinimalStateStore(createStorage()),
-    getRenderer: () => renderer,
+    preferenceStore: { load: () => "current" },
+    getRenderer: id => renderers[id],
     downloadJson(documentRef, windowRef, payload, filename) {
       downloads.push({ payload, filename });
     },
   });
 
+  assert.equal(renderers.current.calls[0].name, "renderEnding");
+  assert.match(environment.app.innerHTML, /data-action="other-ending"/);
+  assert.match(environment.app.innerHTML, /data-action="finish-adventure"/);
+
   environment.app.click(actionControl("finish-adventure"));
   assert.equal(environment.windowRef.__aliceStoryDebug.screen(), "complete");
-  assert.equal(renderer.calls.at(-1).name, "renderComplete");
+  assert.equal(renderers["visual-novel"].calls.at(-1).name, "renderComplete");
 
   environment.app.click(actionControl("complete-test"));
   assert.equal(testStore.events.at(-1).type, "test_completed");
   assert.equal(downloads[0].filename, "moriai-C02.json");
-  assert.equal(renderer.calls.at(-1).args.at(-1).testCompleted, true);
+  assert.equal(renderers["visual-novel"].calls.at(-1).args.at(-1).testCompleted, true);
 
   environment.app.click(actionControl("new-participant"));
   assert.equal(environment.windowRef.__aliceStoryDebug.screen(), "setup");
   assert.equal(testStore.load(), null);
+  assert.equal(renderers["visual-novel"].calls.at(-1).name, "renderSetup");
 });
 
 test("mounted minimal은 beat를 저장·복원하고 story session 변경 없이 reset한다", async () => {
@@ -395,7 +395,9 @@ test("mounted minimal은 beat를 저장·복원하고 story session 변경 없�
   mountBrowserApp({
     ...firstEnvironment,
     sessionStore,
+    testStore: createTestStore({ participantId: "C01", events: [] }),
     minimalStore: createMinimalStateStore(storage),
+    preferenceStore: { load: () => "minimal" },
     getRenderer: () => createRenderer("minimal"),
   });
   firstEnvironment.app.click(readerSurface());
@@ -416,7 +418,9 @@ test("mounted minimal은 beat를 저장·복원하고 story session 변경 없�
   mountBrowserApp({
     ...reloadEnvironment,
     sessionStore,
+    testStore: createTestStore({ participantId: "C01", events: [] }),
     minimalStore: createMinimalStateStore(storage),
+    preferenceStore: { load: () => "minimal" },
     getRenderer: () => createRenderer("minimal"),
   });
   assert.deepEqual(reloadEnvironment.windowRef.__aliceStoryDebug.minimalState(), {
@@ -442,7 +446,9 @@ test("mounted minimal은 저장된 다른 장면 beat를 현재 장면 0으로 �
   mountBrowserApp({
     ...environment,
     sessionStore: createStoryStore(atNextScene),
+    testStore: createTestStore({ participantId: "C01", events: [] }),
     minimalStore: createMinimalStateStore(storage),
+    preferenceStore: { load: () => "minimal" },
     getRenderer: () => createRenderer("minimal"),
   });
 
@@ -451,4 +457,25 @@ test("mounted minimal은 저장된 다른 장면 beat를 현재 장면 0으로 �
     beatIndex: 0,
   });
   assert.deepEqual(JSON.parse(storage.value), { sceneId: "S01", beatIndex: 0 });
+});
+
+test("미니멀 결말은 마지막 문장에 도달한 뒤 테스트 종료 동작을 보여준다", async () => {
+  const { mountBrowserApp } = await import("../src/app.js");
+  const { ending } = reachA1Ending();
+  const environment = createEnvironment("");
+
+  mountBrowserApp({
+    ...environment,
+    sessionStore: createStoryStore(ending.session),
+    testStore: createTestStore({ participantId: "C01", events: [] }),
+    minimalStore: createMinimalStateStore(createStorage()),
+    preferenceStore: { load: () => "minimal" },
+  });
+
+  assert.doesNotMatch(environment.app.innerHTML, /data-action="finish-adventure"/);
+
+  for (let step = 0; step < 30; step += 1) environment.app.click(readerSurface());
+
+  assert.match(environment.app.innerHTML, /data-action="other-ending"/);
+  assert.match(environment.app.innerHTML, /data-action="finish-adventure"/);
 });

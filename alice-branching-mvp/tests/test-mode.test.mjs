@@ -46,6 +46,18 @@ test("새 참가자는 이전 기록을 교체하고 경과 시간과 장면 정
   assert.deepEqual(record.onboarding, { step: "name", answers: {} });
 });
 
+test("테스트 이벤트는 설정에서 선택한 UI를 기록한다", () => {
+  const store = createTestModeStore(
+    storageDouble(),
+    () => "2026-08-09T10:00:00.000Z",
+    "minimal",
+  );
+
+  store.start("C06");
+
+  assert.equal(store.load().events[0].ui, "minimal");
+});
+
 test("채팅 온보딩 답변과 현재 질문을 저장하고 복원한다", () => {
   const storage = storageDouble();
   const store = createTestModeStore(storage, () => "2026-08-09T10:00:00.000Z");

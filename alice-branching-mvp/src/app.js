@@ -16,9 +16,10 @@ import {
   visitScene,
 } from "./session.js";
 import { getScene, resolveScene, story } from "./story-data.js";
-import { createTestModeStore, isTestMode } from "./test-mode.js";
+import { createTestModeStore } from "./test-mode.js";
 import { escapeHtml } from "./ui.js";
-import { createCompareLinks, getUiRenderer, parseUiVariant } from "./ui-variant.js";
+import { createCompareLinks, getUiRenderer } from "./ui-variant.js";
+import { createUiPreferenceStore } from "./ui-preference.js";
 import { getVocabulary } from "./vocabulary.js";
 
 function baseState(session = null) {
@@ -308,6 +309,17 @@ export function renderCompareMenu(search, uiVariant) {
   return `<nav class="compare-menu" aria-label="UI 비교">${links}</nav>`;
 }
 
+export function renderTestNavigation() {
+  return '<nav class="test-navigation" aria-label="테스트 설정"><a class="test-settings-link" href="./settings.html">UI 설정</a></nav>';
+}
+
+export function renderTestEndingActions() {
+  return `<div class="test-ending-actions" aria-label="테스트 계속하기">
+    <button type="button" data-action="other-ending">다른 결말 보기</button>
+    <button type="button" data-action="finish-adventure">오늘 테스트 마치기</button>
+  </div>`;
+}
+
 export function bindAppEvents(
   app,
   getState,
@@ -431,7 +443,7 @@ export function downloadTestJson(documentRef, windowRef, payload, filename) {
 
 function getMinimalBeatContext(state) {
   if (!["scene", "chip-response", "ending"].includes(state.screen)) return null;
-  const scene = getScene(state.sceneId);
+  const scene = resolveScene(state.sceneId, state.session ?? {});
   if (!scene || !isUsableSession(state.session)) return null;
 
   const body = state.screen === "chip-response" ? state.chipResponse?.response : scene.body;
@@ -447,38 +459,35 @@ export function mountBrowserApp({
   sessionStore: suppliedSessionStore = null,
   minimalStore: suppliedMinimalStore = null,
   testStore: suppliedTestStore = null,
+  preferenceStore: suppliedPreferenceStore = null,
   downloadJson = downloadTestJson,
-  getVariant = parseUiVariant,
   getRenderer = getUiRenderer,
 } = {}) {
   const app = documentRef?.querySelector("#app");
   if (!app) return;
 
-  const testMode = isTestMode(windowRef.location.search);
-  const uiVariant = testMode ? "visual-novel" : getVariant(windowRef.location.search);
+  const testMode = true;
+  const preferenceStore = suppliedPreferenceStore ?? createUiPreferenceStore();
+  const uiVariant = preferenceStore.load();
   const ui = getRenderer(uiVariant);
+  const testShell = getRenderer("visual-novel");
   const minimalStore = suppliedMinimalStore ?? createMinimalStateStore();
   const store = suppliedSessionStore ?? createSessionStore();
-  const testStore = suppliedTestStore ?? createTestModeStore();
-  const activeTest = testMode ? testStore.load() : null;
-  if (testMode && !activeTest) store.clear();
+  const testStore = suppliedTestStore ?? createTestModeStore(undefined, undefined, uiVariant);
+  const activeTest = testStore.load();
+  if (!activeTest) store.clear();
   let state = createAppState(store.load());
   let minimalState = null;
   let storyReward = null;
-  let onboarding = testMode ? activeTest?.onboarding ?? null : null;
+  let onboarding = activeTest?.onboarding ?? null;
   let onboardingTyping = false;
-  if (testMode && activeTest && state.screen === "setup") state = { ...state, screen: "onboarding" };
+  if (activeTest && state.screen === "setup") state = { ...state, screen: "onboarding" };
 
-  const compareMenu = renderCompareMenu(windowRef.location.search, uiVariant);
-  if (compareMenu) {
-    app.insertAdjacentHTML("beforebegin", compareMenu);
-    app.dataset.compare = "true";
-  }
   app.dataset.ui = uiVariant;
-  if (testMode) app.dataset.testMode = "true";
+  app.dataset.testMode = "true";
 
   function testContext() {
-    const record = testMode ? testStore.load() : null;
+    const record = testStore.load();
     return {
       testMode,
       participantId: record?.participantId ?? "",
@@ -501,31 +510,40 @@ export function mountBrowserApp({
     minimalStore.save(minimalState);
   }
 
-  function renderWithUi(method, ...args) {
+  function renderStoryWithUi(method, ...args) {
     if (uiVariant === "minimal") return ui[method](...args, { minimalState });
-    if (uiVariant === "visual-novel") return ui[method](...args, testContext());
+    if (uiVariant === "visual-novel") return ui[method](...args, { ...testContext(), testMode: false });
     return ui[method](...args);
+  }
+
+  function renderTestShell(method, ...args) {
+    return testShell[method](...args, testContext());
   }
 
   function render(focusContent = false, resetScroll = focusContent) {
     syncMinimalState();
     const scene = resolveScene(state.sceneId, state.session ?? {});
     let html;
-    if (state.screen === "setup") html = renderWithUi("renderSetup", state.session?.slots);
-    else if (state.screen === "onboarding" && typeof ui.renderOnboarding === "function") html = renderWithUi("renderOnboarding");
-    else if (state.screen === "scene" && scene) html = renderWithUi("renderScene", scene, state.session, state.feedback);
-    else if (state.screen === "chip-response" && scene) html = renderWithUi("renderChipResponse", state);
-    else if (state.screen === "ending" && scene) html = renderWithUi("renderEnding", scene, state.session);
-    else if (state.screen === "complete" && scene && typeof ui.renderComplete === "function") html = renderWithUi("renderComplete", state.session, scene);
-    else html = renderWithUi("renderRecovery");
+    if (state.screen === "setup") html = renderTestShell("renderSetup", state.session?.slots);
+    else if (state.screen === "onboarding") html = renderTestShell("renderOnboarding");
+    else if (state.screen === "scene" && scene) html = renderStoryWithUi("renderScene", scene, state.session, state.feedback);
+    else if (state.screen === "chip-response" && scene) html = renderStoryWithUi("renderChipResponse", state);
+    else if (state.screen === "ending" && scene) html = renderStoryWithUi("renderEnding", scene, state.session);
+    else if (state.screen === "complete" && scene) html = renderTestShell("renderComplete", state.session, scene);
+    else html = renderStoryWithUi("renderRecovery");
 
     const panel = state.vocabulary
-      ? renderWithUi("renderVocabularyPanel", state.vocabulary.word, state.vocabulary.definition)
+      ? renderStoryWithUi("renderVocabularyPanel", state.vocabulary.word, state.vocabulary.definition)
       : "";
-    const testTools = testMode && !["complete", "onboarding"].includes(state.screen) && typeof ui.renderTestTools === "function"
-      ? ui.renderTestTools(testContext())
+    const minimalContext = getMinimalBeatContext(state);
+    const isEndingReady = uiVariant !== "minimal"
+      || minimalState?.beatIndex === Math.max((minimalContext?.beatCount ?? 1) - 1, 0);
+    const endingActions = state.screen === "ending" && isEndingReady ? renderTestEndingActions() : "";
+    const testTools = !["complete", "onboarding"].includes(state.screen) && typeof testShell.renderTestTools === "function"
+      ? testShell.renderTestTools(testContext())
       : "";
-    app.innerHTML = html + panel + testTools;
+    app.dataset.screen = state.screen;
+    app.innerHTML = html + panel + endingActions + testTools + renderTestNavigation();
 
     if (storyReward && typeof ui.playReward === "function") {
       ui.playReward(app, windowRef);
