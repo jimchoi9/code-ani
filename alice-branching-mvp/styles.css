@@ -117,6 +117,29 @@ a:focus-visible {
   isolation: isolate;
 }
 
+.story-art-placeholder {
+  display: grid;
+  width: 100%;
+  min-height: 240px;
+  padding: 24px;
+  place-items: center;
+  color: #303030;
+  background: #bdbdbd;
+  border: 1px solid #8c8c8c;
+  text-align: center;
+}
+
+.story-art-placeholder > span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font: 700 1rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.storybook-scene-frame > .story-art-placeholder,
+.vn-art-frame > .story-art-placeholder {
+  min-height: 100%;
+}
+
 .scene-art::before,
 .scene-art::after {
   position: absolute;

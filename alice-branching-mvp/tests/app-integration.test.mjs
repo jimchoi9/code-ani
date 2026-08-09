@@ -9,7 +9,7 @@ import {
   startStory,
 } from "../src/app.js";
 
-const slots = { HERO: "지민", TREAT: "케이크", PET: "강아지", COLOR: "파랑" };
+const slots = { HERO: "지민", TREAT: "케이크", PET: "강아지" };
 
 function clone(value) {
   return value === null || value === undefined ? value : JSON.parse(JSON.stringify(value));

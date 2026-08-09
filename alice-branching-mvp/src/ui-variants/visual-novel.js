@@ -1,12 +1,10 @@
-import { visualNovelAssets } from "../../assets/visual-novel/manifest.js";
 import { renderTemplate } from "../personalization.js";
 import { getScene } from "../story-data.js";
-import { escapeHtml } from "../ui.js";
+import { escapeHtml, renderArtPlaceholder } from "../ui.js";
 
 const SLOT_OPTIONS = {
   TREAT: ["케이크", "쿠키", "젤리", "붕어빵"],
   PET: ["강아지", "고양이", "토끼", "거북이"],
-  COLOR: ["파랑", "노랑", "초록", "분홍"],
 };
 
 const progressByScene = Object.freeze({
@@ -14,11 +12,19 @@ const progressByScene = Object.freeze({
   S01: 2,
   S02: 2,
   A1: 3,
+  A2: 3,
   A3: 3,
+  B1: 3,
   B2: 3,
-  E1: 5,
-  E3: 5,
-  E5: 5,
+  B3: 3,
+  C1: 5,
+  C2: 6,
+  E1: 7,
+  E2: 7,
+  E3: 7,
+  E4: 7,
+  E5: 7,
+  E6: 7,
 });
 
 const speakers = Object.freeze({
@@ -32,14 +38,27 @@ const speakers = Object.freeze({
 
 const storyFragments = Object.freeze({
   E1: { name: "호기심의 조각", tone: "curiosity", mark: "?" },
+  E2: { name: "신중함의 조각", tone: "prudence", mark: "◌" },
   E3: { name: "즐거움의 조각", tone: "joy", mark: "♪" },
+  E4: { name: "침착함의 조각", tone: "composure", mark: "◇" },
   E5: { name: "자신감의 조각", tone: "confidence", mark: "★" },
+  E6: { name: "친화력의 조각", tone: "warmth", mark: "♥" },
+});
+
+const endingTones = Object.freeze(Object.fromEntries(
+  Object.entries(storyFragments).map(([id, fragment]) => [id, fragment.tone]),
+));
+
+const speakerByScene = Object.freeze({
+  S00: "rabbit",
+  A1: "cat", B1: "cat", C1: "cat",
+  A2: "caterpillar", B2: "caterpillar",
+  A3: "hatter", B3: "hatter",
 });
 
 const onboardingQuestions = Object.freeze({
   name: { prompt: "늦었다, 늦었어! 그런데 넌 누구니? 이름을 알려 줘.", placeholder: "내 이름 쓰기", suggestions: [] },
   friend: { prompt: "반가워! 함께 모험할 친구는 누구야?", placeholder: "함께 갈 친구 쓰기", suggestions: ["강아지", "고양이", "토끼", "거북이"] },
-  color: { prompt: "멋진 친구네! 네가 가장 좋아하는 색은 뭐야?", placeholder: "좋아하는 색 쓰기", suggestions: ["파랑", "노랑", "초록", "분홍"] },
   snack: { prompt: "마지막 질문이야. 모험 가방에 어떤 간식을 넣을까?", placeholder: "먹고 싶은 간식 쓰기", suggestions: ["케이크", "쿠키", "젤리", "붕어빵"] },
 });
 
@@ -55,8 +74,8 @@ function renderParagraphs(value, slots) {
 }
 
 function renderTrail(progress) {
-  return `<div class="vn-trail" aria-label="진행 ${progress}/5">${Array.from(
-    { length: 5 },
+  return `<div class="vn-trail" aria-label="진행 ${progress}/7">${Array.from(
+    { length: 7 },
     (_, index) => `<span class="vn-trail-card${index < progress ? " is-complete" : ""}" aria-hidden="true"></span>`,
   ).join("")}</div>`;
 }
@@ -70,7 +89,7 @@ function renderGameHud(session = null, slots = {}) {
     <div class="vn-avatar" aria-hidden="true">A</div>
     <div class="vn-player"><strong>${escapeHtml(hero)}</strong><span>STORY Lv. ${escapeHtml(level)}</span></div>
     <div class="vn-hud-stat"><span>낱말</span><strong>${escapeHtml(vocabCount)}</strong></div>
-    <div class="vn-hud-stat"><span>결말</span><strong>${escapeHtml(endingCount)}/3</strong></div>
+    <div class="vn-hud-stat"><span>결말</span><strong>${escapeHtml(endingCount)}/6</strong></div>
   </header>`;
 }
 
@@ -82,9 +101,9 @@ function renderGameFooter(session = null, progress = 0) {
   const vocabCount = session?.vocabTapped?.length ?? 0;
   const endingCount = session?.endingsSeen?.length ?? 0;
   return `<footer class="vn-game-footer" aria-label="모험 기록">
-    <span>진행 <strong>${escapeHtml(progress)}/5</strong></span>
+    <span>진행 <strong>${escapeHtml(progress)}/7</strong></span>
     <span>낱말 <strong>${escapeHtml(vocabCount)}</strong></span>
-    <span>결말 <strong>${escapeHtml(endingCount)}/3</strong></span>
+    <span>결말 <strong>${escapeHtml(endingCount)}/6</strong></span>
   </footer>`;
 }
 
@@ -102,7 +121,7 @@ function renderStoryReward(reward) {
       <p class="vn-reward-kicker">새로운 보물을 발견했어요</p>
       <span class="vn-reward-mark" aria-hidden="true">${fragment.mark}</span>
       <h2 id="vn-reward-title">${fragment.name}</h2>
-      <p>이야기 조각 <strong>${escapeHtml(reward.count)}/3</strong></p>
+      <p>이야기 조각 <strong>${escapeHtml(reward.count)}/6</strong></p>
     </div>
     <p class="vn-reward-hint">화면을 누르면 연출을 건너뛸 수 있어요</p>
     <button type="button" data-action="dismiss-reward">보물 확인하기</button>
@@ -143,15 +162,9 @@ function renderSceneActions(scene, slots) {
 }
 
 function renderStage(scene, dialogue, progress, endingTone = "", session = null, context = {}) {
-  const backgroundKey = visualNovelAssets.sceneBackgrounds[scene.id];
-  const background = visualNovelAssets.backgrounds[backgroundKey];
-  const characterKey = visualNovelAssets.sceneCharacters[scene.id];
-  const character = visualNovelAssets.characters[characterKey];
   const speaker = getVisualNovelSpeaker(scene);
   const toneAttribute = endingTone ? ` data-ending-tone="${escapeHtml(endingTone)}"` : "";
-  const backdrop = background
-    ? `<div class="vn-background" style="background-image: url('${escapeHtml(background)}')">${character ? `<img class="vn-sprite" src="${escapeHtml(character)}" alt="">` : ""}</div>`
-    : `<div class="vn-background"></div>`;
+  const backdrop = renderArtPlaceholder(scene.art, "vn-art-placeholder");
 
   const slots = session?.slots ?? {};
   return `<main class="vn-shell" data-ui="visual-novel"${toneAttribute}>
@@ -266,7 +279,7 @@ export function getVisualNovelProgress(session, scene) {
 
 export function getVisualNovelSpeaker(scene) {
   if (scene?.type === "ending") return speakers.ending;
-  const character = visualNovelAssets.sceneCharacters[scene?.id];
+  const character = speakerByScene[scene?.id];
   return speakers[character] ?? speakers.narrator;
 }
 
@@ -289,14 +302,12 @@ export function renderSetup(slots = {}, context = {}) {
     </main>`;
   }
   const hero = personalize("{HERO}", slots);
-  const setupBackground = visualNovelAssets.backgrounds.rabbitHole;
   const groups = Object.entries(SLOT_OPTIONS).map(([slot, options]) => `
     <fieldset data-slot="${slot}">
-      <legend>${escapeHtml({ TREAT: "간식", PET: "친구", COLOR: "색깔" }[slot])}</legend>
+      <legend>${escapeHtml({ TREAT: "간식", PET: "친구" }[slot])}</legend>
       ${options.map(option => `<label><input type="radio" name="${slot}" value="${escapeHtml(option)}" data-action="set-slot" data-slot="${slot}"${personalize(`{${slot}}`, slots) === option ? " checked" : ""}>${escapeHtml(option)}</label>`).join("")}
     </fieldset>`).join("");
 
-  void setupBackground;
   return `<main class="vn-shell vn-setup" data-ui="visual-novel">
     <div class="vn-game-frame">
       ${renderGameHud(null, slots)}
@@ -324,9 +335,7 @@ export function renderOnboarding(context = {}) {
   if (answers.HERO) turns.push({ role: "child", text: answers.HERO });
   if (answers.HERO && onboarding.step !== "name") turns.push({ role: "rabbit", text: onboardingQuestions.friend.prompt });
   if (answers.PET) turns.push({ role: "child", text: answers.PET });
-  if (answers.PET && !["name", "friend"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.color.prompt });
-  if (answers.COLOR) turns.push({ role: "child", text: answers.COLOR });
-  if (answers.COLOR && ["snack", "confirm"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.snack.prompt });
+  if (answers.PET && ["snack", "confirm"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.snack.prompt });
   if (answers.TREAT) turns.push({ role: "child", text: answers.TREAT });
 
   if (context.onboardingTyping) {
@@ -334,7 +343,7 @@ export function renderOnboarding(context = {}) {
   }
 
   const messages = turns.map((turn, index) => `<div class="vn-chat-row is-${turn.role}${index === turns.length - 1 ? " is-latest" : ""}">
-    ${turn.role === "rabbit" ? `<span class="vn-chat-avatar" aria-hidden="true"><img src="${escapeHtml(visualNovelAssets.characters.rabbit)}" alt=""></span>` : ""}
+    ${turn.role === "rabbit" ? `<span class="vn-chat-avatar" aria-hidden="true">토</span>` : ""}
     <p>${escapeHtml(turn.text)}</p>
   </div>`).join("");
 
@@ -343,7 +352,7 @@ export function renderOnboarding(context = {}) {
     composer = `<div class="vn-chat-typing" role="status" aria-label="시계토끼가 답장을 쓰는 중"><span></span><span></span><span></span></div>`;
   } else if (onboarding.step === "confirm") {
     composer = `<div class="vn-chat-confirm">
-      <p><strong>${escapeHtml(answers.HERO)}</strong>, <strong>${escapeHtml(answers.PET)}</strong>와 함께 <strong>${escapeHtml(answers.COLOR)}</strong>빛 길을 지나 <strong>${escapeHtml(answers.TREAT)}</strong>을 챙겨 가는 거구나!</p>
+      <p><strong>${escapeHtml(answers.HERO)}</strong>, <strong>${escapeHtml(answers.PET)}</strong>와 함께 <strong>${escapeHtml(answers.TREAT)}</strong>을 챙겨 가는 거구나!</p>
       <button class="vn-choice" type="button" data-action="onboarding-confirm" data-focus-target>이대로 출발!</button>
     </div>`;
   } else {
@@ -360,7 +369,7 @@ export function renderOnboarding(context = {}) {
 
   return `<main class="vn-shell vn-onboarding" data-ui="visual-novel">
     <div class="vn-game-frame">
-      <header class="vn-chat-header"><span class="vn-chat-avatar" aria-hidden="true"><img src="${escapeHtml(visualNovelAssets.characters.rabbit)}" alt=""></span><div><strong>시계토끼</strong><span>지금 대화 중</span></div></header>
+      <header class="vn-chat-header"><span class="vn-chat-avatar" aria-hidden="true">토</span><div><strong>시계토끼</strong><span>지금 대화 중</span></div></header>
       <section class="vn-chat-log" aria-live="polite">${messages}${context.onboardingTyping ? composer : ""}</section>
       <section class="vn-chat-input">${context.onboardingTyping ? "" : composer}</section>
     </div>
@@ -412,11 +421,11 @@ export function renderEnding(scene, session, context = {}) {
     <div class="vn-copy">${renderParagraphs(scene.body, slots)}</div>
     ${recall}
     <p class="vn-trait">너의 이야기 조각: ${escapeHtml(personalize(scene.trait, slots))}</p>
-    <p class="vn-ending-progress" aria-label="결말 수집 상태">${escapeHtml(endingCount)}/3</p>
+    <p class="vn-ending-progress" aria-label="결말 수집 상태">${escapeHtml(endingCount)}/6</p>
     ${renderVocabularyWords(scene.vocab)}
     ${endingActions}`;
 
-  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), visualNovelAssets.endingTones[scene.id], session, context);
+  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), endingTones[scene.id], session, context);
 }
 
 export function renderComplete(session, endingScene, context = {}) {
@@ -440,14 +449,14 @@ export function renderComplete(session, endingScene, context = {}) {
     <h1>모험 완료!</h1>
     <p class="vn-complete-message">${escapeHtml(personalize("{HERO}{은/는} 오늘 멋진 선택으로 이야기를 완성했어요.", slots))}</p>
     ${fragmentList}
-    <p class="vn-ending-progress">만난 결말 <strong>${escapeHtml(endings.length)}/3</strong></p>
+    <p class="vn-ending-progress">만난 결말 <strong>${escapeHtml(endings.length)}/6</strong></p>
     <section class="vn-facilitator-panel" aria-label="진행자용 테스트 도구">
       <p class="vn-facilitator-label">진행자용</p>
       ${facilitator}
     </section>`;
 
   const completeScene = { ...endingScene, title: "오늘의 모험" };
-  return renderStage(completeScene, dialogue, 5, visualNovelAssets.endingTones[endingScene?.id], session, context);
+  return renderStage(completeScene, dialogue, 7, endingTones[endingScene?.id], session, context);
 }
 
 export function renderRecovery(context = {}) {

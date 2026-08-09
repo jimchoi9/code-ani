@@ -4,7 +4,6 @@ import { getScene } from "./story-data.js";
 const SLOT_OPTIONS = {
   TREAT: ["케이크", "쿠키", "젤리", "붕어빵"],
   PET: ["강아지", "고양이", "토끼", "거북이"],
-  COLOR: ["파랑", "노랑", "초록", "분홍"],
 };
 
 export function escapeHtml(value) {
@@ -15,6 +14,14 @@ export function escapeHtml(value) {
     '"': "&quot;",
     "'": "&#039;",
   })[character]);
+}
+
+export function renderArtPlaceholder(artKey, className = "story-art-placeholder") {
+  const key = escapeHtml(artKey ?? "");
+  const classes = [...new Set([className, "story-art-placeholder"].filter(Boolean))]
+    .map(escapeHtml)
+    .join(" ");
+  return `<div class="${classes}" role="img" aria-label="삽화: ${key}"><span>${key}</span></div>`;
 }
 
 function personalize(value, slots) {
@@ -77,7 +84,7 @@ function renderStorybookFooter(session = null) {
   return `<footer class="storybook-footer" aria-label="이야기 기록">
     <span>장면 <strong>${escapeHtml(sceneCount)}</strong></span>
     <span>낱말 <strong>${escapeHtml(vocabCount)}</strong></span>
-    <span>결말 <strong>${escapeHtml(endingCount)}/3</strong></span>
+    <span>결말 <strong>${escapeHtml(endingCount)}/6</strong></span>
   </footer>`;
 }
 
@@ -85,14 +92,14 @@ export function renderSetup(slots) {
   const hero = personalize("{HERO}", slots);
   const groups = Object.entries(SLOT_OPTIONS).map(([slot, options]) => `
     <fieldset data-slot="${slot}">
-      <legend>${escapeHtml({ TREAT: "간식", PET: "친구", COLOR: "색깔" }[slot])}</legend>
+      <legend>${escapeHtml({ TREAT: "간식", PET: "친구" }[slot])}</legend>
       ${options.map(option => `<label><input type="radio" name="${slot}" value="${escapeHtml(option)}" data-action="set-slot" data-slot="${slot}"${personalize(`{${slot}}`, slots) === option ? " checked" : ""}>${escapeHtml(option)}</label>`).join("")}
     </fieldset>`).join("");
 
   return `<main class="story-screen setup-screen scene-rabbit-hole">
     <div class="storybook-shell">
       ${renderStorybookMasthead(hero, "준비")}
-      <div class="storybook-scene-frame"><div class="scene-art" aria-hidden="true"></div></div>
+      <div class="storybook-scene-frame">${renderArtPlaceholder("start_rabbit_hole")}</div>
       <section class="storybook-content storybook-setup-content">
         <h1>나만의 이상한 나라</h1>
         <p class="storybook-intro">이야기 속에서 불릴 이름과 좋아하는 것들을 골라 보세요.</p>
@@ -117,8 +124,8 @@ export function renderScene(scene, session, feedback = null) {
 
   return `<main class="story-screen scene-${escapeHtml(scene.art)}">
     <div class="storybook-shell">
-      ${renderStorybookMasthead(slots.HERO, `${sceneNumber}/5`)}
-      <div class="storybook-scene-frame"><div class="scene-art" aria-hidden="true"></div></div>
+      ${renderStorybookMasthead(slots.HERO, `${sceneNumber}/7`)}
+      <div class="storybook-scene-frame">${renderArtPlaceholder(scene.art)}</div>
       <article class="storybook-content">
       <p class="scene-kicker">${escapeHtml(sceneNumber)}번째 장면</p>
       <h1>${escapeHtml(personalize(scene.title, slots))}</h1>
@@ -138,7 +145,7 @@ export function renderChipResponse(state) {
   return `<main class="story-screen chip-response-screen scene-${escapeHtml(scene.art)}">
     <div class="storybook-shell">
       ${renderStorybookMasthead(state.session?.slots?.HERO ?? "앨리스", "대답")}
-      <div class="storybook-scene-frame"><div class="scene-art" aria-hidden="true"></div></div>
+      <div class="storybook-scene-frame">${renderArtPlaceholder(scene.art)}</div>
       <article class="storybook-content">
       <p class="scene-kicker">네가 고른 말</p>
       <h1>${escapeHtml(response.label)}</h1>
@@ -185,14 +192,14 @@ export function renderEnding(scene, session) {
   return `<main class="story-screen ending-screen scene-${escapeHtml(scene.art)}">
     <div class="storybook-shell">
       ${renderStorybookMasthead(slots.HERO, "END")}
-      <div class="storybook-scene-frame"><div class="scene-art" aria-hidden="true"></div></div>
+      <div class="storybook-scene-frame">${renderArtPlaceholder(scene.art)}</div>
       <article class="storybook-content">
       <p class="scene-kicker">이야기의 끝</p>
       <h1>${escapeHtml(personalize(scene.title, slots))}</h1>
       <div class="story-copy">${renderParagraphs(scene.body, slots)}</div>
       ${recall}
       <p class="story-trait">너의 이야기 조각: ${escapeHtml(personalize(scene.trait, slots))}</p>
-      <p class="ending-progress" aria-label="결말 수집 상태">${escapeHtml(endingCount)}/3</p>
+      <p class="ending-progress" aria-label="결말 수집 상태">${escapeHtml(endingCount)}/6</p>
       ${renderVocabularyWords(scene.vocab)}
       <button type="button" data-action="restart">다시 시작</button>
       </article>

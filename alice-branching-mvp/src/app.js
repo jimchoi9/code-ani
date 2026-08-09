@@ -53,8 +53,7 @@ function personalized(value, session) {
 
 const ONBOARDING_STEPS = Object.freeze({
   name: { slot: "HERO", next: "friend", maxLength: 6 },
-  friend: { slot: "PET", next: "color", maxLength: 12 },
-  color: { slot: "COLOR", next: "snack", maxLength: 12 },
+  friend: { slot: "PET", next: "snack", maxLength: 12 },
   snack: { slot: "TREAT", next: "confirm", maxLength: 12 },
 });
 

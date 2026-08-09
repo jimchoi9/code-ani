@@ -24,7 +24,7 @@ import {
 } from "../src/ui.js";
 
 const session = {
-  slots: { HERO: "지민", TREAT: "젤리", PET: "토끼", COLOR: "분홍" },
+  slots: { HERO: "지민", TREAT: "젤리", PET: "토끼" },
   path: [],
   chipChoices: [
     { sceneId: "A3", label: "다른 장면의 칩" },
@@ -137,7 +137,6 @@ test("빈 이름은 폼에서 허용되고 기본 이름으로 정규화된다",
     HERO: "",
     TREAT: "젤리",
     PET: "토끼",
-    COLOR: "분홍",
   });
 
   assert.ok(nameInput);
@@ -309,12 +308,11 @@ test("채팅 온보딩은 이름부터 간식까지 답변을 순서대로 누�
   let onboarding = { step: "name", answers: {} };
   onboarding = answerOnboarding(onboarding, " 지민 ");
   onboarding = answerOnboarding(onboarding, "토끼");
-  onboarding = answerOnboarding(onboarding, "분홍");
   onboarding = answerOnboarding(onboarding, "젤리");
 
   assert.deepEqual(onboarding, {
     step: "confirm",
-    answers: { HERO: "지민", PET: "토끼", COLOR: "분홍", TREAT: "젤리" },
+    answers: { HERO: "지민", PET: "토끼", TREAT: "젤리" },
   });
   assert.strictEqual(answerOnboarding(onboarding, "추가"), onboarding);
 });
@@ -358,7 +356,7 @@ test("escapeHtml escapes all HTML-significant characters", () => {
   assert.equal(escapeHtml("&<>\"'"), "&amp;&lt;&gt;&quot;&#039;");
 });
 
-test("설정 화면은 이름과 세 선택 그룹을 제공한다", () => {
+test("설정 화면은 이름과 간식·친구 선택 그룹만 제공한다", () => {
   const html = renderSetup(session.slots);
 
   assert.match(html, /class="storybook-shell"/);
@@ -370,7 +368,7 @@ test("설정 화면은 이름과 세 선택 그룹을 제공한다", () => {
   assert.match(html, /name="HERO"[^>]*maxlength="6"[^>]*autocomplete="off"[^>]*inputmode="text"/);
   assert.match(html, /data-slot="TREAT"/);
   assert.match(html, /data-slot="PET"/);
-  assert.match(html, /data-slot="COLOR"/);
+  assert.doesNotMatch(html, /data-slot="COLOR"|색깔/);
 });
 
 test("현재형 전체 화면은 실제 상태를 표시하는 공통 이야기책 프레임을 사용한다", () => {
@@ -389,7 +387,7 @@ test("현재형 전체 화면은 실제 상태를 표시하는 공통 이야기�
   }
   assert.match(sceneHtml, /장면 <strong>2<\/strong>/);
   assert.match(sceneHtml, /낱말 <strong>1<\/strong>/);
-  assert.match(endingHtml, /결말 <strong>1\/3<\/strong>/);
+  assert.match(endingHtml, /결말 <strong>1\/6<\/strong>/);
   assert.doesNotMatch(sceneHtml, /<button[^>]*storybook/);
 });
 
@@ -493,7 +491,7 @@ test("위임된 submit과 continue 클릭은 순수 전이 경계를 호출한�
     app,
     () => state,
     nextState => { state = nextState; },
-    () => ({ HERO: "", TREAT: "젤리", PET: "토끼", COLOR: "분홍" }),
+    () => ({ HERO: "", TREAT: "젤리", PET: "토끼" }),
   );
   const form = {};
   let prevented = false;
@@ -756,7 +754,7 @@ test("결말은 sourceSceneId의 칩만 회상하고 수집 상태와 재시작�
 
   assert.match(html, /이 길 끝에 뭐가 있어\?/);
   assert.doesNotMatch(html, /다른 장면의 칩/);
-  assert.match(html, /1\/3/);
+  assert.match(html, /1\/6/);
   assert.match(html, /너의 이야기 조각: 호기심/);
   assert.match(html, /data-action="restart"/);
 });

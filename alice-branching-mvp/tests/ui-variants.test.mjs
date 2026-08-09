@@ -3,10 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { visualNovelAssets } from "../assets/visual-novel/manifest.js";
 import { renderCompareMenu } from "../src/app.js";
 import { createSession } from "../src/session.js";
-import { story } from "../src/story-data.js";
+import { resolveScene, story } from "../src/story-data.js";
 import {
   SUPPORTED_UI_IDS,
   createCompareLinks,
@@ -18,8 +17,9 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const visualNovelSession = {
-  ...createSession({ HERO: "지민", TREAT: "젤리", PET: "토끼", COLOR: "파랑" }),
+  ...createSession({ HERO: "지민", TREAT: "젤리", PET: "토끼" }),
   path: ["S00", "S01", "A1"],
+  storyState: { encounterId: "A1", gardenEntry: "SECRET", endingVariation: "TRUTH" },
 };
 const visualNovelEndingSession = {
   ...visualNovelSession,
@@ -27,71 +27,6 @@ const visualNovelEndingSession = {
   chipChoices: [{ sceneId: "A1", label: "이 길 끝에 뭐가 있어?" }],
   endingsSeen: ["E1"],
 };
-
-const visualNovelAssetUrls = {
-  backgrounds: {
-    rabbitHole: [
-      "./assets/visual-novel/backgrounds/rabbit-hole.svg",
-      "./assets/visual-novel/backgrounds/rabbit-hole.webp",
-    ],
-    tinyGarden: [
-      "./assets/visual-novel/backgrounds/tiny-garden.svg",
-      "./assets/visual-novel/backgrounds/tiny-garden.webp",
-    ],
-    cheshireTree: [
-      "./assets/visual-novel/backgrounds/cheshire-tree.svg",
-      "./assets/visual-novel/backgrounds/cheshire-tree.webp",
-    ],
-    teaParty: [
-      "./assets/visual-novel/backgrounds/tea-party.svg",
-      "./assets/visual-novel/backgrounds/tea-party.webp",
-    ],
-    giantLand: [
-      "./assets/visual-novel/backgrounds/giant-land.svg",
-      "./assets/visual-novel/backgrounds/giant-land.webp",
-    ],
-    giantMushroom: [
-      "./assets/visual-novel/backgrounds/giant-mushroom.svg",
-      "./assets/visual-novel/backgrounds/giant-mushroom.webp",
-    ],
-  },
-  characters: {
-    rabbit: [
-      "./assets/visual-novel/characters/white-rabbit.svg",
-      "./assets/visual-novel/characters/white-rabbit.png",
-    ],
-    cat: [
-      "./assets/visual-novel/characters/cheshire-cat.svg",
-      "./assets/visual-novel/characters/cheshire-cat.png",
-    ],
-    hatter: [
-      "./assets/visual-novel/characters/mad-hatter.svg",
-      "./assets/visual-novel/characters/mad-hatter.png",
-    ],
-    caterpillar: [
-      "./assets/visual-novel/characters/caterpillar.svg",
-      "./assets/visual-novel/characters/caterpillar.png",
-    ],
-  },
-};
-
-function assertVisualNovelAssetUrls(assets) {
-  assert.deepEqual(Object.keys(assets.backgrounds), Object.keys(visualNovelAssetUrls.backgrounds));
-  assert.deepEqual(Object.keys(assets.characters), Object.keys(visualNovelAssetUrls.characters));
-
-  const urls = [
-    ...Object.values(assets.backgrounds),
-    ...Object.values(assets.characters),
-  ];
-  assert.equal(urls.length, 10);
-  assert.equal(new Set(urls).size, 10);
-
-  for (const [category, assetUrls] of Object.entries(visualNovelAssetUrls)) {
-    for (const [assetKey, allowedUrls] of Object.entries(assetUrls)) {
-      assert.ok(allowedUrls.includes(assets[category][assetKey]), `${category}.${assetKey}`);
-    }
-  }
-}
 
 test("지원 UI와 잘못된 query 폴백을 결정한다", () => {
   assert.deepEqual(SUPPORTED_UI_IDS, ["current", "visual-novel", "minimal"]);
@@ -149,7 +84,7 @@ test("current chip response renderer는 기존 상태 계약으로 장면을 렌
   });
 
   assert.match(html, /chip-response-screen/);
-  assert.match(html, /scene-cheshire-tree/);
+  assert.match(html, /scene-door_cat_meet/);
   assert.match(html, />질문<\/h1>/);
   assert.match(html, />대답<\/p>/);
 });
@@ -186,21 +121,21 @@ test("미니멀 UI는 마지막 beat에서만 낱말과 선택지를 보여준�
 
   assert.equal(view.beatIndex, view.beats.length - 1);
   assert.equal(view.isLastBeat, true);
-  assert.match(view.text, /지민 앞에는/);
+  assert.match(view.text, /먹음직스러운 젤리/);
   assert.doesNotMatch(html, /data-reader-action="next-beat"/);
   assert.doesNotMatch(html, /data-action="next-beat"/);
   assert.match(html, /data-action="vocab"/);
   assert.match(html, /data-action="choose"/);
 });
 
-test("미니멀 결말은 N\/3 텍스트와 마지막 beat 이후 다시 시작을 제공한다", () => {
+test("미니멀 결말은 N\/6 텍스트와 마지막 beat 이후 다시 시작을 제공한다", () => {
   const html = getUiRenderer("minimal").renderEnding(
     story.scenes.E1,
     visualNovelEndingSession,
     { minimalState: { sceneId: "E1", beatIndex: 999 } },
   );
 
-  assert.match(html, /지금까지 만난 결말 1\/3/);
+  assert.match(html, /지금까지 만난 결말 1\/6/);
   assert.match(html, /data-action="restart"/);
 });
 
@@ -220,19 +155,20 @@ test("미니멀 스타일은 읽기 열, 장면 색조, 선택지와 motion 접�
   assert.doesNotMatch(styles, /url\(|assets\//);
 });
 
-test("비주얼노벨은 manifest 배경, 이름표, 캐릭터, 선택 카드와 5단계 트레일을 렌더링한다", () => {
+test("비주얼노벨은 이미지 키 플레이스홀더, 이름표, 선택 카드와 7단계 트레일을 렌더링한다", () => {
   const renderer = getUiRenderer("visual-novel");
   const html = renderer.renderScene(story.scenes.A1, visualNovelSession, "나무 위 웃음소리로 간다");
 
   assert.equal(renderer.id, "visual-novel");
   assert.match(html, /data-ui="visual-novel"/);
-  assert.match(html, new RegExp(visualNovelAssets.backgrounds.cheshireTree.replace(".", "\\.")));
-  assert.match(html, new RegExp(visualNovelAssets.characters.cat.replace(".", "\\.")));
-  assert.match(html, /alt=""/);
+  assert.match(html, /class="vn-art-placeholder story-art-placeholder"/);
+  assert.match(html, /aria-label="삽화: door_cat_meet"/);
+  assert.match(html, />door_cat_meet<\/span>/);
+  assert.doesNotMatch(html, /\.svg|<img|background-image/);
   assert.match(html, /체셔 고양이/);
   assert.match(html, /class="vn-choice/);
-  assert.equal((html.match(/class="vn-trail-card/g) ?? []).length, 5);
-  assert.match(html, /aria-label="진행 3\/5"/);
+  assert.equal((html.match(/class="vn-trail-card/g) ?? []).length, 7);
+  assert.match(html, /aria-label="진행 3\/7"/);
   assert.match(html, /data-action="choose-chip"/);
   assert.match(html, /data-chip-label="이 길 끝에 뭐가 있어\?"/);
 });
@@ -251,8 +187,8 @@ test("비주얼노벨 전체 화면은 실제 모험 상태를 표시하는 게�
     assert.match(html, /class="vn-game-footer"/);
   }
   assert.match(sceneHtml, /STORY Lv\. 3/);
-  assert.match(sceneHtml, /진행 <strong>1\/5<\/strong>/);
-  assert.match(endingHtml, /결말 <strong>1\/3<\/strong>/);
+  assert.match(sceneHtml, /진행 <strong>1\/7<\/strong>/);
+  assert.match(endingHtml, /결말 <strong>1\/6<\/strong>/);
   assert.doesNotMatch(sceneHtml, /data-action="(?:inventory|quest|settings|currency)"/);
 });
 
@@ -284,7 +220,7 @@ test("시계토끼 온보딩은 누적 대화와 추천 답장과 직접 입력�
   const renderer = getUiRenderer("visual-novel");
   const chat = renderer.renderOnboarding({
     testMode: true,
-    onboarding: { step: "color", answers: { HERO: "지민", PET: "토끼" } },
+    onboarding: { step: "snack", answers: { HERO: "지민", PET: "토끼" } },
   });
   const typing = renderer.renderOnboarding({
     testMode: true,
@@ -293,17 +229,18 @@ test("시계토끼 온보딩은 누적 대화와 추천 답장과 직접 입력�
   });
   const confirm = renderer.renderOnboarding({
     testMode: true,
-    onboarding: { step: "confirm", answers: { HERO: "지민", PET: "토끼", COLOR: "분홍", TREAT: "젤리" } },
+    onboarding: { step: "confirm", answers: { HERO: "지민", PET: "토끼", TREAT: "젤리" } },
   });
 
   assert.match(chat, /시계토끼/);
   assert.match(chat, /지민/);
   assert.match(chat, /토끼/);
-  assert.match(chat, /data-value="파랑"/);
+  assert.match(chat, /data-value="젤리"/);
+  assert.doesNotMatch(chat, /좋아하는 색|data-value="파랑"/);
   assert.match(chat, /data-action="onboarding-answer"/);
   assert.match(typing, /vn-chat-typing/);
   assert.doesNotMatch(typing, /추천 답장/);
-  assert.match(confirm, /지민.*토끼.*분홍.*젤리/s);
+  assert.match(confirm, /지민.*토끼.*젤리/s);
   assert.match(confirm, /data-action="onboarding-confirm"/);
 });
 
@@ -340,25 +277,27 @@ test("새 결말 보상은 결말별 이야기 조각 카드와 열두 개의 �
 
   assert.match(rewarded, /class="vn-reward-overlay"[^>]*data-reward-tone="curiosity"/);
   assert.match(rewarded, /호기심의 조각/);
-  assert.match(rewarded, /이야기 조각 <strong>1\/3<\/strong>/);
+  assert.match(rewarded, /이야기 조각 <strong>1\/6<\/strong>/);
   assert.equal((rewarded.match(/class="vn-reward-particle"/g) ?? []).length, 12);
   assert.match(rewarded, /data-action="dismiss-reward"/);
   assert.doesNotMatch(restored, /vn-reward-overlay/);
 });
 
-test("비주얼노벨 결말은 manifest 배경을 재사용하고 결말 톤과 5\/5를 표시한다", () => {
+test("비주얼노벨 결말은 이미지 키와 결말 톤과 7\/7을 표시한다", () => {
   const html = getUiRenderer("visual-novel").renderEnding(story.scenes.E1, visualNovelEndingSession);
 
-  assert.match(html, new RegExp(visualNovelAssets.backgrounds.cheshireTree.replace(".", "\\.")));
+  assert.match(html, /aria-label="삽화: end_curiosity"/);
   assert.match(html, /data-ending-tone="curiosity"/);
-  assert.match(html, /aria-label="진행 5\/5"/);
+  assert.match(html, /aria-label="진행 7\/7"/);
   assert.match(html, /data-action="restart"/);
 });
 
 test("비주얼노벨 진행과 화자는 장면 계약에 맞춘다", () => {
   assert.equal(getVisualNovelProgress(visualNovelSession, story.scenes.S00), 1);
   assert.equal(getVisualNovelProgress(visualNovelSession, story.scenes.A1), 3);
-  assert.equal(getVisualNovelProgress(visualNovelEndingSession, story.scenes.E1), 5);
+  assert.equal(getVisualNovelProgress(visualNovelSession, story.scenes.C1), 5);
+  assert.equal(getVisualNovelProgress(visualNovelSession, story.scenes.C2), 6);
+  assert.equal(getVisualNovelProgress(visualNovelEndingSession, story.scenes.E1), 7);
   assert.equal(getVisualNovelProgress(visualNovelSession, null), 0);
   assert.deepEqual(getVisualNovelSpeaker(story.scenes.S00), { id: "rabbit", label: "하얀 토끼" });
   assert.deepEqual(getVisualNovelSpeaker(story.scenes.A1), { id: "cat", label: "체셔 고양이" });
@@ -386,65 +325,23 @@ test("비주얼노벨 스타일은 게임 프레임, 화자 색상, ending overl
   assert.doesNotMatch(styles, /assets\/visual-novel/);
 });
 
-test("비주얼노벨 manifest의 로컬 파일과 장면 매핑이 유효하다", () => {
-  assertVisualNovelAssetUrls(visualNovelAssets);
+test("세 UI는 모든 장면에서 같은 이미지 키 플레이스홀더 계약을 사용한다", () => {
+  const samples = [
+    { scene: story.scenes.S00, session: visualNovelSession, key: "start_rabbit_hole" },
+    { scene: resolveScene("C2", { ...visualNovelSession, storyState: { encounterId: "B3", gardenEntry: "GUEST" } }), session: visualNovelSession, key: "queen_garden_trial_big" },
+    { scene: story.scenes.E6, session: { ...visualNovelEndingSession, endingsSeen: ["E6"] }, key: "end_warmth" },
+  ];
 
-  const urls = [...Object.values(visualNovelAssets.backgrounds), ...Object.values(visualNovelAssets.characters)];
-  for (const url of urls) {
-    assert.match(url, /^\.\/assets\/visual-novel\//);
-    assert.ok(fs.existsSync(path.join(root, url.replace(/^\.\//, ""))), url);
-  }
-
-  for (const [sceneId, backgroundKey] of Object.entries(visualNovelAssets.sceneBackgrounds)) {
-    assert.ok(visualNovelAssets.backgrounds[backgroundKey], `${sceneId}: ${backgroundKey}`);
-  }
-  for (const [sceneId, characterKey] of Object.entries(visualNovelAssets.sceneCharacters)) {
-    assert.ok(visualNovelAssets.characters[characterKey], `${sceneId}: ${characterKey}`);
-  }
-  assert.deepEqual(visualNovelAssets.sceneBackgrounds, {
-    S00: "rabbitHole", S01: "tinyGarden", A1: "cheshireTree", A3: "teaParty",
-    S02: "giantLand", B2: "giantMushroom", E1: "cheshireTree", E3: "teaParty", E5: "giantLand",
-  });
-  assert.deepEqual(visualNovelAssets.sceneCharacters, {
-    S00: "rabbit", A1: "cat", A3: "hatter", B2: "caterpillar",
-  });
-  assert.deepEqual(visualNovelAssets.endingTones, {
-    E1: "curiosity", E3: "joy", E5: "confidence",
-  });
-});
-
-test("비주얼노벨 manifest는 정확한 WebP/PNG production replacement URL을 허용한다", () => {
-  const productionAssets = {
-    ...visualNovelAssets,
-    backgrounds: Object.fromEntries(
-      Object.entries(visualNovelAssetUrls.backgrounds).map(([key, [, productionUrl]]) => [key, productionUrl]),
-    ),
-    characters: Object.fromEntries(
-      Object.entries(visualNovelAssetUrls.characters).map(([key, [, productionUrl]]) => [key, productionUrl]),
-    ),
-  };
-
-  assertVisualNovelAssetUrls(productionAssets);
-});
-
-test("비주얼노벨 production asset requirements는 열 개의 최종 파일을 명시한다", () => {
-  const requirements = fs.readFileSync(
-    path.join(root, "assets/visual-novel/ASSET_REQUIREMENTS.md"),
-    "utf8",
-  );
-
-  for (const filename of [
-    "rabbit-hole.webp",
-    "tiny-garden.webp",
-    "cheshire-tree.webp",
-    "tea-party.webp",
-    "giant-land.webp",
-    "giant-mushroom.webp",
-    "white-rabbit.png",
-    "cheshire-cat.png",
-    "mad-hatter.png",
-    "caterpillar.png",
-  ]) {
-    assert.match(requirements, new RegExp(`\\b${filename.replace(".", "\\.")}\\b`));
+  for (const rendererId of ["current", "minimal", "visual-novel"]) {
+    const renderer = getUiRenderer(rendererId);
+    for (const sample of samples) {
+      const html = sample.scene.type === "ending"
+        ? renderer.renderEnding(sample.scene, sample.session, { minimalState: { sceneId: sample.scene.id, beatIndex: 0 } })
+        : renderer.renderScene(sample.scene, sample.session, null, { minimalState: { sceneId: sample.scene.id, beatIndex: 0 } });
+      assert.match(html, /class="[^"]*story-art-placeholder/);
+      assert.match(html, new RegExp(`aria-label="삽화: ${sample.key}"`));
+      assert.match(html, new RegExp(`>${sample.key}<\\/span>`));
+      assert.doesNotMatch(html, /\.svg|\.webp|\.png|<img|background-image/);
+    }
   }
 });
