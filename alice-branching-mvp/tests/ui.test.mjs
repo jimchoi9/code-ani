@@ -217,6 +217,24 @@ test("다시 시작과 슬롯 수정은 결말 및 실행 기록을 보존한다
   assert.equal(state.session.runs.length, 2);
 });
 
+test("다른 결말 보기는 수집 결말을 유지하고 새 실행으로 첫 장면에 돌아간다", async () => {
+  const { replayForAnotherEnding } = await import("../src/app.js");
+  let state = choosePath(choosePath(beginStory(), "S01"), "A1");
+  state = continueChip(selectChip(state, {
+    label: "이 길 끝에 뭐가 있어?",
+    response: "재미있는 생각이구나.",
+    nextSceneId: "E1",
+  }));
+  const replayed = replayForAnotherEnding(state);
+
+  assert.equal(replayed.screen, "scene");
+  assert.equal(replayed.sceneId, "S00");
+  assert.deepEqual(replayed.session.path, ["S00"]);
+  assert.deepEqual(replayed.session.endingsSeen, ["E1"]);
+  assert.equal(replayed.session.runs.length, 2);
+  assert.equal(replayed.session.runs[0].replayed, true);
+});
+
 test("존재하지 않는 활성 장면은 복구 화면으로 전환한다", () => {
   const started = beginStory();
   const invalidSession = visitScene(started.session, "NOT_A_SCENE");

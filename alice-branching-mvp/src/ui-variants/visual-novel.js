@@ -108,7 +108,7 @@ function renderSceneActions(scene, slots) {
   return `<div class="vn-actions" aria-label="다음 장면"><button class="vn-choice" type="button" data-action="continue" data-next-scene="${escapeHtml(scene.nextSceneId)}">계속 읽기</button></div>`;
 }
 
-function renderStage(scene, dialogue, progress, endingTone = "", session = null) {
+function renderStage(scene, dialogue, progress, endingTone = "", session = null, context = {}) {
   const backgroundKey = visualNovelAssets.sceneBackgrounds[scene.id];
   const background = visualNovelAssets.backgrounds[backgroundKey];
   const characterKey = visualNovelAssets.sceneCharacters[scene.id];
@@ -150,7 +150,7 @@ export function getVisualNovelSpeaker(scene) {
   return speakers[character] ?? speakers.narrator;
 }
 
-export function renderSetup(slots = {}) {
+export function renderSetup(slots = {}, context = {}) {
   const hero = personalize("{HERO}", slots);
   const setupBackground = visualNovelAssets.backgrounds.rabbitHole;
   const groups = Object.entries(SLOT_OPTIONS).map(([slot, options]) => `
@@ -166,6 +166,8 @@ export function renderSetup(slots = {}) {
       ${renderTitlePlaque("사용자 정보 입력", "앨리스의 모험을 준비해 주세요")}
       <section class="vn-setup-panel">
         <form data-action="start">
+          ${context.testMode ? `<label for="participant-id">참가자 코드</label>
+          <input id="participant-id" class="vn-participant-input" type="text" name="PARTICIPANT_ID" value="${escapeHtml(context.participantId ?? "")}" maxlength="12" pattern="[A-Za-z0-9_-]+" autocomplete="off" autocapitalize="characters" required data-focus-target>` : ""}
           <label for="hero-name">이름</label>
           <input id="hero-name" type="text" name="HERO" value="${escapeHtml(hero)}" maxlength="6" autocomplete="off" inputmode="text" data-action="set-name">
           ${groups}
@@ -178,7 +180,7 @@ export function renderSetup(slots = {}) {
   </main>`;
 }
 
-export function renderScene(scene, session, feedback = null) {
+export function renderScene(scene, session, feedback = null, context = {}) {
   const slots = session?.slots ?? {};
   const feedbackMessage = feedback === null || feedback === undefined
     ? ""
@@ -189,10 +191,10 @@ export function renderScene(scene, session, feedback = null) {
     ${renderVocabularyWords(scene.vocab)}
     ${renderSceneActions(scene, slots)}`;
 
-  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), "", session);
+  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), "", session, context);
 }
 
-export function renderChipResponse(state) {
+export function renderChipResponse(state, context = {}) {
   const scene = getScene(state?.sceneId);
   if (!scene) return renderRecovery();
 
@@ -202,16 +204,22 @@ export function renderChipResponse(state) {
     <p class="vn-feedback" role="status">${escapeHtml(response.response ?? "")}</p>
     <button class="vn-choice" type="button" data-action="continue-chip">이야기 이어 보기</button>`;
 
-  return renderStage(scene, dialogue, 4, "", state.session);
+  return renderStage(scene, dialogue, 4, "", state.session, context);
 }
 
-export function renderEnding(scene, session) {
+export function renderEnding(scene, session, context = {}) {
   const slots = session?.slots ?? {};
   const selectedChip = (session?.chipChoices ?? []).find(choice => choice.sceneId === scene.sourceSceneId);
   const recall = selectedChip
     ? `<p class="vn-feedback">${escapeHtml(personalize(scene.choiceRecall ?? "네가 고른 말", slots))}: ${escapeHtml(personalize(selectedChip.label, slots))}</p>`
     : "";
   const endingCount = session?.endingsSeen?.length ?? 0;
+  const endingActions = context.testMode
+    ? `<div class="vn-test-ending-actions">
+        <button class="vn-choice" type="button" data-action="other-ending">다른 결말 보러 가기</button>
+        <button class="vn-choice" type="button" data-action="test-complete">오늘은 여기까지</button>
+      </div>`
+    : `<button class="vn-choice" type="button" data-action="restart">다시 시작</button>`;
   const dialogue = `<p class="vn-kicker">이야기의 끝</p>
     <h1>${escapeHtml(personalize(scene.title, slots))}</h1>
     <div class="vn-copy">${renderParagraphs(scene.body, slots)}</div>
@@ -219,12 +227,12 @@ export function renderEnding(scene, session) {
     <p class="vn-trait">너의 이야기 조각: ${escapeHtml(personalize(scene.trait, slots))}</p>
     <p class="vn-ending-progress" aria-label="결말 수집 상태">${escapeHtml(endingCount)}/3</p>
     ${renderVocabularyWords(scene.vocab)}
-    <button class="vn-choice" type="button" data-action="restart">다시 시작</button>`;
+    ${endingActions}`;
 
-  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), visualNovelAssets.endingTones[scene.id], session);
+  return renderStage(scene, dialogue, getVisualNovelProgress(session, scene), visualNovelAssets.endingTones[scene.id], session, context);
 }
 
-export function renderRecovery() {
+export function renderRecovery(context = {}) {
   return `<main class="vn-shell" data-ui="visual-novel">
     <div class="vn-game-frame">
       ${renderGameHud()}
@@ -249,6 +257,18 @@ export function renderVocabularyPanel(word, definition) {
   </section>`;
 }
 
+export function renderTestTools(context = {}) {
+  if (!context.testMode) return "";
+  return `<details class="vn-test-tools">
+    <summary>TEST</summary>
+    <div>
+      <p>참가자 <strong>${escapeHtml(context.participantId || "미등록")}</strong> · 이벤트 ${escapeHtml(context.eventCount ?? 0)}개</p>
+      <button type="button" data-action="test-download"${context.participantId ? "" : " disabled"}>JSON 다운로드</button>
+      <button type="button" data-action="test-reset">새 테스트 시작</button>
+    </div>
+  </details>`;
+}
+
 export const visualNovelRenderer = Object.freeze({
   id: "visual-novel",
   renderSetup,
@@ -257,4 +277,5 @@ export const visualNovelRenderer = Object.freeze({
   renderEnding,
   renderRecovery,
   renderVocabularyPanel,
+  renderTestTools,
 });

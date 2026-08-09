@@ -256,6 +256,27 @@ test("비주얼노벨 전체 화면은 실제 모험 상태를 표시하는 게�
   assert.doesNotMatch(sceneHtml, /data-action="(?:inventory|quest|settings|currency)"/);
 });
 
+test("테스트 모드 비주얼노벨만 참가자 코드와 진행자 도구와 결말 재도전을 제공한다", () => {
+  const renderer = getUiRenderer("visual-novel");
+  const context = { testMode: true, participantId: "C01", eventCount: 7 };
+  const setup = renderer.renderSetup(visualNovelSession.slots, context);
+  const ending = renderer.renderEnding(story.scenes.E1, visualNovelEndingSession, context);
+  const tools = renderer.renderTestTools(context);
+  const normalSetup = renderer.renderSetup(visualNovelSession.slots);
+  const normalEnding = renderer.renderEnding(story.scenes.E1, visualNovelEndingSession);
+
+  assert.match(setup, /name="PARTICIPANT_ID"/);
+  assert.match(setup, /pattern="\[A-Za-z0-9_-\]\+"/);
+  assert.match(ending, /data-action="other-ending"/);
+  assert.match(ending, /data-action="test-complete"/);
+  assert.match(tools, />C01</);
+  assert.match(tools, /이벤트 7개/);
+  assert.match(tools, /data-action="test-download"/);
+  assert.match(tools, /data-action="test-reset"/);
+  assert.doesNotMatch(normalSetup, /PARTICIPANT_ID/);
+  assert.doesNotMatch(normalEnding, /other-ending|test-complete/);
+});
+
 test("비주얼노벨 결말은 manifest 배경을 재사용하고 결말 톤과 5\/5를 표시한다", () => {
   const html = getUiRenderer("visual-novel").renderEnding(story.scenes.E1, visualNovelEndingSession);
 

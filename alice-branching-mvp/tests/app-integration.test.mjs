@@ -29,6 +29,28 @@ function createStoryStore(initial) {
       value = clone(session);
       saves.push(clone(session));
     },
+    clear() { value = null; },
+  };
+}
+
+function createTestStore(initial = null) {
+  let value = clone(initial);
+  const events = [];
+  return {
+    events,
+    load() { return clone(value); },
+    start(participantId) {
+      value = { participantId, startedAt: "2026-08-09T10:00:00.000Z", events: [] };
+      return clone(value);
+    },
+    record(type, details = {}) {
+      const event = { type, ...details };
+      events.push(event);
+      if (value) value.events.push(event);
+      return event;
+    },
+    clear() { value = null; },
+    exportSnapshot(session) { return { participant: clone(value), storySession: clone(session) }; },
   };
 }
 
@@ -222,6 +244,71 @@ test("query UI 전환 mount는 같은 story session을 renderer와 분리해 유
   assert.equal(minimalEnvironment.app.dataset.compare, "true");
   assert.equal(currentEnvironment.app.dataset.ui, "current");
   assert.equal(minimalEnvironment.app.dataset.ui, "minimal");
+});
+
+test("test=1 mount는 비주얼노벨을 강제하고 비교 메뉴 없이 테스트 context를 전달한다", async () => {
+  const { mountBrowserApp } = await import("../src/app.js");
+  const renderer = createRenderer("visual-novel");
+  renderer.renderTestTools = context => `<aside data-test-tools="${context.participantId}"></aside>`;
+  const environment = createEnvironment("?ui=current&compare=1&test=1");
+  const testStore = createTestStore();
+
+  mountBrowserApp({
+    ...environment,
+    sessionStore: createStoryStore(beginStory().session),
+    testStore,
+    minimalStore: createMinimalStateStore(createStorage()),
+    getVariant: () => "current",
+    getRenderer: id => {
+      assert.equal(id, "visual-novel");
+      return renderer;
+    },
+  });
+
+  assert.equal(environment.app.dataset.ui, "visual-novel");
+  assert.equal(environment.app.dataset.testMode, "true");
+  assert.equal(environment.app.inserted.length, 0);
+  assert.equal(renderer.calls[0].name, "renderSetup");
+  assert.equal(renderer.calls[0].args[1].testMode, true);
+  assert.match(environment.app.innerHTML, /data-test-tools=""/);
+});
+
+test("테스트 JSON 다운로드는 참가자 파일명과 직렬화된 payload를 사용한다", async () => {
+  const { downloadTestJson } = await import("../src/app.js");
+  const calls = [];
+  class BlobDouble {
+    constructor(parts, options) {
+      this.parts = parts;
+      this.options = options;
+      calls.push(["blob", parts, options]);
+    }
+  }
+  const link = {
+    href: "",
+    download: "",
+    click() { calls.push(["click", this.href, this.download]); },
+  };
+  const windowRef = {
+    Blob: BlobDouble,
+    URL: {
+      createObjectURL(blob) { calls.push(["create", blob]); return "blob:test"; },
+      revokeObjectURL(url) { calls.push(["revoke", url]); },
+    },
+  };
+  const documentRef = { createElement: tag => {
+    assert.equal(tag, "a");
+    return link;
+  } };
+
+  downloadTestJson(documentRef, windowRef, { participant: { participantId: "C01" } }, "moriai-C01.json");
+
+  assert.deepEqual(calls[0], [
+    "blob",
+    ['{\n  "participant": {\n    "participantId": "C01"\n  }\n}'],
+    { type: "application/json" },
+  ]);
+  assert.deepEqual(calls.at(-2), ["click", "blob:test", "moriai-C01.json"]);
+  assert.deepEqual(calls.at(-1), ["revoke", "blob:test"]);
 });
 
 test("mounted minimal은 beat를 저장·복원하고 story session 변경 없이 reset한다", async () => {

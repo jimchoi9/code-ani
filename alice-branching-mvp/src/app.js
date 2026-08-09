@@ -15,6 +15,7 @@ import {
   visitScene,
 } from "./session.js";
 import { getScene, story } from "./story-data.js";
+import { createTestModeStore, isTestMode } from "./test-mode.js";
 import { escapeHtml } from "./ui.js";
 import { createCompareLinks, getUiRenderer, parseUiVariant } from "./ui-variant.js";
 import { getVocabulary } from "./vocabulary.js";
@@ -176,6 +177,16 @@ export function restartStory(state) {
   return baseState(session);
 }
 
+export function replayForAnotherEnding(state) {
+  if (!isUsableSession(state.session)) return state;
+  const session = visitScene(restartRun(state.session), story.startSceneId);
+  return {
+    ...baseState(session),
+    screen: "scene",
+    sceneId: story.startSceneId,
+  };
+}
+
 export function advanceMinimalBeat(appState, minimalState, beatCount) {
   const current = normalizeMinimalState(minimalState, appState.sceneId, beatCount);
   return {
@@ -232,7 +243,8 @@ const UI_LABELS = Object.freeze({
 });
 
 export function renderCompareMenu(search, uiVariant) {
-  if (new URLSearchParams(search).get("compare") !== "1") return "";
+  const params = new URLSearchParams(search);
+  if (params.get("test") === "1" || params.get("compare") !== "1") return "";
 
   const links = createCompareLinks(search).map(({ id, href }) => {
     const current = id === uiVariant ? ' aria-current="page"' : "";
@@ -250,13 +262,20 @@ export function bindAppEvents(
     onNextBeat = () => {},
     onRestart = () => {},
     getSelectionText = () => globalThis.getSelection?.()?.toString() ?? "",
+    onStart = (values, state) => startStory(state, values),
+    onStoryEvent = () => {},
+    onOtherEnding = state => replayForAnotherEnding(state),
+    onTestReset = state => state,
+    onTestDownload = () => {},
+    onTestComplete = () => {},
   } = {},
 ) {
   app.addEventListener("submit", event => {
     const form = event.target.closest('form[data-action="start"]');
     if (!form) return;
     event.preventDefault();
-    commit(startStory(getState(), readForm(form)));
+    const values = readForm(form);
+    commit(onStart(values, getState()));
   });
 
   app.addEventListener("click", event => {
@@ -271,10 +290,21 @@ export function bindAppEvents(
     const state = getState();
     const action = control.dataset.action;
     if (action === "choose") {
+      onStoryEvent("choice_selected", {
+        sceneId: state.sceneId,
+        choice: control.textContent.trim(),
+        nextSceneId: control.dataset.nextScene,
+      });
       commit(choosePath(state, control.dataset.nextScene, control.textContent.trim()));
     } else if (action === "continue") {
       commit(continueStory(state, control.dataset.nextScene));
     } else if (action === "choose-chip") {
+      onStoryEvent("choice_selected", {
+        sceneId: state.sceneId,
+        choice: control.dataset.chipLabel,
+        nextSceneId: control.dataset.nextScene,
+        kind: "chip",
+      });
       commit(selectChip(state, {
         label: control.dataset.chipLabel,
         response: control.dataset.chipResponse,
@@ -285,6 +315,7 @@ export function bindAppEvents(
     } else if (action === "next-beat") {
       onNextBeat();
     } else if (action === "vocab") {
+      onStoryEvent("vocabulary_opened", { sceneId: state.sceneId, word: control.dataset.word });
       commit(openVocabulary(state, control.dataset.word), false);
       app.querySelector('[data-action="close-vocabulary"]')?.focus();
     } else if (action === "close-vocabulary") {
@@ -294,10 +325,31 @@ export function bindAppEvents(
         .find(button => button.dataset.word === word)
         ?.focus();
     } else if (action === "restart") {
+      onStoryEvent("story_restarted", { sceneId: state.sceneId });
       onRestart();
       commit(restartStory(state));
+    } else if (action === "other-ending") {
+      onStoryEvent("story_replayed", { sceneId: state.sceneId });
+      commit(onOtherEnding(state));
+    } else if (action === "test-reset") {
+      commit(onTestReset(state));
+    } else if (action === "test-download") {
+      onTestDownload(state);
+    } else if (action === "test-complete") {
+      onStoryEvent("test_completed", { sceneId: state.sceneId });
+      onTestComplete(control, state);
     }
   });
+}
+
+export function downloadTestJson(documentRef, windowRef, payload, filename) {
+  const blob = new windowRef.Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = windowRef.URL.createObjectURL(blob);
+  const link = documentRef.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  windowRef.URL.revokeObjectURL(url);
 }
 
 function getMinimalBeatContext(state) {
@@ -317,16 +369,22 @@ export function mountBrowserApp({
   windowRef = globalThis.window,
   sessionStore: suppliedSessionStore = null,
   minimalStore: suppliedMinimalStore = null,
+  testStore: suppliedTestStore = null,
+  downloadJson = downloadTestJson,
   getVariant = parseUiVariant,
   getRenderer = getUiRenderer,
 } = {}) {
   const app = documentRef?.querySelector("#app");
   if (!app) return;
 
-  const uiVariant = getVariant(windowRef.location.search);
+  const testMode = isTestMode(windowRef.location.search);
+  const uiVariant = testMode ? "visual-novel" : getVariant(windowRef.location.search);
   const ui = getRenderer(uiVariant);
   const minimalStore = suppliedMinimalStore ?? createMinimalStateStore();
   const store = suppliedSessionStore ?? createSessionStore();
+  const testStore = suppliedTestStore ?? createTestModeStore();
+  const activeTest = testMode ? testStore.load() : null;
+  if (testMode && !activeTest) store.clear();
   let state = createAppState(store.load());
   let minimalState = null;
 
@@ -336,6 +394,16 @@ export function mountBrowserApp({
     app.dataset.compare = "true";
   }
   app.dataset.ui = uiVariant;
+  if (testMode) app.dataset.testMode = "true";
+
+  function testContext() {
+    const record = testMode ? testStore.load() : null;
+    return {
+      testMode,
+      participantId: record?.participantId ?? "",
+      eventCount: record?.events?.length ?? 0,
+    };
+  }
 
   function syncMinimalState() {
     if (uiVariant !== "minimal") return;
@@ -349,9 +417,9 @@ export function mountBrowserApp({
   }
 
   function renderWithUi(method, ...args) {
-    return uiVariant === "minimal"
-      ? ui[method](...args, { minimalState })
-      : ui[method](...args);
+    if (uiVariant === "minimal") return ui[method](...args, { minimalState });
+    if (testMode) return ui[method](...args, testContext());
+    return ui[method](...args);
   }
 
   function render(focusContent = false, resetScroll = focusContent) {
@@ -367,14 +435,26 @@ export function mountBrowserApp({
     const panel = state.vocabulary
       ? renderWithUi("renderVocabularyPanel", state.vocabulary.word, state.vocabulary.definition)
       : "";
-    app.innerHTML = html + panel;
+    const testTools = testMode && typeof ui.renderTestTools === "function"
+      ? ui.renderTestTools(testContext())
+      : "";
+    app.innerHTML = html + panel + testTools;
 
     if (focusContent) focusRenderedContent(app, options => windowRef.scrollTo(options), resetScroll);
   }
 
   function commit(nextState, focusHeading = true) {
+    const previous = state;
     state = nextState;
     if (state.session) store.save(state.session);
+    if (testMode && testStore.load()) {
+      if (state.screen === "scene" && (previous.screen !== "scene" || previous.sceneId !== state.sceneId)) {
+        testStore.record("scene_viewed", { sceneId: state.sceneId });
+      }
+      if (state.screen === "ending" && previous.screen !== "ending") {
+        testStore.record("ending_reached", { sceneId: state.sceneId });
+      }
+    }
     render(focusHeading);
   }
 
@@ -393,6 +473,32 @@ export function mountBrowserApp({
       minimalState = null;
     },
     getSelectionText: () => windowRef.getSelection?.()?.toString() ?? "",
+    onStart(values) {
+      if (!testMode) return startStory(state, values);
+      store.clear();
+      minimalStore.clear();
+      testStore.start(values.PARTICIPANT_ID);
+      return startStory(createAppState(), values);
+    },
+    onStoryEvent(type, details) {
+      if (testMode) testStore.record(type, details);
+    },
+    onTestReset() {
+      store.clear();
+      minimalStore.clear();
+      testStore.clear();
+      return createAppState();
+    },
+    onTestDownload(currentState) {
+      if (!testMode) return;
+      const payload = testStore.exportSnapshot(currentState.session);
+      const participantId = payload.participant?.participantId ?? "unknown";
+      downloadJson(documentRef, windowRef, payload, `moriai-${participantId}.json`);
+    },
+    onTestComplete(control) {
+      control.textContent = "테스트 완료";
+      control.disabled = true;
+    },
   });
 
   windowRef.__aliceStoryDebug = createDebugGetters(
@@ -401,6 +507,9 @@ export function mountBrowserApp({
     () => minimalState,
   );
   render();
+  if (testMode && activeTest && ["scene", "ending"].includes(state.screen)) {
+    testStore.record("scene_viewed", { sceneId: state.sceneId, restored: true });
+  }
 }
 
 if (typeof document !== "undefined" && typeof window !== "undefined") mountBrowserApp();
