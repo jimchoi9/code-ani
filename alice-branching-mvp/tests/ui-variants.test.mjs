@@ -277,6 +277,21 @@ test("테스트 모드 비주얼노벨만 참가자 코드와 진행자 도구�
   assert.doesNotMatch(normalEnding, /other-ending|test-complete/);
 });
 
+test("새 결말 보상은 결말별 이야기 조각 카드와 열두 개의 빛 조각을 렌더링한다", () => {
+  const renderer = getUiRenderer("visual-novel");
+  const rewarded = renderer.renderEnding(story.scenes.E1, visualNovelEndingSession, {
+    storyReward: { endingId: "E1", count: 1 },
+  });
+  const restored = renderer.renderEnding(story.scenes.E1, visualNovelEndingSession);
+
+  assert.match(rewarded, /class="vn-reward-overlay"[^>]*data-reward-tone="curiosity"/);
+  assert.match(rewarded, /호기심의 조각/);
+  assert.match(rewarded, /이야기 조각 <strong>1\/3<\/strong>/);
+  assert.equal((rewarded.match(/class="vn-reward-particle"/g) ?? []).length, 12);
+  assert.match(rewarded, /data-action="dismiss-reward"/);
+  assert.doesNotMatch(restored, /vn-reward-overlay/);
+});
+
 test("비주얼노벨 결말은 manifest 배경을 재사용하고 결말 톤과 5\/5를 표시한다", () => {
   const html = getUiRenderer("visual-novel").renderEnding(story.scenes.E1, visualNovelEndingSession);
 

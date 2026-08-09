@@ -926,3 +926,298 @@
     grid-template-columns: 1fr;
   }
 }
+
+.vn-reward-overlay {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  padding: 28px 20px;
+  overflow: hidden;
+  align-content: center;
+  justify-items: center;
+  color: #fff4ce;
+  background:
+    radial-gradient(circle at 50% 45%, rgb(102 67 176 / 38%), transparent 38%),
+    rgb(5 5 18 / 96%);
+  isolation: isolate;
+}
+
+.vn-reward-rays {
+  position: absolute;
+  z-index: -2;
+  top: 50%;
+  left: 50%;
+  width: min(110vw, 680px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgb(255 220 105 / 32%) 0deg 7deg, transparent 7deg 18deg);
+  filter: blur(1px);
+  transform: translate(-50%, -50%);
+}
+
+.vn-reward-rays::after {
+  position: absolute;
+  inset: 19%;
+  border: 2px solid rgb(255 224 126 / 62%);
+  border-radius: 50%;
+  box-shadow: 0 0 26px #ffd662, inset 0 0 30px rgb(255 214 98 / 38%);
+  content: "";
+}
+
+.vn-reward-particles,
+.vn-reward-impact {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+}
+
+.vn-reward-particle {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px 70% 2px 70%;
+  background: #ffe58e;
+  box-shadow: 0 0 12px #ffd75c;
+}
+
+.vn-reward-particle:nth-child(3n) {
+  width: 8px;
+  height: 18px;
+  background: #fff7cb;
+}
+
+.vn-reward-impact {
+  width: 280px;
+  height: 280px;
+  margin: -140px 0 0 -140px;
+  border: 4px solid #ffe48a;
+  border-radius: 50%;
+  box-shadow: 0 0 26px #ffd461, inset 0 0 26px #ffd461;
+}
+
+.vn-reward-card {
+  position: relative;
+  display: grid;
+  width: min(82vw, 330px);
+  min-height: 410px;
+  padding: 44px 26px 32px;
+  border: 2px solid #f1ca63;
+  color: #fff0bc;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 8%) 0 1px, transparent 1px) 0 0 / 18px 18px,
+    linear-gradient(160deg, #2f2459, #15142e 68%);
+  box-shadow:
+    0 0 0 6px #17132e,
+    0 0 0 8px #9e742c,
+    0 28px 70px rgb(0 0 0 / 55%),
+    inset 0 0 50px rgb(231 191 88 / 12%);
+  text-align: center;
+  place-items: center;
+  clip-path: polygon(12% 0, 88% 0, 100% 9%, 100% 91%, 88% 100%, 12% 100%, 0 91%, 0 9%);
+}
+
+.vn-reward-card::before,
+.vn-reward-card::after {
+  position: absolute;
+  top: 18px;
+  color: #e4b94e;
+  font-size: 20px;
+  content: "◆";
+}
+
+.vn-reward-card::before { left: 22px; }
+.vn-reward-card::after { right: 22px; }
+
+.vn-reward-kicker {
+  margin: 0;
+  color: #e7c66d;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.vn-reward-mark {
+  display: grid;
+  width: 128px;
+  height: 128px;
+  margin: 18px 0;
+  border: 2px solid #f5d36f;
+  border-radius: 50%;
+  color: #fff1aa;
+  background: radial-gradient(circle at 35% 30%, #9170dc, #432b87 55%, #1b1740 56%);
+  box-shadow: 0 0 0 7px rgb(235 190 71 / 14%), 0 0 34px rgb(150 108 235 / 60%);
+  font-family: Georgia, serif;
+  font-size: 70px;
+  font-weight: 900;
+  text-shadow: 0 4px 10px rgb(0 0 0 / 32%);
+  place-items: center;
+}
+
+[data-reward-tone="joy"] .vn-reward-mark {
+  background: radial-gradient(circle at 35% 30%, #f072a7, #a91d61 58%, #441238 59%);
+  box-shadow: 0 0 0 7px rgb(235 190 71 / 14%), 0 0 34px rgb(245 75 150 / 56%);
+}
+
+[data-reward-tone="confidence"] .vn-reward-mark {
+  background: radial-gradient(circle at 35% 30%, #6acb8a, #237346 58%, #113822 59%);
+  box-shadow: 0 0 0 7px rgb(235 190 71 / 14%), 0 0 34px rgb(78 213 124 / 50%);
+}
+
+.vn-reward-card h2 {
+  margin: 0;
+  color: #ffe58e;
+  font-family: Georgia, "AppleMyungjo", serif;
+  font-size: 28px;
+  line-height: 1.25;
+}
+
+.vn-reward-card > p:last-child {
+  margin: 8px 0 0;
+  color: #d8cce9;
+  font-size: 15px;
+}
+
+.vn-reward-card > p strong {
+  color: #ffe17d;
+  font-size: 19px;
+}
+
+.vn-reward-hint {
+  margin: 24px 0 10px;
+  color: #b7abc9;
+  font-size: 12px;
+}
+
+.vn-reward-overlay > button {
+  min-width: 190px;
+  min-height: 52px;
+  padding: 11px 20px;
+  border: 1px solid #ffe28a;
+  border-radius: 9px;
+  color: #3a2506;
+  background: linear-gradient(180deg, #ffe38a, #d99c28);
+  box-shadow: 0 6px 0 #7e5016, 0 12px 24px rgb(0 0 0 / 32%), inset 0 1px rgb(255 255 255 / 42%);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.vn-reward-overlay > button:active {
+  box-shadow: 0 2px 0 #7e5016, 0 5px 12px rgb(0 0 0 / 32%);
+  transform: translateY(4px);
+}
+
+.vn-reward-overlay.use-css-motion {
+  animation: vn-reward-overlay-in 260ms ease-out both;
+}
+
+.vn-reward-overlay.use-css-motion .vn-reward-rays {
+  animation: vn-reward-rays-in 1450ms 180ms cubic-bezier(.16, .8, .22, 1) both;
+}
+
+.vn-reward-overlay.use-css-motion .vn-reward-card {
+  animation: vn-reward-card-in 1120ms 560ms cubic-bezier(.18, .9, .22, 1.18) both;
+}
+
+.vn-reward-overlay.use-css-motion .vn-reward-impact {
+  animation: vn-reward-impact-in 620ms 1280ms ease-out both;
+}
+
+.vn-reward-overlay.use-css-motion .vn-reward-particle {
+  animation: vn-reward-particle-in 1050ms var(--particle-delay, 220ms) ease-in-out both;
+}
+
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(1) { --particle-delay: 255ms; --particle-x: -140px; --particle-y: -110px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(2) { --particle-delay: 290ms; --particle-x: -70px; --particle-y: -180px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(3) { --particle-delay: 325ms; --particle-x: 20px; --particle-y: -190px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(4) { --particle-delay: 360ms; --particle-x: 120px; --particle-y: -130px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(5) { --particle-delay: 395ms; --particle-x: 180px; --particle-y: -30px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(6) { --particle-delay: 430ms; --particle-x: 145px; --particle-y: 105px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(7) { --particle-delay: 465ms; --particle-x: 65px; --particle-y: 175px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(8) { --particle-delay: 500ms; --particle-x: -25px; --particle-y: 190px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(9) { --particle-delay: 535ms; --particle-x: -125px; --particle-y: 140px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(10) { --particle-delay: 570ms; --particle-x: -185px; --particle-y: 40px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(11) { --particle-delay: 605ms; --particle-x: -180px; --particle-y: -55px; }
+.vn-reward-overlay.use-css-motion .vn-reward-particle:nth-child(12) { --particle-delay: 640ms; --particle-x: 165px; --particle-y: 55px; }
+
+.vn-reward-overlay.use-css-motion .vn-reward-kicker,
+.vn-reward-overlay.use-css-motion .vn-reward-card h2,
+.vn-reward-overlay.use-css-motion .vn-reward-card p,
+.vn-reward-overlay.use-css-motion .vn-reward-hint,
+.vn-reward-overlay.use-css-motion > button {
+  animation: vn-reward-copy-in 360ms 1580ms ease-out both;
+}
+
+.vn-reward-overlay.is-ready,
+.vn-reward-overlay.is-ready * {
+  animation: none !important;
+}
+
+@media (max-height: 680px) {
+  .vn-reward-card {
+    min-height: 330px;
+    padding-block: 26px 22px;
+  }
+
+  .vn-reward-mark {
+    width: 96px;
+    height: 96px;
+    margin: 10px 0;
+    font-size: 54px;
+  }
+
+  .vn-reward-hint {
+    margin-top: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vn-reward-overlay {
+    animation: vn-reward-fade 180ms ease-out both;
+  }
+}
+
+@keyframes vn-reward-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vn-reward-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vn-reward-rays-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(.3) rotate(-25deg); }
+  to { opacity: .9; transform: translate(-50%, -50%) scale(1) rotate(18deg); }
+}
+
+@keyframes vn-reward-card-in {
+  0% { opacity: 0; transform: translateY(90px) scale(.32) rotate(-8deg); }
+  72% { opacity: 1; transform: translateY(-14px) scale(1.08) rotate(2deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+
+@keyframes vn-reward-impact-in {
+  0% { opacity: 0; transform: scale(.2); }
+  45% { opacity: .9; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.65); }
+}
+
+@keyframes vn-reward-particle-in {
+  0% { opacity: 0; transform: translate(var(--particle-x), var(--particle-y)) scale(.2) rotate(0); }
+  42% { opacity: 1; }
+  88% { opacity: .9; transform: translate(0, 0) scale(1) rotate(240deg); }
+  100% { opacity: 0; transform: translate(0, 0) scale(.1) rotate(320deg); }
+}
+
+@keyframes vn-reward-copy-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}

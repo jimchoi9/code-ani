@@ -187,6 +187,16 @@ export function replayForAnotherEnding(state) {
   };
 }
 
+export function createStoryReward(previousState, nextState) {
+  if (nextState?.screen !== "ending" || !nextState.sceneId) return null;
+  if (previousState?.session?.endingsSeen?.includes(nextState.sceneId)) return null;
+  if (!nextState.session?.endingsSeen?.includes(nextState.sceneId)) return null;
+  return {
+    endingId: nextState.sceneId,
+    count: nextState.session.endingsSeen.length,
+  };
+}
+
 export function advanceMinimalBeat(appState, minimalState, beatCount) {
   const current = normalizeMinimalState(minimalState, appState.sceneId, beatCount);
   return {
@@ -268,6 +278,7 @@ export function bindAppEvents(
     onTestReset = state => state,
     onTestDownload = () => {},
     onTestComplete = () => {},
+    onDismissReward = () => {},
   } = {},
 ) {
   app.addEventListener("submit", event => {
@@ -338,6 +349,8 @@ export function bindAppEvents(
     } else if (action === "test-complete") {
       onStoryEvent("test_completed", { sceneId: state.sceneId });
       onTestComplete(control, state);
+    } else if (action === "dismiss-reward") {
+      onDismissReward(control);
     }
   });
 }
@@ -387,6 +400,7 @@ export function mountBrowserApp({
   if (testMode && !activeTest) store.clear();
   let state = createAppState(store.load());
   let minimalState = null;
+  let storyReward = null;
 
   const compareMenu = renderCompareMenu(windowRef.location.search, uiVariant);
   if (compareMenu) {
@@ -402,6 +416,7 @@ export function mountBrowserApp({
       testMode,
       participantId: record?.participantId ?? "",
       eventCount: record?.events?.length ?? 0,
+      storyReward,
     };
   }
 
@@ -418,7 +433,7 @@ export function mountBrowserApp({
 
   function renderWithUi(method, ...args) {
     if (uiVariant === "minimal") return ui[method](...args, { minimalState });
-    if (testMode) return ui[method](...args, testContext());
+    if (uiVariant === "visual-novel") return ui[method](...args, testContext());
     return ui[method](...args);
   }
 
@@ -440,11 +455,17 @@ export function mountBrowserApp({
       : "";
     app.innerHTML = html + panel + testTools;
 
+    if (storyReward && typeof ui.playReward === "function") {
+      ui.playReward(app, windowRef);
+      storyReward = null;
+    }
+
     if (focusContent) focusRenderedContent(app, options => windowRef.scrollTo(options), resetScroll);
   }
 
   function commit(nextState, focusHeading = true) {
     const previous = state;
+    storyReward = createStoryReward(previous, nextState);
     state = nextState;
     if (state.session) store.save(state.session);
     if (testMode && testStore.load()) {
@@ -498,6 +519,9 @@ export function mountBrowserApp({
     onTestComplete(control) {
       control.textContent = "테스트 완료";
       control.disabled = true;
+    },
+    onDismissReward(control) {
+      control.closest(".vn-reward-overlay")?.remove();
     },
   });
 

@@ -235,6 +235,22 @@ test("다른 결말 보기는 수집 결말을 유지하고 새 실행으로 첫
   assert.equal(replayed.session.runs[0].replayed, true);
 });
 
+test("이야기 조각 보상은 처음 수집한 결말 전환에서만 생성된다", async () => {
+  const { createStoryReward } = await import("../src/app.js");
+  const before = choosePath(choosePath(beginStory(), "S01"), "A1");
+  const firstEnding = continueChip(selectChip(before, {
+    label: "이 길 끝에 뭐가 있어?",
+    response: "재미있는 생각이구나.",
+    nextSceneId: "E1",
+  }));
+  const alreadyCollected = { ...before, session: { ...before.session, endingsSeen: ["E1"] } };
+
+  assert.deepEqual(createStoryReward(before, firstEnding), { endingId: "E1", count: 1 });
+  assert.equal(createStoryReward(alreadyCollected, firstEnding), null);
+  assert.equal(createStoryReward(firstEnding, firstEnding), null);
+  assert.equal(createStoryReward(before, { ...firstEnding, screen: "scene" }), null);
+});
+
 test("존재하지 않는 활성 장면은 복구 화면으로 전환한다", () => {
   const started = beginStory();
   const invalidSession = visitScene(started.session, "NOT_A_SCENE");

@@ -30,6 +30,12 @@ const speakers = Object.freeze({
   ending: { id: "ending", label: "결말" },
 });
 
+const storyFragments = Object.freeze({
+  E1: { name: "호기심의 조각", tone: "curiosity", mark: "?" },
+  E3: { name: "즐거움의 조각", tone: "joy", mark: "♪" },
+  E5: { name: "자신감의 조각", tone: "confidence", mark: "★" },
+});
+
 function personalize(value, slots = {}) {
   return renderTemplate(String(value ?? ""), slots);
 }
@@ -73,6 +79,27 @@ function renderGameFooter(session = null, progress = 0) {
     <span>낱말 <strong>${escapeHtml(vocabCount)}</strong></span>
     <span>결말 <strong>${escapeHtml(endingCount)}/3</strong></span>
   </footer>`;
+}
+
+function renderStoryReward(reward) {
+  const fragment = storyFragments[reward?.endingId];
+  if (!fragment) return "";
+  const particles = Array.from({ length: 12 }, (_, index) => (
+    `<i class="vn-reward-particle" data-particle="${index}" aria-hidden="true"></i>`
+  )).join("");
+  return `<section class="vn-reward-overlay" data-reward-tone="${fragment.tone}" role="dialog" aria-modal="true" aria-labelledby="vn-reward-title">
+    <div class="vn-reward-rays" aria-hidden="true"></div>
+    <div class="vn-reward-particles">${particles}</div>
+    <div class="vn-reward-impact" aria-hidden="true"></div>
+    <div class="vn-reward-card">
+      <p class="vn-reward-kicker">새로운 보물을 발견했어요</p>
+      <span class="vn-reward-mark" aria-hidden="true">${fragment.mark}</span>
+      <h2 id="vn-reward-title">${fragment.name}</h2>
+      <p>이야기 조각 <strong>${escapeHtml(reward.count)}/3</strong></p>
+    </div>
+    <p class="vn-reward-hint">화면을 누르면 연출을 건너뛸 수 있어요</p>
+    <button type="button" data-action="dismiss-reward">보물 확인하기</button>
+  </section>`;
 }
 
 function renderVocabularyWords(words = []) {
@@ -134,7 +161,93 @@ function renderStage(scene, dialogue, progress, endingTone = "", session = null,
       </section>
       ${renderGameFooter(session, progress)}
     </div>
+    ${renderStoryReward(context.storyReward)}
   </main>`;
+}
+
+export function playStoryFragmentReward(root, windowRef = globalThis.window) {
+  const overlay = root?.querySelector?.(".vn-reward-overlay");
+  if (!overlay) return [];
+  const reducedMotion = windowRef?.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  const elements = {
+    rays: overlay.querySelector(".vn-reward-rays"),
+    card: overlay.querySelector(".vn-reward-card"),
+    impact: overlay.querySelector(".vn-reward-impact"),
+    copy: [...overlay.querySelectorAll(".vn-reward-kicker, .vn-reward-card h2, .vn-reward-card p, .vn-reward-hint, button")],
+    particles: [...overlay.querySelectorAll(".vn-reward-particle")],
+  };
+
+  if (reducedMotion) {
+    overlay.classList.add("is-ready");
+    return [];
+  }
+
+  if (typeof overlay.animate !== "function") {
+    const finishCssFallback = () => {
+      overlay.classList.remove("use-css-motion");
+      overlay.classList.add("is-ready");
+      overlay.querySelector('[data-action="dismiss-reward"]')?.focus({ preventScroll: true });
+    };
+    overlay.classList.add("use-css-motion");
+    overlay.addEventListener("click", event => {
+      if (!event.target.closest("[data-action]")) finishCssFallback();
+    }, { once: true });
+    windowRef?.setTimeout?.(finishCssFallback, 2450);
+    return [];
+  }
+
+  overlay.classList.add("is-animating");
+  const animations = [
+    overlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, fill: "both", easing: "ease-out" }),
+    elements.rays.animate(
+      [{ opacity: 0, transform: "scale(.3) rotate(-25deg)" }, { opacity: .9, transform: "scale(1) rotate(18deg)" }],
+      { delay: 180, duration: 1450, fill: "both", easing: "cubic-bezier(.16,.8,.22,1)" },
+    ),
+    elements.card.animate(
+      [
+        { opacity: 0, transform: "translateY(90px) scale(.32) rotate(-8deg)" },
+        { opacity: 1, transform: "translateY(-14px) scale(1.08) rotate(2deg)", offset: .72 },
+        { opacity: 1, transform: "translateY(0) scale(1) rotate(0)" },
+      ],
+      { delay: 560, duration: 1120, fill: "both", easing: "cubic-bezier(.18,.9,.22,1.18)" },
+    ),
+    elements.impact.animate(
+      [{ opacity: 0, transform: "scale(.2)" }, { opacity: .9, transform: "scale(1.1)", offset: .45 }, { opacity: 0, transform: "scale(1.65)" }],
+      { delay: 1280, duration: 620, fill: "both", easing: "ease-out" },
+    ),
+    ...elements.copy.map((element, index) => element.animate(
+      [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "translateY(0)" }],
+      { delay: 1500 + index * 65, duration: 360, fill: "both", easing: "ease-out" },
+    )),
+    ...elements.particles.map((particle, index) => {
+      const angle = (Math.PI * 2 * index) / elements.particles.length;
+      const distance = 145 + (index % 3) * 34;
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+      return particle.animate(
+        [
+          { opacity: 0, transform: `translate(${x}px, ${y}px) scale(.2) rotate(0deg)` },
+          { opacity: 1, offset: .42 },
+          { opacity: .9, transform: "translate(0, 0) scale(1) rotate(240deg)" },
+          { opacity: 0, transform: "translate(0, 0) scale(.1) rotate(320deg)" },
+        ],
+        { delay: 220 + index * 35, duration: 1120, fill: "both", easing: "cubic-bezier(.2,.75,.3,1)" },
+      );
+    }),
+  ].filter(Boolean);
+
+  const finish = () => {
+    for (const animation of animations) {
+      try { animation.finish(); } catch { /* A detached overlay needs no final frame. */ }
+    }
+    overlay.classList.add("is-ready");
+    overlay.querySelector('[data-action="dismiss-reward"]')?.focus({ preventScroll: true });
+  };
+  overlay.addEventListener("click", event => {
+    if (!event.target.closest("[data-action]")) finish();
+  }, { once: true });
+  Promise.allSettled(animations.map(animation => animation.finished)).then(finish);
+  return animations;
 }
 
 export function getVisualNovelProgress(session, scene) {
@@ -278,4 +391,5 @@ export const visualNovelRenderer = Object.freeze({
   renderRecovery,
   renderVocabularyPanel,
   renderTestTools,
+  playReward: playStoryFragmentReward,
 });
