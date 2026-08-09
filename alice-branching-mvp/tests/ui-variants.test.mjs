@@ -68,6 +68,16 @@ test("current 변형 스타일은 current UI root를 정의한다", () => {
   assert.match(styles, /\[data-ui="current"\]\s*\{[^}]*min-height:\s*100svh/);
 });
 
+test("삽화 플레이스홀더는 회색 화면 중앙에 이미지 키만 표시한다", () => {
+  const styles = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+  const rule = styles.match(/\.story-art-placeholder\s*\{([^}]*)\}/)?.[1] ?? "";
+
+  assert.match(rule, /display:\s*grid/);
+  assert.match(rule, /place-items:\s*center/);
+  assert.match(rule, /background:\s*#bdbdbd/);
+  assert.match(rule, /text-align:\s*center/);
+});
+
 test("current renderer는 기존 UI export를 그대로 제공한다", () => {
   const renderer = getUiRenderer("current");
   assert.equal(renderer.id, "current");
@@ -220,12 +230,12 @@ test("시계토끼 온보딩은 누적 대화와 추천 답장과 직접 입력�
   const renderer = getUiRenderer("visual-novel");
   const chat = renderer.renderOnboarding({
     testMode: true,
-    onboarding: { step: "snack", answers: { HERO: "지민", PET: "토끼" } },
+    onboarding: { step: "friend", answers: { HERO: "지민", TREAT: "젤리" } },
   });
   const typing = renderer.renderOnboarding({
     testMode: true,
     onboardingTyping: true,
-    onboarding: { step: "friend", answers: { HERO: "지민" } },
+    onboarding: { step: "snack", answers: { HERO: "지민" } },
   });
   const confirm = renderer.renderOnboarding({
     testMode: true,
@@ -233,14 +243,13 @@ test("시계토끼 온보딩은 누적 대화와 추천 답장과 직접 입력�
   });
 
   assert.match(chat, /시계토끼/);
-  assert.match(chat, /지민/);
-  assert.match(chat, /토끼/);
-  assert.match(chat, /data-value="젤리"/);
+  assert.match(chat, /지민.*어떤 간식을 넣을까.*젤리.*마지막 질문.*함께 모험할 친구/s);
+  assert.match(chat, /data-value="토끼"/);
   assert.doesNotMatch(chat, /좋아하는 색|data-value="파랑"/);
   assert.match(chat, /data-action="onboarding-answer"/);
   assert.match(typing, /vn-chat-typing/);
   assert.doesNotMatch(typing, /추천 답장/);
-  assert.match(confirm, /지민.*토끼.*젤리/s);
+  assert.match(confirm, /지민.*젤리.*토끼/s);
   assert.match(confirm, /data-action="onboarding-confirm"/);
 });
 
@@ -326,11 +335,45 @@ test("비주얼노벨 스타일은 게임 프레임, 화자 색상, ending overl
 });
 
 test("세 UI는 모든 장면에서 같은 이미지 키 플레이스홀더 계약을 사용한다", () => {
-  const samples = [
-    { scene: story.scenes.S00, session: visualNovelSession, key: "start_rabbit_hole" },
-    { scene: resolveScene("C2", { ...visualNovelSession, storyState: { encounterId: "B3", gardenEntry: "GUEST" } }), session: visualNovelSession, key: "queen_garden_trial_big" },
-    { scene: story.scenes.E6, session: { ...visualNovelEndingSession, endingsSeen: ["E6"] }, key: "end_warmth" },
-  ];
+  const samples = story.sceneOrder.map(sceneId => {
+    const scene = story.scenes[sceneId];
+    const session = scene.type === "ending"
+      ? { ...visualNovelEndingSession, endingsSeen: [scene.id] }
+      : visualNovelSession;
+    return { scene, session, key: scene.art };
+  });
+  samples.push({
+    scene: resolveScene("C2", {
+      ...visualNovelSession,
+      storyState: { encounterId: "B3", gardenEntry: "GUEST" },
+    }),
+    session: visualNovelSession,
+    key: "queen_garden_trial_big",
+  });
+
+  assert.deepEqual(
+    new Set(samples.map(sample => sample.key)),
+    new Set([
+      "start_rabbit_hole",
+      "door_shrink",
+      "cake_grow",
+      "door_cat_meet",
+      "door_caterpillar_meet",
+      "door_hatter_meet",
+      "cake_cat_meet",
+      "cake_caterpillar_meet",
+      "cake_hatter_meet",
+      "mist_hill_grin",
+      "queen_garden_trial_small",
+      "queen_garden_trial_big",
+      "end_curiosity",
+      "end_prudence",
+      "end_cheer",
+      "end_composure",
+      "end_selftrust",
+      "end_warmth",
+    ]),
+  );
 
   for (const rendererId of ["current", "minimal", "visual-novel"]) {
     const renderer = getUiRenderer(rendererId);

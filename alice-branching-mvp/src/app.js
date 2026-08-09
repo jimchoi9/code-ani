@@ -52,9 +52,9 @@ function personalized(value, session) {
 }
 
 const ONBOARDING_STEPS = Object.freeze({
-  name: { slot: "HERO", next: "friend", maxLength: 6 },
-  friend: { slot: "PET", next: "snack", maxLength: 12 },
-  snack: { slot: "TREAT", next: "confirm", maxLength: 12 },
+  name: { slot: "HERO", next: "snack", maxLength: 6 },
+  snack: { slot: "TREAT", next: "friend", maxLength: 12 },
+  friend: { slot: "PET", next: "confirm", maxLength: 12 },
 });
 
 export function answerOnboarding(onboarding, value) {

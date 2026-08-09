@@ -58,8 +58,8 @@ const speakerByScene = Object.freeze({
 
 const onboardingQuestions = Object.freeze({
   name: { prompt: "늦었다, 늦었어! 그런데 넌 누구니? 이름을 알려 줘.", placeholder: "내 이름 쓰기", suggestions: [] },
-  friend: { prompt: "반가워! 함께 모험할 친구는 누구야?", placeholder: "함께 갈 친구 쓰기", suggestions: ["강아지", "고양이", "토끼", "거북이"] },
-  snack: { prompt: "마지막 질문이야. 모험 가방에 어떤 간식을 넣을까?", placeholder: "먹고 싶은 간식 쓰기", suggestions: ["케이크", "쿠키", "젤리", "붕어빵"] },
+  snack: { prompt: "이번에는, 모험 가방에 어떤 간식을 넣을까?", placeholder: "먹고 싶은 간식 쓰기", suggestions: ["케이크", "쿠키", "젤리", "붕어빵"] },
+  friend: { prompt: "마지막 질문이야. 함께 모험할 친구는 누구야?", placeholder: "함께 갈 친구 쓰기", suggestions: ["강아지", "고양이", "토끼", "거북이"] },
 });
 
 function personalize(value, slots = {}) {
@@ -333,10 +333,10 @@ export function renderOnboarding(context = {}) {
   const answers = onboarding.answers ?? {};
   const turns = [{ role: "rabbit", text: onboardingQuestions.name.prompt }];
   if (answers.HERO) turns.push({ role: "child", text: answers.HERO });
-  if (answers.HERO && onboarding.step !== "name") turns.push({ role: "rabbit", text: onboardingQuestions.friend.prompt });
-  if (answers.PET) turns.push({ role: "child", text: answers.PET });
-  if (answers.PET && ["snack", "confirm"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.snack.prompt });
+  if (answers.HERO && onboarding.step !== "name") turns.push({ role: "rabbit", text: onboardingQuestions.snack.prompt });
   if (answers.TREAT) turns.push({ role: "child", text: answers.TREAT });
+  if (answers.TREAT && ["friend", "confirm"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.friend.prompt });
+  if (answers.PET) turns.push({ role: "child", text: answers.PET });
 
   if (context.onboardingTyping) {
     while (turns.at(-1)?.role === "rabbit") turns.pop();
@@ -352,7 +352,7 @@ export function renderOnboarding(context = {}) {
     composer = `<div class="vn-chat-typing" role="status" aria-label="시계토끼가 답장을 쓰는 중"><span></span><span></span><span></span></div>`;
   } else if (onboarding.step === "confirm") {
     composer = `<div class="vn-chat-confirm">
-      <p><strong>${escapeHtml(answers.HERO)}</strong>, <strong>${escapeHtml(answers.PET)}</strong>와 함께 <strong>${escapeHtml(answers.TREAT)}</strong>을 챙겨 가는 거구나!</p>
+      <p><strong>${escapeHtml(answers.HERO)}</strong>, <strong>${escapeHtml(answers.TREAT)}</strong>을 챙기고 <strong>${escapeHtml(answers.PET)}</strong>와 함께 가는 거구나!</p>
       <button class="vn-choice" type="button" data-action="onboarding-confirm" data-focus-target>이대로 출발!</button>
     </div>`;
   } else {

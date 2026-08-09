@@ -307,12 +307,12 @@ test("채팅 온보딩은 이름부터 간식까지 답변을 순서대로 누�
   const { answerOnboarding } = await import("../src/app.js");
   let onboarding = { step: "name", answers: {} };
   onboarding = answerOnboarding(onboarding, " 지민 ");
-  onboarding = answerOnboarding(onboarding, "토끼");
   onboarding = answerOnboarding(onboarding, "젤리");
+  onboarding = answerOnboarding(onboarding, "토끼");
 
   assert.deepEqual(onboarding, {
     step: "confirm",
-    answers: { HERO: "지민", PET: "토끼", TREAT: "젤리" },
+    answers: { HERO: "지민", TREAT: "젤리", PET: "토끼" },
   });
   assert.strictEqual(answerOnboarding(onboarding, "추가"), onboarding);
 });
