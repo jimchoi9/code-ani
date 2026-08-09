@@ -1,30 +1,32 @@
-# Visual Novel Production Asset Requirements
+# Visual Novel POV Assets v2.1
 
-These local SVGs are intentionally lightweight comparison mocks. Replace each mock URL in `manifest.js` with the corresponding final raster URL below only after the production asset has been approved. Keep the manifest keys and scene mappings unchanged. The asset regression test accepts only each listed SVG mock URL or its listed WebP/PNG replacement URL, so no test assertion update is required during replacement; the final local raster file must exist before the test will pass.
+The approved MVP art uses first-person point-of-view compositions. `{HERO}` and `{PET}` remain text-only and must not be added to scene illustrations, ending illustrations, reports, icons, or silhouettes. `{COLOR}` is not a supported personalization slot.
 
-## Backgrounds
+## Implemented Assets
 
-| Final filename | Intended scene / use | Dimensions / ratio | Composition | Style continuity / replacement notes |
-| --- | --- | --- | --- | --- |
-| `rabbit-hole.webp` | `rabbitHole`; S00 opening garden | 1920 x 1200, 16:10 | Sunny garden and round rabbit hole in the lower-middle distance; leave lower center open for the rabbit sprite and dialogue. | Soft watercolor storybook, bright and safe for ages 7-9; include pocket-watch and map hints, no character, text, logo, or watermark. Replace `backgrounds/rabbit-hole.svg`. |
-| `tiny-garden.webp` | `tinyGarden`; S01 discovery scene | 1920 x 1200, 16:10 | Giant flowers frame a tiny ornate door; reserve lower center for dialogue and sprite placement. | Match the shared sky blue, leaf green, cherry red, warm yellow palette with restrained violet accents; dewy, inviting, no characters. Replace `backgrounds/tiny-garden.svg`. |
-| `cheshire-tree.webp` | `cheshireTree`; A1, E1 | 1920 x 1200, 16:10 | Curving old tree on a wide clearing; friendly floating crescent smile in the upper-side area; lower center remains readable. | Continue painterly paper texture and clear silhouettes; purple-green accents, whimsical rather than eerie, no character body or text. Replace `backgrounds/cheshire-tree.svg`. |
-| `tea-party.webp` | `teaParty`; A3, E3 | 1920 x 1200, 16:10 | Long outdoor tea table receding across the scene, mismatched cups, clocks, and hats; maintain a clean lower-center overlay zone. | Preserve the same warm children's-book watercolor treatment and bright daylight; props only, no characters or text. Replace `backgrounds/tea-party.svg`. |
-| `giant-land.webp` | `giantLand`; S02, E5 | 1920 x 1200, 16:10 | Elevated view toward winding river, white castle, and colorful garden; side and upper detail with a calm lower center. | Keep broad painterly shapes and saturated but gentle color; welcoming adventure mood, no characters or text. Replace `backgrounds/giant-land.svg`. |
-| `giant-mushroom.webp` | `giantMushroom`; B2 | 1920 x 1200, 16:10 | Enormous mushroom grove, mist rings, and a broad cap; preserve the lower center for the caterpillar sprite and dialogue. | Maintain shared watercolor/paper texture and legible silhouettes; soft magical mist, no frightening elements, text, or character. Replace `backgrounds/giant-mushroom.svg`. |
+| Group | Directory | Count | Format |
+| --- | --- | ---: | --- |
+| Main story scenes | `scenes/` | 12 | JPEG, 1376 x 768 |
+| Endings | `endings/` | 6 | JPEG, 1376 x 768 |
+| C2 variation spots | `spots/` | 3 | JPEG, 1376 x 768 |
+| **Total** |  | **21** | 16:9 |
 
-## Character Sprites
+The exact filename-to-key mapping is maintained in `manifest.js`. Known keys render as decorative images with empty alt text because the adjacent authored prose describes each scene. Unknown keys retain the neutral placeholder fallback.
 
-| Final filename | Intended scene / use | Dimensions / ratio | Composition | Style continuity / replacement notes |
-| --- | --- | --- | --- | --- |
-| `white-rabbit.png` | `rabbit`; S00 | 900 x 1400 transparent PNG, 9:14 | Full-body white rabbit, centered, front three-quarter view, with generous transparent padding. | Use the same watercolor line and color language as the backgrounds; friendly, expressive, no ground shadow, text, logo, or watermark. Replace `characters/white-rabbit.svg`; retain alpha. |
-| `cheshire-cat.png` | `cat`; A1 | 900 x 1400 transparent PNG, 9:14 | Full-body friendly Cheshire cat, centered, front three-quarter view, with generous transparent padding. | Use a playful violet-green accent range consistent with the tree scene; preserve clean silhouette and full transparency outside the subject. Replace `characters/cheshire-cat.svg`; retain alpha. |
-| `mad-hatter.png` | `hatter`; A3 | 900 x 1400 transparent PNG, 9:14 | Full-body whimsical Mad Hatter, centered, front three-quarter view, with generous transparent padding. | Continue the warm, painterly storybook treatment; expressive and kind for ages 7-9, transparent canvas only. Replace `characters/mad-hatter.svg`; retain alpha. |
-| `caterpillar.png` | `caterpillar`; B2 | 900 x 1400 transparent PNG, 9:14 | Full-body calm blue caterpillar, centered, front three-quarter view, with generous transparent padding. | Match the soft mushroom-grove palette and approachable visual language; no floor, shadow, background, text, logo, or watermark. Replace `characters/caterpillar.svg`; retain alpha. |
+## Scene Rules
 
-## Delivery Notes
+- `queen_garden_trial_small` is used for the A route and `queen_garden_trial_big` for the B route.
+- `spot_truth`, `spot_shield`, and `spot_turn` are displayed as compact ending insets after the corresponding C2 choice.
+- No scene character sprite is rendered over POV illustrations.
+- Story, ending, and spot assets remain local; do not introduce external image URLs.
+- Easy and advanced text levels share the same illustrations.
 
-- Final backgrounds must be browser-safe WebP files at a 16:10 aspect ratio; final sprites must be transparent PNG files with no baked backdrop.
-- Keep all ten final images self-contained and locally hosted. Do not introduce external image URLs.
-- The final set should share a soft watercolor children's-storybook medium, painterly paper texture, clear silhouettes, and bright, safe fantasy lighting.
-- For each approved final file: add it at the exact table filename, update only that manifest URL from `.svg` to its documented `.webp` or `.png` target, then run `node --test tests/ui-variants.test.mjs`. Do not change manifest keys or scene mappings.
+## Remaining v2.1 Production Assets
+
+These are specified but not part of the current 21-image delivery:
+
+- Four `{TREAT}` transparent overlays: cake, cookie, jelly, and bungeoppang.
+- Nine UI/support assets: `cover_title`, `prologue_setup`, `frame_choice`, `frame_word`, `bust_cat`, `bust_caterpillar`, `bust_hatter`, `frame_parent_report`, and `frame_child_quote`.
+- Four pre-production sheets: style A, style B, seven-character reference, and prohibited-elements reference.
+
+Legacy SVG backgrounds and character files remain only for compatibility with non-story UI such as the onboarding rabbit avatar. They are not used as visual-novel scene art.

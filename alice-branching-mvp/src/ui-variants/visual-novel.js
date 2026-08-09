@@ -410,6 +410,9 @@ export function renderEnding(scene, session, context = {}) {
     ? `<p class="vn-feedback">${escapeHtml(personalize(scene.choiceRecall ?? "네가 고른 말", slots))}: ${escapeHtml(personalize(selectedChip.label, slots))}</p>`
     : "";
   const endingCount = session?.endingsSeen?.length ?? 0;
+  const variationSpot = scene.spotArt
+    ? `<figure class="vn-variation-spot">${renderArtPlaceholder(scene.spotArt, "vn-variation-spot-image")}</figure>`
+    : "";
   const endingActions = context.testMode
     ? `<div class="vn-test-ending-actions">
         <button class="vn-choice" type="button" data-action="other-ending">다른 결말도 찾아볼래!</button>
@@ -419,6 +422,7 @@ export function renderEnding(scene, session, context = {}) {
   const dialogue = `<p class="vn-kicker">이야기의 끝</p>
     <h1>${escapeHtml(personalize(scene.title, slots))}</h1>
     <div class="vn-copy">${renderParagraphs(scene.body, slots)}</div>
+    ${variationSpot}
     ${recall}
     <p class="vn-trait">너의 이야기 조각: ${escapeHtml(personalize(scene.trait, slots))}</p>
     <p class="vn-ending-progress" aria-label="결말 수집 상태">${escapeHtml(endingCount)}/6</p>

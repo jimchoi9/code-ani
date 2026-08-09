@@ -9,6 +9,7 @@ export const ENDING_BY_ENCOUNTER = Object.freeze({
 
 export const ENDING_VARIATIONS = Object.freeze({
   TRUTH: {
+    spotArt: "spot_truth",
     body: `"하얀 장미였어요." {HERO}{이/가} 서슴없이 말했어요.
 
 카드들이 파닥거렸어요. 그런데 여왕은 화를 내지 않았어요.
@@ -19,6 +20,7 @@ export const ENDING_VARIATIONS = Object.freeze({
     parentNote: "솔직하게 말하는 쪽을 택했어요.",
   },
   SHIELD: {
+    spotArt: "spot_shield",
     body: `"제가 쏟았어요." {HERO}{이/가} 얼른 말했어요. "제가 페인트를 엎질러서 그렇게 됐어요."
 
 카드 하나가 {HERO}{을/를} 올려다보았어요. 아무 말도 못 했어요.
@@ -31,6 +33,7 @@ export const ENDING_VARIATIONS = Object.freeze({
     parentNote: "친구가 곤란할 때 대신 나서는 쪽을 택했어요.",
   },
   TURN: {
+    spotArt: "spot_turn",
     body: `"여왕님은 어떤 색이었으면 좋겠어요?" {HERO}{이/가} 물었어요.
 
 여왕이 눈을 크게 떴어요. 아무도 여왕에게 되물은 적이 없었거든요.
@@ -601,6 +604,7 @@ export function resolveScene(sceneId, session = {}) {
       art,
       choices,
       returnAdjustment,
+      spotArt: variation.spotArt,
       parentNote: `${scene.parentNote} ${variation.parentNote}`,
     };
   }

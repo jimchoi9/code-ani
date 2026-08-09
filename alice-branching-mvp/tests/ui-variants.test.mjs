@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { getVisualNovelArtUrl } from "../assets/visual-novel/manifest.js";
 import { renderCompareMenu } from "../src/app.js";
 import { createSession } from "../src/session.js";
 import { resolveScene, story } from "../src/story-data.js";
@@ -165,16 +166,16 @@ test("미니멀 스타일은 읽기 열, 장면 색조, 선택지와 motion 접�
   assert.doesNotMatch(styles, /url\(|assets\//);
 });
 
-test("비주얼노벨은 이미지 키 플레이스홀더, 이름표, 선택 카드와 7단계 트레일을 렌더링한다", () => {
+test("비주얼노벨은 POV 삽화, 이름표, 선택 카드와 7단계 트레일을 렌더링한다", () => {
   const renderer = getUiRenderer("visual-novel");
   const html = renderer.renderScene(story.scenes.A1, visualNovelSession, "나무 위 웃음소리로 간다");
 
   assert.equal(renderer.id, "visual-novel");
   assert.match(html, /data-ui="visual-novel"/);
-  assert.match(html, /class="vn-art-placeholder story-art-placeholder"/);
-  assert.match(html, /aria-label="삽화: door_cat_meet"/);
-  assert.match(html, />door_cat_meet<\/span>/);
-  assert.doesNotMatch(html, /\.svg|<img|background-image/);
+  assert.match(html, /<img class="vn-art-placeholder story-art-placeholder story-art-image"/);
+  assert.match(html, /src="\.\/assets\/visual-novel\/scenes\/door_cat_meet\.jpg"/);
+  assert.match(html, /data-art-key="door_cat_meet"/);
+  assert.doesNotMatch(html, /aria-label="삽화:/);
   assert.match(html, /체셔 고양이/);
   assert.match(html, /class="vn-choice/);
   assert.equal((html.match(/class="vn-trail-card/g) ?? []).length, 7);
@@ -292,10 +293,11 @@ test("새 결말 보상은 결말별 이야기 조각 카드와 열두 개의 �
   assert.doesNotMatch(restored, /vn-reward-overlay/);
 });
 
-test("비주얼노벨 결말은 이미지 키와 결말 톤과 7\/7을 표시한다", () => {
+test("비주얼노벨 결말은 실제 삽화와 결말 톤과 7\/7을 표시한다", () => {
   const html = getUiRenderer("visual-novel").renderEnding(story.scenes.E1, visualNovelEndingSession);
 
-  assert.match(html, /aria-label="삽화: end_curiosity"/);
+  assert.match(html, /src="\.\/assets\/visual-novel\/endings\/end_curiosity\.jpg"/);
+  assert.match(html, /data-art-key="end_curiosity"/);
   assert.match(html, /data-ending-tone="curiosity"/);
   assert.match(html, /aria-label="진행 7\/7"/);
   assert.match(html, /data-action="restart"/);
@@ -334,7 +336,7 @@ test("비주얼노벨 스타일은 게임 프레임, 화자 색상, ending overl
   assert.doesNotMatch(styles, /assets\/visual-novel/);
 });
 
-test("세 UI는 모든 장면에서 같은 이미지 키 플레이스홀더 계약을 사용한다", () => {
+test("세 UI는 모든 장면에서 같은 실제 POV 이미지 계약을 사용한다", () => {
   const samples = story.sceneOrder.map(sceneId => {
     const scene = story.scenes[sceneId];
     const session = scene.type === "ending"
@@ -381,10 +383,27 @@ test("세 UI는 모든 장면에서 같은 이미지 키 플레이스홀더 계�
       const html = sample.scene.type === "ending"
         ? renderer.renderEnding(sample.scene, sample.session, { minimalState: { sceneId: sample.scene.id, beatIndex: 0 } })
         : renderer.renderScene(sample.scene, sample.session, null, { minimalState: { sceneId: sample.scene.id, beatIndex: 0 } });
-      assert.match(html, /class="[^"]*story-art-placeholder/);
-      assert.match(html, new RegExp(`aria-label="삽화: ${sample.key}"`));
-      assert.match(html, new RegExp(`>${sample.key}<\\/span>`));
-      assert.doesNotMatch(html, /\.svg|\.webp|\.png|<img|background-image/);
+      const url = getVisualNovelArtUrl(sample.key);
+      assert.ok(url?.endsWith(".jpg"), sample.key);
+      assert.equal(fs.existsSync(path.resolve(root, url.replace(/^\.\//, ""))), true, url);
+      assert.match(html, /<img[^>]*class="[^"]*story-art-image/);
+      assert.match(html, new RegExp(`src="${url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+      assert.match(html, new RegExp(`data-art-key="${sample.key}"`));
+      assert.match(html, /alt=""/);
+      assert.doesNotMatch(html, /aria-label="삽화:/);
     }
+  }
+});
+
+test("결말 변주는 선택에 맞는 실제 스폿 이미지를 렌더링한다", () => {
+  const renderer = getUiRenderer("visual-novel");
+  for (const [variation, spotArt] of Object.entries({ TRUTH: "spot_truth", SHIELD: "spot_shield", TURN: "spot_turn" })) {
+    const scene = resolveScene("E1", { storyState: { encounterId: "A1", endingVariation: variation } });
+    const html = renderer.renderEnding(scene, visualNovelEndingSession, { testMode: true });
+    const url = getVisualNovelArtUrl(spotArt);
+    assert.equal(scene.spotArt, spotArt);
+    assert.equal(fs.existsSync(path.resolve(root, url.replace(/^\.\//, ""))), true);
+    assert.match(html, new RegExp(`data-art-key="${spotArt}"`));
+    assert.match(html, /class="[^"]*vn-variation-spot-image/);
   }
 });

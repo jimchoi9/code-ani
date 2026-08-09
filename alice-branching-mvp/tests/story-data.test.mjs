@@ -126,6 +126,7 @@ test("모든 결말은 세 변주와 결말별 조정 문장을 결합한다", (
       const scene = resolveScene(endingId, { storyState: { encounterId, endingVariation } });
       assert.match(scene.body, new RegExp(ENDING_VARIATIONS[endingVariation].body.slice(0, 8)));
       assert.ok(scene.returnAdjustment);
+      assert.equal(scene.spotArt, ENDING_VARIATIONS[endingVariation].spotArt);
       assert.match(scene.parentNote, new RegExp(ENDING_VARIATIONS[endingVariation].parentNote));
     }
   }

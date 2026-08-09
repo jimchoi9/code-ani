@@ -1,5 +1,6 @@
 import { renderTemplate } from "./personalization.js";
 import { getScene } from "./story-data.js";
+import { getVisualNovelArtUrl } from "../assets/visual-novel/manifest.js";
 
 const SLOT_OPTIONS = {
   TREAT: ["케이크", "쿠키", "젤리", "붕어빵"],
@@ -21,6 +22,10 @@ export function renderArtPlaceholder(artKey, className = "story-art-placeholder"
   const classes = [...new Set([className, "story-art-placeholder"].filter(Boolean))]
     .map(escapeHtml)
     .join(" ");
+  const source = getVisualNovelArtUrl(artKey);
+  if (source) {
+    return `<img class="${classes} story-art-image" src="${escapeHtml(source)}" alt="" data-art-key="${key}">`;
+  }
   return `<div class="${classes}" role="img" aria-label="삽화: ${key}"><span>${key}</span></div>`;
 }
 
