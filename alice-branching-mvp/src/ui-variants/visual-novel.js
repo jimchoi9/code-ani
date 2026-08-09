@@ -163,6 +163,9 @@ function renderSceneActions(scene, slots) {
 
 function renderStage(scene, dialogue, progress, endingTone = "", session = null, context = {}) {
   const speaker = getVisualNovelSpeaker(scene);
+  const nameplate = context.hideNameplate
+    ? ""
+    : `<p class="vn-nameplate vn-nameplate--${speaker.id}">${escapeHtml(speaker.label)}</p>`;
   const toneAttribute = endingTone ? ` data-ending-tone="${escapeHtml(endingTone)}"` : "";
   const backdrop = renderArtPlaceholder(scene.art, "vn-art-placeholder");
 
@@ -174,7 +177,7 @@ function renderStage(scene, dialogue, progress, endingTone = "", session = null,
       <section class="vn-stage">
         <div class="vn-art-frame">${backdrop}</div>
         <article class="vn-dialogue">
-        <p class="vn-nameplate vn-nameplate--${speaker.id}">${escapeHtml(speaker.label)}</p>
+        ${nameplate}
         ${dialogue}
         ${renderTrail(progress)}
         </article>
@@ -395,8 +398,7 @@ export function renderChipResponse(state, context = {}) {
   if (!scene) return renderRecovery();
 
   const response = state?.chipResponse ?? {};
-  const dialogue = `<p class="vn-kicker">네가 고른 말</p>
-    <h1>${escapeHtml(response.label ?? "")}</h1>
+  const dialogue = `<h1>${escapeHtml(response.label ?? "")}</h1>
     <p class="vn-feedback" role="status">${escapeHtml(response.response ?? "")}</p>
     <button class="vn-choice" type="button" data-action="continue-chip">이야기 이어 보기</button>`;
 
@@ -448,8 +450,7 @@ export function renderComplete(session, endingScene, context = {}) {
         <button class="vn-choice" type="button" data-action="complete-test">기록 저장하고 테스트 완료</button>
         <button class="vn-text-action" type="button" data-action="back-to-ending">이야기로 돌아가기</button>
       </div>`;
-  const dialogue = `<p class="vn-kicker">오늘의 모험</p>
-    <h1>모험 완료!</h1>
+  const dialogue = `<h1>모험 완료!</h1>
     <p class="vn-complete-message">${escapeHtml(personalize("{HERO}{은/는} 오늘 멋진 선택으로 이야기를 완성했어요.", slots))}</p>
     ${fragmentList}
     <p class="vn-ending-progress">만난 결말 <strong>${escapeHtml(endings.length)}/6</strong></p>
@@ -459,7 +460,7 @@ export function renderComplete(session, endingScene, context = {}) {
     </section>`;
 
   const completeScene = { ...endingScene, title: "오늘의 모험" };
-  return renderStage(completeScene, dialogue, 7, endingTones[endingScene?.id], session, context);
+  return renderStage(completeScene, dialogue, 7, endingTones[endingScene?.id], session, { ...context, hideNameplate: true });
 }
 
 export function renderRecovery(context = {}) {

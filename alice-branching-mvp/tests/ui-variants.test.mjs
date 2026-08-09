@@ -203,6 +203,17 @@ test("비주얼노벨 전체 화면은 실제 모험 상태를 표시하는 게�
   assert.doesNotMatch(sceneHtml, /data-action="(?:inventory|quest|settings|currency)"/);
 });
 
+test("비주얼노벨 선택 응답은 캐릭터 이름표만 표시한다", () => {
+  const html = getUiRenderer("visual-novel").renderChipResponse({
+    sceneId: "A2",
+    chipResponse: { label: "조금 어리둥절해요", response: "천천히 알아 가도 괜찮아." },
+    session: visualNovelSession,
+  });
+
+  assert.match(html, /vn-nameplate--caterpillar">애벌레<\/p>/);
+  assert.doesNotMatch(html, /<p class="vn-kicker">네가 고른 말<\/p>/);
+});
+
 test("테스트 모드 비주얼노벨만 참가자 코드와 진행자 도구와 결말 재도전을 제공한다", () => {
   const renderer = getUiRenderer("visual-novel");
   const context = { testMode: true, participantId: "C01", eventCount: 7 };
@@ -268,7 +279,9 @@ test("비주얼노벨 테스트 완료 화면은 아이의 성취와 진행자 �
   });
 
   assert.match(complete, /모험 완료!/);
-  assert.match(complete, /오늘의 모험/);
+  assert.equal((complete.match(/오늘의 모험/g) ?? []).length, 1);
+  assert.doesNotMatch(complete, /class="vn-nameplate/);
+  assert.doesNotMatch(complete, /class="vn-kicker"/);
   assert.match(complete, /호기심의 조각/);
   assert.match(complete, /진행자용 테스트 도구/);
   assert.match(complete, /data-action="complete-test"/);
