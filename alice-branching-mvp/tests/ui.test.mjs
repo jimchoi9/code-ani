@@ -105,8 +105,16 @@ function beginStory() {
     HERO: "지민",
     TREAT: "젤리",
     PET: "토끼",
-    COLOR: "분홍",
   });
+}
+
+function reachA1Ending() {
+  let state = choosePath(beginStory(), "S01", "작은 문을 열어 본다", "shrink");
+  state = choosePath(state, "A1", "나무 위 웃음소리로 간다", "A1");
+  state = selectChip(state, { label: "이 길 끝에 뭐가 있어?", nextSceneId: "C1" });
+  state = continueChip(state);
+  state = choosePath(state, "C2", "붓질 소리를 따라 담장 쪽으로 간다", "secret");
+  return choosePath(state, "E1", "하얀 장미였다고 사실대로 말한다", "truth");
 }
 
 test("설정에서 시작하면 S00을 방문하고 선택 피드백을 다음 장면에 둔다", () => {
@@ -137,40 +145,51 @@ test("빈 이름은 폼에서 허용되고 기본 이름으로 정규화된다",
   assert.equal(started.session.slots.HERO, "앨리스");
 });
 
-test("세 갈래 플레이가 칩 응답 화면을 거쳐 각각의 결말에 도달한다", () => {
+test("여섯 만남이 공통 수렴부와 정원 선택을 거쳐 각각의 결말에 도달한다", () => {
   const routes = [
-    { scenes: [["S01", "작은 문을 열어 본다"], ["A1", "나무 위 웃음소리로 간다"]], chip: ["이 길 끝에 뭐가 있어?", "재미있는 생각이구나.", "E1"], ending: "E1" },
-    { scenes: [["S01", "작은 문을 열어 본다"], ["A3", "멀리 들리는 찻잔 소리로 간다"]], chip: ["노래가 나오는 시계", "훌륭한 생각이야!", "E3"], ending: "E3" },
-    { scenes: [["S02", "젤리를 먹어 본다"], ["B2", "계속 읽기"]], chip: ["강을 한 번에 건너고 싶어요", "그것도 좋은 일이지.", "E5"], ending: "E5" },
+    { first: ["S01", "작은 문을 열어 본다", "shrink"], encounter: ["A1", "나무 위 웃음소리로 간다", "A1"], chip: "이 길 끝에 뭐가 있어?", ending: "E1" },
+    { first: ["S01", "작은 문을 열어 본다", "shrink"], encounter: ["A2", "버섯 쪽 콧노래로 간다", "A2"], chip: "조금 어리둥절해요", ending: "E2" },
+    { first: ["S01", "작은 문을 열어 본다", "shrink"], encounter: ["A3", "멀리 들리는 찻잔 소리로 간다", "A3"], chip: "노래가 나오는 시계", ending: "E3" },
+    { first: ["S02", "젤리를 먹어 본다", "grow"], encounter: ["B1", "웃음소리가 들리는 길로 간다", "B1"], chip: "하얀 성에 가 보고 싶어", ending: "E4" },
+    { first: ["S02", "젤리를 먹어 본다", "grow"], encounter: ["B2", "커다란 버섯이 있는 길로 간다", "B2"], chip: "강을 한 번에 건너고 싶어요", ending: "E5" },
+    { first: ["S02", "젤리를 먹어 본다", "grow"], encounter: ["B3", "찻잔 소리가 나는 길로 간다", "B3"], chip: "약속할게", ending: "E6" },
   ];
 
   for (const route of routes) {
     let state = beginStory();
-    for (const [sceneId, label] of route.scenes) state = choosePath(state, sceneId, label);
+    state = choosePath(state, ...route.first);
+    state = choosePath(state, ...route.encounter);
     state = selectChip(state, {
-      label: route.chip[0],
-      response: route.chip[1],
-      nextSceneId: route.chip[2],
+      label: route.chip,
+      nextSceneId: "C1",
     });
 
     assert.equal(state.screen, "chip-response");
-    assert.equal(state.chipResponse.label, route.chip[0]);
-    assert.deepEqual(state.session.chipChoices, [{ sceneId: state.sceneId, label: route.chip[0] }]);
+    assert.equal(state.chipResponse.label, route.chip);
+    assert.match(state.chipResponse.response, /\S/);
+    assert.deepEqual(state.session.chipChoices, [{ sceneId: state.sceneId, label: route.chip }]);
 
     state = continueChip(state);
+    assert.equal(state.sceneId, "C1");
+    state = choosePath(state, "C2", "붓질 소리를 따라 담장 쪽으로 간다", "secret");
+    state = choosePath(state, route.ending, "하얀 장미였다고 사실대로 말한다", "truth");
     assert.equal(state.screen, "ending");
     assert.equal(state.sceneId, route.ending);
     assert.deepEqual(state.session.endingsSeen, [route.ending]);
+    assert.deepEqual(state.session.storyState, {
+      encounterId: route.encounter[2],
+      gardenEntry: "SECRET",
+      endingVariation: "TRUTH",
+    });
   }
 });
 
 test("새로고침 상태 복원은 활성 장면과 칩 응답을 유지한다", () => {
   const sceneState = choosePath(beginStory(), "S01", "작은 문을 열어 본다");
   const restoredScene = createAppState(sceneState.session);
-  const chipState = selectChip(choosePath(sceneState, "A1", "나무 위 웃음소리로 간다"), {
+  const chipState = selectChip(choosePath(sceneState, "A1", "나무 위 웃음소리로 간다", "A1"), {
     label: "너는 왜 웃고 있어?",
-    response: "그건 나도 궁금했어.",
-    nextSceneId: "E1",
+    nextSceneId: "C1",
   });
   const restoredChip = createAppState(chipState.session);
 
@@ -179,11 +198,10 @@ test("새로고침 상태 복원은 활성 장면과 칩 응답을 유지한다"
   assert.equal(restoredScene.feedback, "작은 문을 열어 본다");
   assert.equal(restoredChip.screen, "chip-response");
   assert.equal(restoredChip.sceneId, "A1");
-  assert.deepEqual(restoredChip.chipResponse, {
-    label: "너는 왜 웃고 있어?",
-    response: "그건 나도 궁금했어. 고양이의 귀가 쫑긋 움직였어요.",
-    nextSceneId: "E1",
-  });
+  assert.equal(restoredChip.chipResponse.label, "너는 왜 웃고 있어?");
+  assert.match(restoredChip.chipResponse.response, /^그건 나도 궁금했어/);
+  assert.match(restoredChip.chipResponse.response, /모르는 것도 괜찮아/);
+  assert.equal(restoredChip.chipResponse.nextSceneId, "C1");
 });
 
 test("낱말은 패널을 열고 현재 실행에 중복 없이 기록된다", () => {
@@ -196,13 +214,7 @@ test("낱말은 패널을 열고 현재 실행에 중복 없이 기록된다", (
 });
 
 test("다시 시작과 슬롯 수정은 결말 및 실행 기록을 보존한다", () => {
-  let state = choosePath(choosePath(beginStory(), "S01"), "A1");
-  state = continueChip(selectChip(state, {
-    label: "이 길 끝에 뭐가 있어?",
-    response: "재미있는 생각이구나.",
-    nextSceneId: "E1",
-  }));
-  state = restartStory(state);
+  let state = restartStory(reachA1Ending());
 
   assert.equal(state.screen, "setup");
   assert.deepEqual(state.session.endingsSeen, ["E1"]);
@@ -219,13 +231,7 @@ test("다시 시작과 슬롯 수정은 결말 및 실행 기록을 보존한다
 
 test("다른 결말 보기는 수집 결말을 유지하고 새 실행으로 첫 장면에 돌아간다", async () => {
   const { replayForAnotherEnding } = await import("../src/app.js");
-  let state = choosePath(choosePath(beginStory(), "S01"), "A1");
-  state = continueChip(selectChip(state, {
-    label: "이 길 끝에 뭐가 있어?",
-    response: "재미있는 생각이구나.",
-    nextSceneId: "E1",
-  }));
-  const replayed = replayForAnotherEnding(state);
+  const replayed = replayForAnotherEnding(reachA1Ending());
 
   assert.equal(replayed.screen, "scene");
   assert.equal(replayed.sceneId, "S00");
@@ -237,12 +243,8 @@ test("다른 결말 보기는 수집 결말을 유지하고 새 실행으로 첫
 
 test("이야기 조각 보상은 처음 수집한 결말 전환에서만 생성된다", async () => {
   const { createStoryReward } = await import("../src/app.js");
-  const before = choosePath(choosePath(beginStory(), "S01"), "A1");
-  const firstEnding = continueChip(selectChip(before, {
-    label: "이 길 끝에 뭐가 있어?",
-    response: "재미있는 생각이구나.",
-    nextSceneId: "E1",
-  }));
+  const firstEnding = reachA1Ending();
+  const before = { ...firstEnding, screen: "scene", sceneId: "C2", session: { ...firstEnding.session, endingsSeen: [] } };
   const alreadyCollected = { ...before, session: { ...before.session, endingsSeen: ["E1"] } };
 
   assert.deepEqual(createStoryReward(before, firstEnding), { endingId: "E1", count: 1 });
@@ -293,10 +295,7 @@ test("next-beat는 스토리 세션을 바꾸지 않고 UI 상태만 한 칸 진
 
 test("모험 마치기는 결말 세션을 보존한 완료 화면으로 전환한다", async () => {
   const { finishAdventure } = await import("../src/app.js");
-  const ending = continueChip(selectChip(
-    choosePath(choosePath(beginStory(), "S01"), "A1"),
-    { label: "이 길 끝에 뭐가 있어?", nextSceneId: "E1" },
-  ));
+  const ending = reachA1Ending();
   const complete = finishAdventure(ending);
 
   assert.equal(complete.screen, "complete");

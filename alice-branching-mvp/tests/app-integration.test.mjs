@@ -19,6 +19,17 @@ function beginStory() {
   return startStory(createAppState(), slots);
 }
 
+function reachA1Ending() {
+  let state = choosePath(beginStory(), "S01", "작은 문을 열어 본다", "shrink");
+  state = choosePath(state, "A1", "나무 위 웃음소리로 간다", "A1");
+  state = selectChip(state, { label: "이 길 끝에 뭐가 있어?", nextSceneId: "C1" });
+  const chipResponse = state;
+  state = continueChip(state);
+  state = choosePath(state, "C2", "붓질 소리를 따라 담장 쪽으로 간다", "secret");
+  const ending = choosePath(state, "E1", "하얀 장미였다고 사실대로 말한다", "truth");
+  return { chipResponse, ending };
+}
+
 function createStoryStore(initial) {
   let value = clone(initial);
   const saves = [];
@@ -162,12 +173,7 @@ function readerSurface() {
 test("mounted app은 선택 renderer로 모든 화면과 낱말 panel을 dispatch한다", async () => {
   const { mountBrowserApp } = await import("../src/app.js");
   const started = beginStory();
-  const atChip = choosePath(choosePath(started, "S01"), "A1");
-  const chipResponse = selectChip(atChip, {
-    label: "이 길 끝에 뭐가 있어?",
-    nextSceneId: "E1",
-  });
-  const ending = continueChip(chipResponse);
+  const { chipResponse, ending } = reachA1Ending();
   const cases = [
     { session: null, expected: "renderSetup" },
     { session: started.session, expected: "renderScene" },
@@ -346,11 +352,7 @@ test("테스트 JSON 다운로드는 참가자 파일명과 직렬화된 payload
 
 test("테스트 종료는 아이 완료 화면 뒤 기록을 저장하고 새 참가자로 초기화한다", async () => {
   const { mountBrowserApp } = await import("../src/app.js");
-  const atChip = choosePath(choosePath(beginStory(), "S01"), "A1");
-  const ending = continueChip(selectChip(atChip, {
-    label: "이 길 끝에 뭐가 있어?",
-    nextSceneId: "E1",
-  }));
+  const { ending } = reachA1Ending();
   const renderer = createRenderer("visual-novel");
   renderer.renderTestTools = () => "";
   const environment = createEnvironment("?test=1");

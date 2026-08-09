@@ -54,7 +54,7 @@ function renderSceneActions(scene, slots) {
   }
 
   const choices = (scene.choices ?? []).map(choice => (
-    `<button class="minimal-choice" type="button" data-action="choose" data-next-scene="${escapeHtml(choice.nextSceneId)}">${escapeHtml(personalize(choice.label, slots))}</button>`
+    `<button class="minimal-choice" type="button" data-action="choose" data-choice-id="${escapeHtml(choice.id ?? "")}" data-next-scene="${escapeHtml(choice.nextSceneId)}">${escapeHtml(personalize(choice.label, slots))}</button>`
   )).join("");
   if (choices) return `<div class="minimal-actions" aria-label="다음 장면 고르기">${choices}</div>`;
   if (!scene.nextSceneId) return "";

@@ -5,6 +5,7 @@ import {
 } from "./beat.js";
 import { renderTemplate } from "./personalization.js";
 import {
+  applyStoryEffect,
   chooseChip,
   completeRun,
   createSession,
@@ -14,7 +15,7 @@ import {
   updateSlots,
   visitScene,
 } from "./session.js";
-import { getScene, story } from "./story-data.js";
+import { getScene, resolveScene, story } from "./story-data.js";
 import { createTestModeStore, isTestMode } from "./test-mode.js";
 import { escapeHtml } from "./ui.js";
 import { createCompareLinks, getUiRenderer, parseUiVariant } from "./ui-variant.js";
@@ -86,7 +87,7 @@ function restoredChipResponse(scene, session) {
   if (!chip || !getScene(chip.nextSceneId)) return null;
   return {
     label: personalized(chip.label, session),
-    response: personalized(chip.response, session),
+    response: personalized([chip.response, scene.afterChip].filter(Boolean).join("\n\n"), session),
     nextSceneId: chip.nextSceneId,
   };
 }
@@ -122,15 +123,25 @@ export function startStory(state, slots) {
   };
 }
 
-export function choosePath(state, nextSceneId, selectedLabel = null) {
+export function choosePath(state, nextSceneId, selectedLabel = null, choiceId = null) {
   const nextScene = getScene(nextSceneId);
   if (!isUsableSession(state.session) || !nextScene) {
     return { ...state, screen: "recovery", vocabulary: null };
   }
 
-  const session = nextScene.type === "ending"
-    ? completeRun(state.session, nextScene.id)
-    : visitScene(state.session, nextScene.id);
+  let session = state.session;
+  if (choiceId) {
+    const currentScene = resolveScene(state.sceneId, session);
+    const choice = currentScene?.choices?.find(item => item.id === choiceId);
+    if (!choice || choice.nextSceneId !== nextSceneId) {
+      return { ...state, screen: "recovery", vocabulary: null };
+    }
+    session = applyStoryEffect(session, choice.effect);
+  }
+
+  session = nextScene.type === "ending"
+    ? completeRun(session, nextScene.id)
+    : visitScene(session, nextScene.id);
   return {
     ...state,
     screen: nextScene.type === "ending" ? "ending" : "scene",
@@ -160,7 +171,7 @@ export function selectChip(state, selection) {
 
   const chipResponse = {
     label: personalized(chip.label, state.session),
-    response: personalized(chip.response, state.session),
+    response: personalized([chip.response, scene.afterChip].filter(Boolean).join("\n\n"), state.session),
     nextSceneId: chip.nextSceneId,
   };
   return {
@@ -349,7 +360,7 @@ export function bindAppEvents(
         choice: control.textContent.trim(),
         nextSceneId: control.dataset.nextScene,
       });
-      commit(choosePath(state, control.dataset.nextScene, control.textContent.trim()));
+      commit(choosePath(state, control.dataset.nextScene, control.textContent.trim(), control.dataset.choiceId));
     } else if (action === "continue") {
       commit(continueStory(state, control.dataset.nextScene));
     } else if (action === "choose-chip") {
@@ -499,7 +510,7 @@ export function mountBrowserApp({
 
   function render(focusContent = false, resetScroll = focusContent) {
     syncMinimalState();
-    const scene = getScene(state.sceneId);
+    const scene = resolveScene(state.sceneId, state.session ?? {});
     let html;
     if (state.screen === "setup") html = renderWithUi("renderSetup", state.session?.slots);
     else if (state.screen === "onboarding" && typeof ui.renderOnboarding === "function") html = renderWithUi("renderOnboarding");

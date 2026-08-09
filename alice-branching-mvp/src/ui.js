@@ -37,7 +37,7 @@ function renderVocabularyWords(words = []) {
 }
 
 function renderChoice(choice, slots) {
-  return `<button class="choice" type="button" data-action="choose" data-next-scene="${escapeHtml(choice.nextSceneId)}">${escapeHtml(personalize(choice.label, slots))}</button>`;
+  return `<button class="choice" type="button" data-action="choose" data-choice-id="${escapeHtml(choice.id ?? "")}" data-next-scene="${escapeHtml(choice.nextSceneId)}">${escapeHtml(personalize(choice.label, slots))}</button>`;
 }
 
 function renderChip(chip, slots) {

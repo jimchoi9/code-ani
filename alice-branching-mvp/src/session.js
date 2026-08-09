@@ -11,6 +11,7 @@ function run(id, startedAt) {
     path: [],
     chipChoices: [],
     vocabTapped: [],
+    storyState: {},
     replayed: false,
   };
 }
@@ -34,6 +35,7 @@ export function createSession(slots = {}, now = isoNow()) {
     chipChoices: [],
     vocabTapped: [],
     endingsSeen: [],
+    storyState: {},
     runs: [run(`run-${now}`, now)],
   };
 }
@@ -54,6 +56,14 @@ export function chooseChip(session, sceneId, label) {
   return updateCurrentRun({ ...session, chipChoices: [...session.chipChoices, choice] }, current => ({
     ...current,
     chipChoices: [...current.chipChoices, choice],
+  }));
+}
+
+export function applyStoryEffect(session, effect = {}) {
+  const storyState = { ...(session.storyState ?? {}), ...effect };
+  return updateCurrentRun({ ...session, storyState }, current => ({
+    ...current,
+    storyState: { ...(current.storyState ?? {}), ...effect },
   }));
 }
 
@@ -84,6 +94,7 @@ export function restartRun(session, now = isoNow()) {
     path: [],
     chipChoices: [],
     vocabTapped: [],
+    storyState: {},
     runs: [
       ...session.runs.map((current, index) => index === previousRun ? { ...current, replayed: true } : current),
       run(`run-${now}`, now),

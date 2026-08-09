@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  applyStoryEffect,
   chooseChip,
   completeRun,
   createSession,
@@ -12,6 +13,20 @@ import {
 } from "../src/session.js";
 
 const start = "2026-08-07T10:00:00.000Z";
+
+test("이야기 선택 상태를 세션과 현재 실행에 함께 기록한다", () => {
+  let session = createSession({}, start);
+  session = applyStoryEffect(session, { encounterId: "A2" });
+  session = applyStoryEffect(session, { gardenEntry: "SECRET" });
+  session = applyStoryEffect(session, { endingVariation: "TURN" });
+
+  assert.deepEqual(session.storyState, {
+    encounterId: "A2",
+    gardenEntry: "SECRET",
+    endingVariation: "TURN",
+  });
+  assert.deepEqual(session.runs[0].storyState, session.storyState);
+});
 
 test("경로, 칩, 낱말, 결말과 완료 시각을 기록한다", () => {
   let session = createSession({ HERO: "지민" }, start);
@@ -28,12 +43,14 @@ test("경로, 칩, 낱말, 결말과 완료 시각을 기록한다", () => {
 });
 
 test("다시 하기는 수집 기록을 유지하고 새 실행을 연다", () => {
-  const completed = completeRun(createSession({}, start), "E1", start);
+  const completed = completeRun(applyStoryEffect(createSession({}, start), { encounterId: "A1" }), "E1", start);
   const replay = restartRun(completed, "2026-08-07T10:05:00.000Z");
   assert.deepEqual(replay.endingsSeen, ["E1"]);
   assert.equal(replay.runs[0].replayed, true);
   assert.equal(replay.runs.length, 2);
   assert.deepEqual(replay.path, []);
+  assert.deepEqual(replay.storyState, {});
+  assert.deepEqual(replay.runs[1].storyState, {});
 });
 
 test("저장소 오류 시 메모리 폴백으로 저장한다", () => {
@@ -60,7 +77,7 @@ test("슬롯 갱신은 정규화하고 관찰 기록을 보존한다", () => {
   const completed = completeRun(createSession({ HERO: "지민" }, start), "E1", start);
   const updated = updateSlots(completed, { HERO: "Alice", TREAT: "젤리" });
 
-  assert.deepEqual(updated.slots, { HERO: "앨리스", TREAT: "젤리", PET: "강아지", COLOR: "파랑" });
+  assert.deepEqual(updated.slots, { HERO: "앨리스", TREAT: "젤리", PET: "강아지" });
   assert.deepEqual(updated.endingsSeen, ["E1"]);
   assert.deepEqual(updated.runs, completed.runs);
   assert.notStrictEqual(updated.runs, completed.runs);
