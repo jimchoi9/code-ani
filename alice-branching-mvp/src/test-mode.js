@@ -1,5 +1,7 @@
 const STORAGE_KEY = "alice-branching-mvp/test-v1";
 
+const INITIAL_ONBOARDING = Object.freeze({ step: "name", answers: {} });
+
 function clone(value) {
   return value === null || value === undefined ? value : JSON.parse(JSON.stringify(value));
 }
@@ -74,9 +76,22 @@ export function createTestModeStore(storage, now = () => new Date().toISOString(
       const normalized = normalizeParticipantId(participantId);
       if (!normalized) return null;
       const startedAt = now();
-      persist({ participantId: normalized, startedAt, events: [] });
+      persist({ participantId: normalized, startedAt, events: [], onboarding: clone(INITIAL_ONBOARDING) });
       record("test_started");
       return load();
+    },
+    saveOnboarding(onboarding) {
+      const current = load();
+      if (!current) return null;
+      const next = {
+        ...current,
+        onboarding: {
+          step: String(onboarding?.step ?? "name"),
+          answers: clone(onboarding?.answers ?? {}),
+        },
+      };
+      persist(next);
+      return clone(next.onboarding);
     },
     record,
     clear() {

@@ -43,6 +43,17 @@ test("새 참가자는 이전 기록을 교체하고 경과 시간과 장면 정
   assert.equal(record.events[1].elapsedMs, 2500);
   assert.equal(record.events[1].sceneId, "S00");
   assert.equal(record.events[1].choice, "문을 연다");
+  assert.deepEqual(record.onboarding, { step: "name", answers: {} });
+});
+
+test("채팅 온보딩 답변과 현재 질문을 저장하고 복원한다", () => {
+  const storage = storageDouble();
+  const store = createTestModeStore(storage, () => "2026-08-09T10:00:00.000Z");
+  store.start("C04");
+  store.saveOnboarding({ step: "friend", answers: { HERO: "지민" } });
+
+  const restored = createTestModeStore(storage, () => "2026-08-09T10:00:01.000Z").load();
+  assert.deepEqual(restored.onboarding, { step: "friend", answers: { HERO: "지민" } });
 });
 
 test("내보내기 스냅샷은 테스트 기록과 이야기 세션을 복제한다", () => {

@@ -49,6 +49,10 @@ function createTestStore(initial = null) {
       if (value) value.events.push(event);
       return event;
     },
+    saveOnboarding(onboarding) {
+      if (value) value.onboarding = clone(onboarding);
+      return clone(onboarding);
+    },
     clear() { value = null; },
     exportSnapshot(session) { return { participant: clone(value), storySession: clone(session) }; },
   };
@@ -84,6 +88,7 @@ function createRenderer(id = "test") {
     id,
     calls,
     renderSetup: render("renderSetup"),
+    renderOnboarding: render("renderOnboarding"),
     renderScene: render("renderScene"),
     renderChipResponse: render("renderChipResponse"),
     renderEnding: render("renderEnding"),
@@ -272,6 +277,33 @@ test("test=1 mount는 비주얼노벨을 강제하고 비교 메뉴 없이 테�
   assert.equal(renderer.calls[0].name, "renderSetup");
   assert.equal(renderer.calls[0].args[1].testMode, true);
   assert.match(environment.app.innerHTML, /data-test-tools=""/);
+});
+
+test("진행 중인 채팅 온보딩은 저장된 질문과 답변으로 복원한다", async () => {
+  const { mountBrowserApp } = await import("../src/app.js");
+  const renderer = createRenderer("visual-novel");
+  renderer.renderTestTools = () => "";
+  const environment = createEnvironment("?test=1");
+  const testStore = createTestStore({
+    participantId: "C05",
+    events: [],
+    onboarding: { step: "color", answers: { HERO: "지민", PET: "토끼" } },
+  });
+
+  mountBrowserApp({
+    ...environment,
+    sessionStore: createStoryStore(null),
+    testStore,
+    minimalStore: createMinimalStateStore(createStorage()),
+    getRenderer: () => renderer,
+  });
+
+  assert.equal(environment.windowRef.__aliceStoryDebug.screen(), "onboarding");
+  assert.equal(renderer.calls[0].name, "renderOnboarding");
+  assert.deepEqual(renderer.calls[0].args[0].onboarding, {
+    step: "color",
+    answers: { HERO: "지민", PET: "토끼" },
+  });
 });
 
 test("테스트 JSON 다운로드는 참가자 파일명과 직렬화된 payload를 사용한다", async () => {

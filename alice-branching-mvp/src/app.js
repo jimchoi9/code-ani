@@ -50,6 +50,25 @@ function personalized(value, session) {
   return renderTemplate(String(value ?? ""), session.slots);
 }
 
+const ONBOARDING_STEPS = Object.freeze({
+  name: { slot: "HERO", next: "friend", maxLength: 6 },
+  friend: { slot: "PET", next: "color", maxLength: 12 },
+  color: { slot: "COLOR", next: "snack", maxLength: 12 },
+  snack: { slot: "TREAT", next: "confirm", maxLength: 12 },
+});
+
+export function answerOnboarding(onboarding, value) {
+  const current = onboarding ?? { step: "name", answers: {} };
+  const config = ONBOARDING_STEPS[current.step];
+  if (!config) return current;
+  const answer = String(value ?? "").trim().slice(0, config.maxLength);
+  if (!answer) return current;
+  return {
+    step: config.next,
+    answers: { ...(current.answers ?? {}), [config.slot]: answer },
+  };
+}
+
 function previousChoiceFeedback(path) {
   if (path.length < 2) return null;
   const previous = getScene(path.at(-2));
@@ -295,15 +314,22 @@ export function bindAppEvents(
     onTestDownload = () => {},
     onTestComplete = () => {},
     onNewParticipant = state => state,
+    onStartOnboarding = () => {},
+    onOnboardingAnswer = () => {},
+    onOnboardingConfirm = () => {},
     onDismissReward = () => {},
   } = {},
 ) {
   app.addEventListener("submit", event => {
-    const form = event.target.closest('form[data-action="start"]');
+    const form = event.target.closest('form[data-action="start"]') ?? event.target.closest("form[data-action]");
     if (!form) return;
+    const action = form.dataset?.action ?? "start";
+    if (!["start", "start-onboarding", "onboarding-answer"].includes(action)) return;
     event.preventDefault();
     const values = readForm(form);
-    commit(onStart(values, getState()));
+    if (action === "start") commit(onStart(values, getState()));
+    else if (action === "start-onboarding") onStartOnboarding(values);
+    else onOnboardingAnswer(values.ANSWER);
   });
 
   app.addEventListener("click", event => {
@@ -373,6 +399,10 @@ export function bindAppEvents(
       commit(onNewParticipant(state));
     } else if (action === "back-to-ending") {
       commit(returnToEnding(state));
+    } else if (action === "onboarding-suggestion") {
+      onOnboardingAnswer(control.dataset.value);
+    } else if (action === "onboarding-confirm") {
+      onOnboardingConfirm();
     } else if (action === "dismiss-reward") {
       onDismissReward(control);
     }
@@ -425,6 +455,9 @@ export function mountBrowserApp({
   let state = createAppState(store.load());
   let minimalState = null;
   let storyReward = null;
+  let onboarding = testMode ? activeTest?.onboarding ?? null : null;
+  let onboardingTyping = false;
+  if (testMode && activeTest && state.screen === "setup") state = { ...state, screen: "onboarding" };
 
   const compareMenu = renderCompareMenu(windowRef.location.search, uiVariant);
   if (compareMenu) {
@@ -442,6 +475,8 @@ export function mountBrowserApp({
       eventCount: record?.events?.length ?? 0,
       storyReward,
       testCompleted: state.testCompleted,
+      onboarding,
+      onboardingTyping,
     };
   }
 
@@ -467,6 +502,7 @@ export function mountBrowserApp({
     const scene = getScene(state.sceneId);
     let html;
     if (state.screen === "setup") html = renderWithUi("renderSetup", state.session?.slots);
+    else if (state.screen === "onboarding" && typeof ui.renderOnboarding === "function") html = renderWithUi("renderOnboarding");
     else if (state.screen === "scene" && scene) html = renderWithUi("renderScene", scene, state.session, state.feedback);
     else if (state.screen === "chip-response" && scene) html = renderWithUi("renderChipResponse", state);
     else if (state.screen === "ending" && scene) html = renderWithUi("renderEnding", scene, state.session);
@@ -476,7 +512,7 @@ export function mountBrowserApp({
     const panel = state.vocabulary
       ? renderWithUi("renderVocabularyPanel", state.vocabulary.word, state.vocabulary.definition)
       : "";
-    const testTools = testMode && state.screen !== "complete" && typeof ui.renderTestTools === "function"
+    const testTools = testMode && !["complete", "onboarding"].includes(state.screen) && typeof ui.renderTestTools === "function"
       ? ui.renderTestTools(testContext())
       : "";
     app.innerHTML = html + panel + testTools;
@@ -527,6 +563,40 @@ export function mountBrowserApp({
       testStore.start(values.PARTICIPANT_ID);
       return startStory(createAppState(), values);
     },
+    onStartOnboarding(values) {
+      if (!testMode) return;
+      store.clear();
+      minimalStore.clear();
+      testStore.start(values.PARTICIPANT_ID);
+      testStore.record("onboarding_started");
+      onboarding = testStore.load()?.onboarding ?? { step: "name", answers: {} };
+      state = { ...createAppState(), screen: "onboarding" };
+      render(true);
+    },
+    onOnboardingAnswer(value) {
+      if (!testMode || !onboarding || onboardingTyping) return;
+      const previousStep = onboarding.step;
+      const next = answerOnboarding(onboarding, value);
+      if (next === onboarding) return;
+      const slot = ONBOARDING_STEPS[previousStep].slot;
+      testStore.record("onboarding_answered", { step: previousStep, slot, value: next.answers[slot] });
+      onboarding = next;
+      onboardingTyping = true;
+      render();
+      const finishReply = () => {
+        onboardingTyping = false;
+        testStore.saveOnboarding(onboarding);
+        render(true, false);
+      };
+      if (typeof windowRef.setTimeout === "function") windowRef.setTimeout(finishReply, 650);
+      else finishReply();
+    },
+    onOnboardingConfirm() {
+      if (!testMode || onboarding?.step !== "confirm") return;
+      testStore.record("onboarding_completed", { answers: onboarding.answers });
+      testStore.saveOnboarding({ ...onboarding, step: "complete" });
+      commit(startStory(createAppState(), onboarding.answers));
+    },
     onStoryEvent(type, details) {
       if (testMode) testStore.record(type, details);
     },
@@ -552,6 +622,8 @@ export function mountBrowserApp({
       store.clear();
       minimalStore.clear();
       testStore.clear();
+      onboarding = null;
+      onboardingTyping = false;
       return createAppState();
     },
     onDismissReward(control) {

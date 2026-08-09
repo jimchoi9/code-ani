@@ -267,6 +267,8 @@ test("테스트 모드 비주얼노벨만 참가자 코드와 진행자 도구�
 
   assert.match(setup, /name="PARTICIPANT_ID"/);
   assert.match(setup, /pattern="\[A-Za-z0-9_-\]\+"/);
+  assert.match(setup, /data-action="start-onboarding"/);
+  assert.doesNotMatch(setup, /name="HERO"|data-slot="PET"/);
   assert.match(ending, /data-action="other-ending"/);
   assert.match(ending, /다른 결말도 찾아볼래!/);
   assert.match(ending, /data-action="finish-adventure"/);
@@ -276,6 +278,33 @@ test("테스트 모드 비주얼노벨만 참가자 코드와 진행자 도구�
   assert.match(tools, /data-action="test-reset"/);
   assert.doesNotMatch(normalSetup, /PARTICIPANT_ID/);
   assert.doesNotMatch(normalEnding, /other-ending|finish-adventure/);
+});
+
+test("시계토끼 온보딩은 누적 대화와 추천 답장과 직접 입력을 제공한다", () => {
+  const renderer = getUiRenderer("visual-novel");
+  const chat = renderer.renderOnboarding({
+    testMode: true,
+    onboarding: { step: "color", answers: { HERO: "지민", PET: "토끼" } },
+  });
+  const typing = renderer.renderOnboarding({
+    testMode: true,
+    onboardingTyping: true,
+    onboarding: { step: "friend", answers: { HERO: "지민" } },
+  });
+  const confirm = renderer.renderOnboarding({
+    testMode: true,
+    onboarding: { step: "confirm", answers: { HERO: "지민", PET: "토끼", COLOR: "분홍", TREAT: "젤리" } },
+  });
+
+  assert.match(chat, /시계토끼/);
+  assert.match(chat, /지민/);
+  assert.match(chat, /토끼/);
+  assert.match(chat, /data-value="파랑"/);
+  assert.match(chat, /data-action="onboarding-answer"/);
+  assert.match(typing, /vn-chat-typing/);
+  assert.doesNotMatch(typing, /추천 답장/);
+  assert.match(confirm, /지민.*토끼.*분홍.*젤리/s);
+  assert.match(confirm, /data-action="onboarding-confirm"/);
 });
 
 test("비주얼노벨 테스트 완료 화면은 아이의 성취와 진행자 작업을 분리한다", () => {

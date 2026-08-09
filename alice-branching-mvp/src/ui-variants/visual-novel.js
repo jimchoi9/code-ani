@@ -36,6 +36,13 @@ const storyFragments = Object.freeze({
   E5: { name: "자신감의 조각", tone: "confidence", mark: "★" },
 });
 
+const onboardingQuestions = Object.freeze({
+  name: { prompt: "늦었다, 늦었어! 그런데 넌 누구니? 이름을 알려 줘.", placeholder: "내 이름 쓰기", suggestions: [] },
+  friend: { prompt: "반가워! 함께 모험할 친구는 누구야?", placeholder: "함께 갈 친구 쓰기", suggestions: ["강아지", "고양이", "토끼", "거북이"] },
+  color: { prompt: "멋진 친구네! 네가 가장 좋아하는 색은 뭐야?", placeholder: "좋아하는 색 쓰기", suggestions: ["파랑", "노랑", "초록", "분홍"] },
+  snack: { prompt: "마지막 질문이야. 모험 가방에 어떤 간식을 넣을까?", placeholder: "먹고 싶은 간식 쓰기", suggestions: ["케이크", "쿠키", "젤리", "붕어빵"] },
+});
+
 function personalize(value, slots = {}) {
   return renderTemplate(String(value ?? ""), slots);
 }
@@ -264,6 +271,23 @@ export function getVisualNovelSpeaker(scene) {
 }
 
 export function renderSetup(slots = {}, context = {}) {
+  if (context.testMode) {
+    return `<main class="vn-shell vn-setup vn-code-entry" data-ui="visual-novel">
+      <div class="vn-game-frame">
+        ${renderGameHud()}
+        ${renderTitlePlaque("모험 입장", "시계토끼가 기다리고 있어요")}
+        <section class="vn-setup-panel">
+          <form data-action="start-onboarding">
+            <label for="participant-id">참가자 코드</label>
+            <input id="participant-id" class="vn-participant-input" type="text" name="PARTICIPANT_ID" value="${escapeHtml(context.participantId ?? "")}" maxlength="12" pattern="[A-Za-z0-9_-]+" autocomplete="off" autocapitalize="characters" required data-focus-target>
+            <button class="vn-choice" type="submit">시계토끼 만나기</button>
+          </form>
+          ${renderTrail(0)}
+        </section>
+        ${renderGameFooter(null, 0)}
+      </div>
+    </main>`;
+  }
   const hero = personalize("{HERO}", slots);
   const setupBackground = visualNovelAssets.backgrounds.rabbitHole;
   const groups = Object.entries(SLOT_OPTIONS).map(([slot, options]) => `
@@ -289,6 +313,56 @@ export function renderSetup(slots = {}, context = {}) {
         ${renderTrail(0)}
       </section>
       ${renderGameFooter(null, 0)}
+    </div>
+  </main>`;
+}
+
+export function renderOnboarding(context = {}) {
+  const onboarding = context.onboarding ?? { step: "name", answers: {} };
+  const answers = onboarding.answers ?? {};
+  const turns = [{ role: "rabbit", text: onboardingQuestions.name.prompt }];
+  if (answers.HERO) turns.push({ role: "child", text: answers.HERO });
+  if (answers.HERO && onboarding.step !== "name") turns.push({ role: "rabbit", text: onboardingQuestions.friend.prompt });
+  if (answers.PET) turns.push({ role: "child", text: answers.PET });
+  if (answers.PET && !["name", "friend"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.color.prompt });
+  if (answers.COLOR) turns.push({ role: "child", text: answers.COLOR });
+  if (answers.COLOR && ["snack", "confirm"].includes(onboarding.step)) turns.push({ role: "rabbit", text: onboardingQuestions.snack.prompt });
+  if (answers.TREAT) turns.push({ role: "child", text: answers.TREAT });
+
+  if (context.onboardingTyping) {
+    while (turns.at(-1)?.role === "rabbit") turns.pop();
+  }
+
+  const messages = turns.map((turn, index) => `<div class="vn-chat-row is-${turn.role}${index === turns.length - 1 ? " is-latest" : ""}">
+    ${turn.role === "rabbit" ? `<span class="vn-chat-avatar" aria-hidden="true"><img src="${escapeHtml(visualNovelAssets.characters.rabbit)}" alt=""></span>` : ""}
+    <p>${escapeHtml(turn.text)}</p>
+  </div>`).join("");
+
+  let composer = "";
+  if (context.onboardingTyping) {
+    composer = `<div class="vn-chat-typing" role="status" aria-label="시계토끼가 답장을 쓰는 중"><span></span><span></span><span></span></div>`;
+  } else if (onboarding.step === "confirm") {
+    composer = `<div class="vn-chat-confirm">
+      <p><strong>${escapeHtml(answers.HERO)}</strong>, <strong>${escapeHtml(answers.PET)}</strong>와 함께 <strong>${escapeHtml(answers.COLOR)}</strong>빛 길을 지나 <strong>${escapeHtml(answers.TREAT)}</strong>을 챙겨 가는 거구나!</p>
+      <button class="vn-choice" type="button" data-action="onboarding-confirm" data-focus-target>이대로 출발!</button>
+    </div>`;
+  } else {
+    const question = onboardingQuestions[onboarding.step] ?? onboardingQuestions.name;
+    const suggestions = question.suggestions.length
+      ? `<div class="vn-chat-suggestions" aria-label="추천 답장">${question.suggestions.map(value => `<button type="button" data-action="onboarding-suggestion" data-value="${escapeHtml(value)}">${escapeHtml(value)}</button>`).join("")}</div>`
+      : "";
+    composer = `${suggestions}<form class="vn-chat-composer" data-action="onboarding-answer">
+      <label class="sr-only" for="onboarding-answer">${escapeHtml(question.placeholder)}</label>
+      <input id="onboarding-answer" name="ANSWER" maxlength="${onboarding.step === "name" ? "6" : "12"}" placeholder="${escapeHtml(question.placeholder)}" autocomplete="off" required data-focus-target>
+      <button type="submit" aria-label="답장 보내기">➜</button>
+    </form>`;
+  }
+
+  return `<main class="vn-shell vn-onboarding" data-ui="visual-novel">
+    <div class="vn-game-frame">
+      <header class="vn-chat-header"><span class="vn-chat-avatar" aria-hidden="true"><img src="${escapeHtml(visualNovelAssets.characters.rabbit)}" alt=""></span><div><strong>시계토끼</strong><span>지금 대화 중</span></div></header>
+      <section class="vn-chat-log" aria-live="polite">${messages}${context.onboardingTyping ? composer : ""}</section>
+      <section class="vn-chat-input">${context.onboardingTyping ? "" : composer}</section>
     </div>
   </main>`;
 }
@@ -416,6 +490,7 @@ export function renderTestTools(context = {}) {
 export const visualNovelRenderer = Object.freeze({
   id: "visual-novel",
   renderSetup,
+  renderOnboarding,
   renderScene,
   renderChipResponse,
   renderEnding,

@@ -305,6 +305,56 @@ test("모험 마치기는 결말 세션을 보존한 완료 화면으로 전환�
   assert.equal(complete.testCompleted, false);
 });
 
+test("채팅 온보딩은 이름부터 간식까지 답변을 순서대로 누적한다", async () => {
+  const { answerOnboarding } = await import("../src/app.js");
+  let onboarding = { step: "name", answers: {} };
+  onboarding = answerOnboarding(onboarding, " 지민 ");
+  onboarding = answerOnboarding(onboarding, "토끼");
+  onboarding = answerOnboarding(onboarding, "분홍");
+  onboarding = answerOnboarding(onboarding, "젤리");
+
+  assert.deepEqual(onboarding, {
+    step: "confirm",
+    answers: { HERO: "지민", PET: "토끼", COLOR: "분홍", TREAT: "젤리" },
+  });
+  assert.strictEqual(answerOnboarding(onboarding, "추가"), onboarding);
+});
+
+test("채팅 온보딩 폼과 추천 답장과 확인은 각각 위임 callback을 호출한다", async () => {
+  const { bindAppEvents } = await import("../src/app.js");
+  const listeners = {};
+  const calls = [];
+  const app = {
+    addEventListener(type, listener) { listeners[type] = listener; },
+    contains() { return true; },
+    querySelector() { return null; },
+    querySelectorAll() { return []; },
+  };
+  bindAppEvents(app, () => createAppState(), () => {}, form => form.values, {
+    onStartOnboarding(values) { calls.push(["start", values.PARTICIPANT_ID]); },
+    onOnboardingAnswer(value) { calls.push(["answer", value]); },
+    onOnboardingConfirm() { calls.push(["confirm"]); },
+  });
+
+  const form = { dataset: { action: "start-onboarding" }, values: { PARTICIPANT_ID: "C07" } };
+  listeners.submit({
+    target: { closest: selector => selector === "form[data-action]" ? form : null },
+    preventDefault() {},
+  });
+  const suggestion = {
+    dataset: { action: "onboarding-suggestion", value: "토끼" },
+    closest: selector => selector === "[data-action]" ? suggestion : null,
+  };
+  listeners.click({ target: suggestion });
+  const confirm = {
+    dataset: { action: "onboarding-confirm" },
+    closest: selector => selector === "[data-action]" ? confirm : null,
+  };
+  listeners.click({ target: confirm });
+
+  assert.deepEqual(calls, [["start", "C07"], ["answer", "토끼"], ["confirm"]]);
+});
+
 test("escapeHtml escapes all HTML-significant characters", () => {
   assert.equal(escapeHtml("&<>\"'"), "&amp;&lt;&gt;&quot;&#039;");
 });
