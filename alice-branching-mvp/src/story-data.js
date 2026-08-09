@@ -1,8 +1,15 @@
 import { storyGraph, storyLevels } from "./generated/story-bundle.js";
+import { normalizeStoryLevel } from "./session.js";
 import { createStoryRuntime } from "./story-engine.js";
 
 const level = storyLevels[storyGraph.defaultLevel];
-const runtime = createStoryRuntime(storyGraph, level);
+const runtimes = Object.freeze(Object.fromEntries(
+  Object.entries(storyLevels).map(([levelId, content]) => [
+    levelId,
+    createStoryRuntime(storyGraph, content),
+  ]),
+));
+const runtime = runtimes[storyGraph.defaultLevel];
 const referenceEnding = level.scenes[Object.values(storyGraph.endingByEncounter)[0]];
 const spotArtCases = storyGraph.presentationSelectors.E1.spotArt.cases;
 
@@ -19,3 +26,7 @@ export const story = runtime.story;
 export const getScene = runtime.getScene;
 export const resolveScene = runtime.resolveScene;
 export const estimateRouteSeconds = runtime.estimateRouteSeconds;
+
+export function getStoryRuntime(levelId) {
+  return runtimes[normalizeStoryLevel(levelId)];
+}

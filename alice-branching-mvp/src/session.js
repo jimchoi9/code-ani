@@ -3,6 +3,15 @@ import { normalizeSlots } from "./personalization.js";
 const STORAGE_KEY = "alice-branching-mvp/session-v1";
 const isoNow = () => new Date().toISOString();
 
+export function normalizeStoryLevel(value) {
+  return value === "easy" ? "easy" : "hard";
+}
+
+export function normalizeSessionLevel(session) {
+  if (!session || typeof session !== "object") return session;
+  return { ...session, level: normalizeStoryLevel(session.level) };
+}
+
 function run(id, startedAt) {
   return {
     id,
@@ -28,8 +37,9 @@ function appendOnce(items, item) {
   return items.includes(item) ? items : [...items, item];
 }
 
-export function createSession(slots = {}, now = isoNow()) {
+export function createSession(slots = {}, now = isoNow(), level = "hard") {
   return {
+    level: normalizeStoryLevel(level),
     slots: normalizeSlots(slots),
     path: [],
     chipChoices: [],
@@ -132,15 +142,15 @@ export function createSessionStore(storage) {
 
   return {
     load() {
-      if (storageFailed) return memory;
+      if (storageFailed) return normalizeSessionLevel(memory);
       try {
         const value = storage?.getItem(STORAGE_KEY);
-        if (value === null || value === undefined) return memory;
-        memory = JSON.parse(value);
+        if (value === null || value === undefined) return normalizeSessionLevel(memory);
+        memory = normalizeSessionLevel(JSON.parse(value));
         return memory;
       } catch {
         storageFailed = true;
-        return memory;
+        return normalizeSessionLevel(memory);
       }
     },
     save(session) {

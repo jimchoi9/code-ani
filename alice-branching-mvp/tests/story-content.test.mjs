@@ -10,8 +10,18 @@ import {
 } from "../scripts/story-content.mjs";
 import { storyGraph, storyLevels } from "../src/generated/story-bundle.js";
 import { createStoryRuntime } from "../src/story-engine.js";
+import { getStoryRuntime } from "../src/story-data.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+test("스토리 데이터는 선택 레벨의 런타임을 반환하고 잘못된 값은 hard로 복구한다", () => {
+  const easy = getStoryRuntime("easy");
+  const hard = getStoryRuntime("hard");
+
+  assert.match(easy.getScene("S00").body, /그림도 없고 말도 없는 책/);
+  assert.notEqual(easy.getScene("S00").body, hard.getScene("S00").body);
+  assert.strictEqual(getStoryRuntime("unknown"), hard);
+});
 
 function validFixture() {
   return {

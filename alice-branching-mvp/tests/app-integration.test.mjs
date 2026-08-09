@@ -317,7 +317,7 @@ test("처음으로 뒤 이전 온보딩 타이머는 새 참가자 상태를 오
 
     timers[1]();
     assert.deepEqual(testStore.load().onboarding, {
-      step: "snack",
+      step: "age",
       answers: { HERO: "민지" },
     });
     assert.equal(renderers["visual-novel"].calls.at(-1).args.at(-1).onboardingTyping, false);
@@ -457,6 +457,42 @@ test("진행 중인 채팅 온보딩은 저장된 질문과 답변으로 복원�
     step: "color",
     answers: { HERO: "지민", PET: "토끼" },
   });
+});
+
+test("온보딩 확인은 선택한 쉬운 레벨로 이야기 세션을 시작한다", async () => {
+  const { mountBrowserApp } = await import("../src/app.js");
+  const renderers = {
+    minimal: createRenderer("minimal"),
+    "visual-novel": createRenderer("visual-novel"),
+  };
+  renderers["visual-novel"].renderTestTools = () => "";
+  const environment = createEnvironment("?test=1");
+  const storyStore = createStoryStore(null);
+  const testStore = createTestStore({
+    participantId: "C08",
+    events: [],
+    onboarding: {
+      step: "confirm",
+      answers: slots,
+      ageGroup: "9살 이하",
+      level: "easy",
+    },
+  });
+
+  mountBrowserApp({
+    ...environment,
+    sessionStore: storyStore,
+    testStore,
+    minimalStore: createMinimalStateStore(createStorage()),
+    preferenceStore: { load: () => "minimal" },
+    getRenderer: id => renderers[id],
+  });
+  environment.app.click(actionControl("onboarding-confirm"));
+
+  assert.equal(environment.windowRef.__aliceStoryDebug.screen(), "scene");
+  assert.equal(environment.windowRef.__aliceStoryDebug.session().level, "easy");
+  assert.equal(storyStore.saves.at(-1).level, "easy");
+  assert.match(renderers.minimal.calls.at(-1).args[0].body, /그림도 없고 말도 없는 책/);
 });
 
 test("테스트 JSON 다운로드는 참가자 파일명과 직렬화된 payload를 사용한다", async () => {

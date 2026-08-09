@@ -62,10 +62,20 @@ test("채팅 온보딩 답변과 현재 질문을 저장하고 복원한다", ()
   const storage = storageDouble();
   const store = createTestModeStore(storage, () => "2026-08-09T10:00:00.000Z");
   store.start("C04");
-  store.saveOnboarding({ step: "friend", answers: { HERO: "지민" } });
+  store.saveOnboarding({
+    step: "friend",
+    answers: { HERO: "지민", TREAT: "젤리" },
+    ageGroup: "9살 이하",
+    level: "easy",
+  });
 
   const restored = createTestModeStore(storage, () => "2026-08-09T10:00:01.000Z").load();
-  assert.deepEqual(restored.onboarding, { step: "friend", answers: { HERO: "지민" } });
+  assert.deepEqual(restored.onboarding, {
+    step: "friend",
+    answers: { HERO: "지민", TREAT: "젤리" },
+    ageGroup: "9살 이하",
+    level: "easy",
+  });
 });
 
 test("내보내기 스냅샷은 테스트 기록과 이야기 세션을 복제한다", () => {

@@ -8,6 +8,8 @@ import {
   completeRun,
   createSession,
   createSessionStore,
+  normalizeSessionLevel,
+  normalizeStoryLevel,
   restartRun,
   tapVocabulary,
   updateSlots,
@@ -15,6 +17,33 @@ import {
 } from "../src/session.js";
 
 const start = "2026-08-07T10:00:00.000Z";
+
+test("세션은 선택한 이야기 레벨을 저장하고 잘못된 값은 hard로 정규화한다", () => {
+  assert.equal(createSession({}, start, "easy").level, "easy");
+  assert.equal(createSession({}, start, "hard").level, "hard");
+  assert.equal(createSession({}, start, "unknown").level, "hard");
+  assert.equal(normalizeStoryLevel("easy"), "easy");
+  assert.equal(normalizeStoryLevel(undefined), "hard");
+  assert.equal(normalizeSessionLevel({ path: [] }).level, "hard");
+});
+
+test("다시 하기는 선택한 이야기 레벨을 유지한다", () => {
+  const replay = restartRun(createSession({}, start, "easy"), "2026-08-07T10:05:00.000Z");
+
+  assert.equal(replay.level, "easy");
+});
+
+test("저장된 기존 세션은 레벨이 없으면 hard로 복원한다", () => {
+  const legacy = createSession({}, start);
+  delete legacy.level;
+  const storage = {
+    getItem() { return JSON.stringify(legacy); },
+    setItem() {},
+    removeItem() {},
+  };
+
+  assert.equal(createSessionStore(storage).load().level, "hard");
+});
 
 test("이야기 선택 상태를 세션과 현재 실행에 함께 기록한다", () => {
   let session = createSession({}, start);

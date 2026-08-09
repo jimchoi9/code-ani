@@ -17,17 +17,21 @@ import {
   updateSlots,
   visitScene,
 } from "./session.js";
-import { ENDING_BY_ENCOUNTER, getScene, resolveScene, story } from "./story-data.js";
+import { ENDING_BY_ENCOUNTER, getStoryRuntime } from "./story-data.js";
 import { createTestModeStore } from "./test-mode.js";
 import { escapeHtml } from "./ui.js";
 import { createCompareLinks, getUiRenderer } from "./ui-variant.js";
 import { createUiPreferenceStore } from "./ui-preference.js";
-import { getVocabulary } from "./vocabulary.js";
+
+function runtimeFor(session) {
+  return getStoryRuntime(session?.level);
+}
 
 function baseState(session = null) {
+  const runtime = runtimeFor(session);
   return {
     screen: "setup",
-    sceneId: story.startSceneId,
+    sceneId: runtime.story.startSceneId,
     session,
     feedback: null,
     chipResponse: null,
@@ -55,7 +59,11 @@ function personalized(value, session) {
 }
 
 const ONBOARDING_STEPS = Object.freeze({
-  name: { slot: "HERO", next: "snack", maxLength: 6 },
+  name: { slot: "HERO", next: "age", maxLength: 6 },
+  age: {
+    next: "snack",
+    levels: Object.freeze({ "9살 이하": "easy", "10살 이상": "hard" }),
+  },
   snack: { slot: "TREAT", next: "friend", maxLength: 12 },
   friend: { slot: "PET", next: "confirm", maxLength: 12 },
 });
@@ -64,29 +72,37 @@ export function answerOnboarding(onboarding, value) {
   const current = onboarding ?? { step: "name", answers: {} };
   const config = ONBOARDING_STEPS[current.step];
   if (!config) return current;
+  if (config.levels) {
+    const ageGroup = String(value ?? "").trim();
+    const level = config.levels[ageGroup];
+    if (!level) return current;
+    return { ...current, step: config.next, ageGroup, level };
+  }
   const answer = String(value ?? "").trim().slice(0, config.maxLength);
   if (!answer) return current;
   return {
+    ...current,
     step: config.next,
     answers: { ...(current.answers ?? {}), [config.slot]: answer },
   };
 }
 
-function previousChoiceFeedback(path) {
+function previousChoiceFeedback(session, runtime) {
+  const path = session.path;
   if (path.length < 2) return null;
-  const previous = getScene(path.at(-2));
+  const previous = runtime.getScene(path.at(-2));
   const currentSceneId = path.at(-1);
   return previous?.choices?.find(choice => choice.nextSceneId === currentSceneId)?.label ?? null;
 }
 
-function restoredChipResponse(scene, session) {
+function restoredChipResponse(scene, session, runtime) {
   const selected = [...session.chipChoices]
     .reverse()
     .find(choice => choice.sceneId === scene.id);
   if (!selected) return null;
 
   const chip = scene.chips?.find(item => personalized(item.label, session) === selected.label);
-  if (!chip || !getScene(chip.nextSceneId)) return null;
+  if (!chip || !runtime.getScene(chip.nextSceneId)) return null;
   return {
     label: personalized(chip.label, session),
     response: personalized([chip.response, scene.afterChip].filter(Boolean).join("\n\n"), session),
@@ -100,40 +116,43 @@ export function createAppState(session = null) {
   if (!isUsableSession(session)) return { ...state, screen: "recovery", sceneId: null };
   if (session.path.length === 0) return state;
 
+  const runtime = runtimeFor(session);
   const sceneId = session.path.at(-1);
-  const scene = getScene(sceneId);
+  const scene = runtime.getScene(sceneId);
   if (!scene) return { ...state, screen: "recovery", sceneId };
   if (scene.type === "ending") return { ...state, screen: "ending", sceneId };
 
-  const chipResponse = scene.type === "chip" ? restoredChipResponse(scene, session) : null;
+  const chipResponse = scene.type === "chip" ? restoredChipResponse(scene, session, runtime) : null;
   return {
     ...state,
     screen: chipResponse ? "chip-response" : "scene",
     sceneId,
-    feedback: previousChoiceFeedback(session.path),
+    feedback: previousChoiceFeedback(session, runtime),
     chipResponse,
   };
 }
 
-export function startStory(state, slots) {
+export function startStory(state, slots, level = state.session?.level) {
   const session = isUsableSession(state.session)
     ? updateSlots(state.session, slots)
-    : createSession(slots);
+    : createSession(slots, undefined, level);
+  const runtime = runtimeFor(session);
   return {
-    ...baseState(visitScene(session, story.startSceneId)),
+    ...baseState(visitScene(session, runtime.story.startSceneId)),
     screen: "scene",
   };
 }
 
 export function choosePath(state, nextSceneId, selectedLabel = null, choiceId = null) {
-  const nextScene = getScene(nextSceneId);
+  const runtime = runtimeFor(state.session);
+  const nextScene = runtime.getScene(nextSceneId);
   if (!isUsableSession(state.session) || !nextScene) {
     return { ...state, screen: "recovery", vocabulary: null };
   }
 
   let session = state.session;
   if (choiceId) {
-    const currentScene = resolveScene(state.sceneId, session);
+    const currentScene = runtime.resolveScene(state.sceneId, session);
     const choice = currentScene?.choices?.find(item => item.id === choiceId);
     if (!choice || choice.nextSceneId !== nextSceneId) {
       return { ...state, screen: "recovery", vocabulary: null };
@@ -168,14 +187,15 @@ export function continueStory(state, nextSceneId) {
 }
 
 export function selectChip(state, selection) {
-  const scene = getScene(state.sceneId);
+  const runtime = runtimeFor(state.session);
+  const scene = runtime.getScene(state.sceneId);
   if (!isUsableSession(state.session) || scene?.type !== "chip") return state;
 
   const chip = scene.chips?.find(item => (
     personalized(item.label, state.session) === selection.label
     && item.nextSceneId === selection.nextSceneId
   ));
-  if (!chip || !getScene(chip.nextSceneId)) {
+  if (!chip || !runtime.getScene(chip.nextSceneId)) {
     return { ...state, screen: "recovery", vocabulary: null };
   }
 
@@ -200,7 +220,7 @@ export function continueChip(state) {
 }
 
 export function openVocabulary(state, word) {
-  const definition = getVocabulary(word);
+  const definition = runtimeFor(state.session).getVocabulary(word);
   if (!definition || !isUsableSession(state.session)) return state;
   return {
     ...state,
@@ -220,11 +240,13 @@ export function restartStory(state) {
 
 export function replayForAnotherEnding(state) {
   if (!isUsableSession(state.session)) return state;
-  const session = visitScene(restartRun(state.session), story.startSceneId);
+  const restarted = restartRun(state.session);
+  const startSceneId = runtimeFor(restarted).story.startSceneId;
+  const session = visitScene(restarted, startSceneId);
   return {
     ...baseState(session),
     screen: "scene",
-    sceneId: story.startSceneId,
+    sceneId: startSceneId,
   };
 }
 
@@ -466,7 +488,7 @@ export function downloadTestJson(documentRef, windowRef, payload, filename) {
 
 function getMinimalBeatContext(state) {
   if (!["scene", "chip-response", "ending"].includes(state.screen)) return null;
-  const scene = resolveScene(state.sceneId, state.session ?? {});
+  const scene = runtimeFor(state.session).resolveScene(state.sceneId, state.session ?? {});
   if (!scene || !isUsableSession(state.session)) return null;
 
   const body = state.screen === "chip-response" ? state.chipResponse?.response : scene.body;
@@ -546,7 +568,7 @@ export function mountBrowserApp({
 
   function render(focusContent = false, resetScroll = focusContent) {
     syncMinimalState();
-    const scene = resolveScene(state.sceneId, state.session ?? {});
+    const scene = runtimeFor(state.session).resolveScene(state.sceneId, state.session ?? {});
     let html;
     if (state.screen === "setup") html = renderTestShell("renderSetup", state.session?.slots);
     else if (state.screen === "onboarding") html = renderTestShell("renderOnboarding");
@@ -645,8 +667,13 @@ export function mountBrowserApp({
       const previousStep = onboarding.step;
       const next = answerOnboarding(onboarding, value);
       if (next === onboarding) return;
-      const slot = ONBOARDING_STEPS[previousStep].slot;
-      testStore.record("onboarding_answered", { step: previousStep, slot, value: next.answers[slot] });
+      const slot = ONBOARDING_STEPS[previousStep].slot ?? null;
+      testStore.record("onboarding_answered", {
+        step: previousStep,
+        slot,
+        value: slot ? next.answers[slot] : next.ageGroup,
+        ...(previousStep === "age" ? { level: next.level } : {}),
+      });
       onboarding = next;
       onboardingTyping = true;
       render();
@@ -662,9 +689,13 @@ export function mountBrowserApp({
     },
     onOnboardingConfirm() {
       if (!testMode || onboarding?.step !== "confirm") return;
-      testStore.record("onboarding_completed", { answers: onboarding.answers });
+      testStore.record("onboarding_completed", {
+        answers: onboarding.answers,
+        ageGroup: onboarding.ageGroup,
+        level: onboarding.level,
+      });
       testStore.saveOnboarding({ ...onboarding, step: "complete" });
-      commit(startStory(createAppState(), onboarding.answers));
+      commit(startStory(createAppState(), onboarding.answers, onboarding.level));
     },
     onStoryEvent(type, details) {
       if (testMode) testStore.record(type, details);

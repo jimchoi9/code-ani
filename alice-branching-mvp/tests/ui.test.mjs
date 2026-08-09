@@ -37,6 +37,13 @@ const session = {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
+test("이야기 시작은 선택한 레벨을 세션에 저장한다", () => {
+  const state = startStory(createAppState(), { HERO: "지민" }, "easy");
+
+  assert.equal(state.session.level, "easy");
+  assert.equal(state.sceneId, "S00");
+});
+
 function cssRule(selector) {
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
   const start = css.indexOf(`${selector} {`);
@@ -347,18 +354,34 @@ test("모험 마치기는 결말 세션을 보존한 완료 화면으로 전환�
   assert.equal(complete.testCompleted, false);
 });
 
-test("채팅 온보딩은 이름부터 간식까지 답변을 순서대로 누적한다", async () => {
+test("채팅 온보딩은 이름, 나이대, 간식, 친구를 순서대로 누적한다", async () => {
   const { answerOnboarding } = await import("../src/app.js");
   let onboarding = { step: "name", answers: {} };
   onboarding = answerOnboarding(onboarding, " 지민 ");
+  onboarding = answerOnboarding(onboarding, "9살 이하");
   onboarding = answerOnboarding(onboarding, "젤리");
   onboarding = answerOnboarding(onboarding, "토끼");
 
   assert.deepEqual(onboarding, {
     step: "confirm",
     answers: { HERO: "지민", TREAT: "젤리", PET: "토끼" },
+    ageGroup: "9살 이하",
+    level: "easy",
   });
   assert.strictEqual(answerOnboarding(onboarding, "추가"), onboarding);
+});
+
+test("10살 이상을 고르면 어려운 원고 레벨을 선택한다", async () => {
+  const { answerOnboarding } = await import("../src/app.js");
+  const ageStep = { step: "age", answers: { HERO: "지민" } };
+
+  assert.deepEqual(answerOnboarding(ageStep, "10살 이상"), {
+    step: "snack",
+    answers: { HERO: "지민" },
+    ageGroup: "10살 이상",
+    level: "hard",
+  });
+  assert.strictEqual(answerOnboarding(ageStep, "12살"), ageStep);
 });
 
 test("채팅 온보딩 폼과 추천 답장과 확인은 각각 위임 callback을 호출한다", async () => {
