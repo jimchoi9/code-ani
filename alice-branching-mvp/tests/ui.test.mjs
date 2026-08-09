@@ -67,6 +67,12 @@ test("HTML 셸은 세 UI 변형 스타일을 연결한다", () => {
   }
 });
 
+test("테스트 결말 화면은 고정 액션 바와 모험 기록이 겹치지 않게 여백을 둔다", () => {
+  const rule = cssRule('#app[data-test-mode="true"][data-screen="ending"] .vn-game-frame');
+
+  assert.match(rule, /padding-bottom:\s*calc\(104px \+ env\(safe-area-inset-bottom\)\)/);
+});
+
 test("비교 서버는 8082를 사용한다", () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 

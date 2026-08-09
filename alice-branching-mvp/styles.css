@@ -167,6 +167,10 @@ a:focus-visible {
   display: none;
 }
 
+#app[data-test-mode="true"][data-screen="ending"] .vn-game-frame {
+  padding-bottom: calc(104px + env(safe-area-inset-bottom));
+}
+
 .story-screen {
   min-height: 100svh;
   display: grid;
