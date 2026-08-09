@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json-ani.local/schemas/content.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["storyId", "level", "title", "vocabulary", "scenes"],
+  "properties": {
+    "storyId": { "type": "string", "minLength": 1 },
+    "level": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "vocabulary": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "scenes": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/$defs/scene" } },
+    "endingVariations": { "type": "object", "additionalProperties": { "$ref": "#/$defs/endingVariation" } }
+  },
+  "$defs": {
+    "blockReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["block"],
+      "properties": { "block": { "type": "string", "minLength": 1 } }
+    },
+    "paragraphs": {
+      "type": "array",
+      "items": { "oneOf": [{ "type": "string" }, { "$ref": "#/$defs/blockReference" }] }
+    },
+    "chip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "response"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "response": { "type": "string", "minLength": 1 }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "body", "vocab"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "body": { "$ref": "#/$defs/paragraphs" },
+        "afterChip": { "$ref": "#/$defs/paragraphs" },
+        "vocab": { "type": "array", "minItems": 1, "maxItems": 2, "uniqueItems": true, "items": { "type": "string" } },
+        "prompt": { "type": "string", "minLength": 1 },
+        "choices": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+        "chips": { "type": "object", "additionalProperties": { "$ref": "#/$defs/chip" } },
+        "blocks": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": { "$ref": "#/$defs/paragraphs" } } },
+        "trait": { "type": "string", "minLength": 1 },
+        "choiceRecall": { "type": "string", "minLength": 1 },
+        "parentNote": { "type": "string", "minLength": 1 },
+        "parentNoteVariants": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "endingVariation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["body", "parentNote"],
+      "properties": {
+        "body": { "$ref": "#/$defs/paragraphs" },
+        "parentNote": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

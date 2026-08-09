@@ -1,37 +1,10 @@
-export const vocabulary = Object.freeze({
-  "황급히": "아주 급하게, 서둘러서",
-  "먹음직스러운": "보기에 맛있어 보이는",
-  "아리송한": "알 듯 모를 듯 또렷하지 않은",
-  "흐드러지게": "아주 탐스럽고 활짝",
-  "서서히": "천천히, 조금씩",
-  "알쏭달쏭하게": "무슨 뜻인지 알 듯 모를 듯하게",
-  "머뭇거리며": "선뜻 하지 못하고 자꾸 망설이며",
-  "느긋하게": "서두르지 않고 여유 있게",
-  "깐깐하게": "아주 꼼꼼하고 까다롭게",
-  "어리둥절했어요": "무슨 일인지 몰라 정신이 얼떨떨했어요",
-  "장식되어": "보기 좋게 꾸며져",
-  "훤히": "아주 밝고 뚜렷하게, 막힘없이",
-  "둥그렇게": "둥근 모양으로",
-  "한결": "전보다 훨씬, 더욱",
-  "덤덤하게": "특별히 놀라거나 흔들리지 않고 차분하게",
-  "선뜻": "망설이지 않고 시원하게",
-  "휘둥그레졌어요": "놀라서 눈이 크고 둥그렇게 떠졌어요",
-  "주섬주섬": "이것저것 하나씩 챙기거나 모으는 모양",
-  "자취": "어떤 것이 남긴 흔적",
-  "어렴풋이": "또렷하지 않고 희미하게",
-  "서슴없이": "망설이지 않고 바로",
-  "대수롭지 않게": "별일 아닌 것처럼",
-  "두둥실": "가볍게 떠오르는 모양",
-  "이윽고": "얼마 지난 뒤에",
-  "덩달아": "남이 하는 대로 따라서",
-  "차근차근": "서두르지 않고 하나씩 순서대로",
-  "성큼성큼": "걸음을 크고 시원하게 내딛는 모양",
-  "어느새": "모르는 사이에 어느 틈에",
-});
+import { storyGraph, storyLevels } from "./generated/story-bundle.js";
+import { createStoryRuntime } from "./story-engine.js";
 
-export function getVocabulary(word) {
-  return vocabulary[word] ?? null;
-}
+const runtime = createStoryRuntime(storyGraph, storyLevels[storyGraph.defaultLevel]);
+
+export const vocabulary = runtime.vocabulary;
+export const getVocabulary = runtime.getVocabulary;
 
 export function recordVocabulary(session, word) {
   if (!getVocabulary(word)) return session;

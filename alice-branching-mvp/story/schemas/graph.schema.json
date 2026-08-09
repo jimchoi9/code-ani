@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json-ani.local/schemas/graph.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "defaultLevel", "startSceneId", "sceneOrder", "readingModel", "screenCounts", "endingByEncounter", "contentSelectors", "presentationSelectors", "scenes"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "defaultLevel": { "type": "string", "minLength": 1 },
+    "startSceneId": { "type": "string", "minLength": 1 },
+    "sceneOrder": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+    "readingModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["charactersPerMinute", "setupSeconds", "chipResponseSeconds"],
+      "properties": {
+        "charactersPerMinute": { "type": "number", "exclusiveMinimum": 0 },
+        "setupSeconds": { "type": "number", "minimum": 0 },
+        "chipResponseSeconds": { "type": "number", "minimum": 0 }
+      }
+    },
+    "screenCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["setup", "chipResponse"],
+      "properties": {
+        "setup": { "type": "integer", "minimum": 0 },
+        "chipResponse": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "endingByEncounter": { "type": "object", "additionalProperties": { "type": "string" } },
+    "contentSelectors": { "type": "object", "additionalProperties": { "$ref": "#/$defs/selectorMap" } },
+    "presentationSelectors": { "type": "object", "additionalProperties": { "$ref": "#/$defs/selectorMap" } },
+    "scenes": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/$defs/scene" } }
+  },
+  "$defs": {
+    "effect": { "type": "object", "additionalProperties": { "type": "string" } },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "nextSceneId": { "type": "string", "minLength": 1 },
+        "dynamicNext": { "enum": ["endingByEncounter"] },
+        "effect": { "$ref": "#/$defs/effect" }
+      },
+      "oneOf": [
+        { "required": ["nextSceneId"] },
+        { "required": ["dynamicNext"] }
+      ]
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "art"],
+      "properties": {
+        "type": { "enum": ["story", "choice", "chip", "ending"] },
+        "art": { "type": "string", "minLength": 1 },
+        "choices": { "type": "array", "items": { "$ref": "#/$defs/transition" } },
+        "chips": { "type": "array", "items": { "$ref": "#/$defs/transition" } },
+        "nextSceneId": { "type": "string", "minLength": 1 },
+        "sourceSceneId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stateKey", "cases"],
+      "properties": {
+        "stateKey": { "type": "string", "minLength": 1 },
+        "cases": { "type": "object", "additionalProperties": { "type": "string" } },
+        "default": { "type": "string" }
+      }
+    },
+    "selectorMap": { "type": "object", "additionalProperties": { "$ref": "#/$defs/selector" } }
+  }
+}

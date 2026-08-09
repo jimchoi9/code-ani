@@ -1,0 +1,501 @@
+{
+  "id": "alice-branching-mvp",
+  "defaultLevel": "hard",
+  "startSceneId": "S00",
+  "sceneOrder": [
+    "S00",
+    "S01",
+    "S02",
+    "A1",
+    "A2",
+    "A3",
+    "B1",
+    "B2",
+    "B3",
+    "C1",
+    "C2",
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6"
+  ],
+  "readingModel": {
+    "charactersPerMinute": 450,
+    "setupSeconds": 20,
+    "chipResponseSeconds": 15
+  },
+  "screenCounts": {
+    "setup": 1,
+    "chipResponse": 1
+  },
+  "endingByEncounter": {
+    "A1": "E1",
+    "A2": "E2",
+    "A3": "E3",
+    "B1": "E4",
+    "B2": "E5",
+    "B3": "E6"
+  },
+  "contentSelectors": {
+    "C1": {
+      "catMeeting": {
+        "stateKey": "encounterId",
+        "cases": {
+          "A1": "reunion",
+          "B1": "reunion"
+        },
+        "default": "first"
+      }
+    },
+    "C2": {
+      "gardenEntry": {
+        "stateKey": "gardenEntry",
+        "cases": {
+          "SECRET": "SECRET",
+          "GUEST": "GUEST"
+        }
+      }
+    },
+    "E1": {
+      "endingVariation": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      },
+      "returnAdjustment": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      }
+    },
+    "E2": {
+      "endingVariation": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      },
+      "returnAdjustment": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      }
+    },
+    "E3": {
+      "endingVariation": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      },
+      "returnAdjustment": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      }
+    },
+    "E4": {
+      "endingVariation": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      },
+      "returnAdjustment": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      }
+    },
+    "E5": {
+      "endingVariation": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      },
+      "returnAdjustment": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      }
+    },
+    "E6": {
+      "endingVariation": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      },
+      "returnAdjustment": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "TRUTH",
+          "SHIELD": "SHIELD",
+          "TURN": "TURN"
+        }
+      }
+    }
+  },
+  "presentationSelectors": {
+    "C2": {
+      "art": {
+        "stateKey": "encounterId",
+        "cases": {
+          "A1": "queen_garden_trial_small",
+          "A2": "queen_garden_trial_small",
+          "A3": "queen_garden_trial_small",
+          "B1": "queen_garden_trial_big",
+          "B2": "queen_garden_trial_big",
+          "B3": "queen_garden_trial_big"
+        },
+        "default": "queen_garden_trial_small"
+      }
+    },
+    "E1": {
+      "spotArt": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "spot_truth",
+          "SHIELD": "spot_shield",
+          "TURN": "spot_turn"
+        }
+      }
+    },
+    "E2": {
+      "spotArt": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "spot_truth",
+          "SHIELD": "spot_shield",
+          "TURN": "spot_turn"
+        }
+      }
+    },
+    "E3": {
+      "spotArt": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "spot_truth",
+          "SHIELD": "spot_shield",
+          "TURN": "spot_turn"
+        }
+      }
+    },
+    "E4": {
+      "spotArt": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "spot_truth",
+          "SHIELD": "spot_shield",
+          "TURN": "spot_turn"
+        }
+      }
+    },
+    "E5": {
+      "spotArt": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "spot_truth",
+          "SHIELD": "spot_shield",
+          "TURN": "spot_turn"
+        }
+      }
+    },
+    "E6": {
+      "spotArt": {
+        "stateKey": "endingVariation",
+        "cases": {
+          "TRUTH": "spot_truth",
+          "SHIELD": "spot_shield",
+          "TURN": "spot_turn"
+        }
+      }
+    }
+  },
+  "scenes": {
+    "S00": {
+      "type": "choice",
+      "art": "start_rabbit_hole",
+      "choices": [
+        {
+          "id": "shrink",
+          "nextSceneId": "S01"
+        },
+        {
+          "id": "grow",
+          "nextSceneId": "S02"
+        }
+      ]
+    },
+    "S01": {
+      "type": "choice",
+      "art": "door_shrink",
+      "choices": [
+        {
+          "id": "A1",
+          "nextSceneId": "A1",
+          "effect": {
+            "encounterId": "A1"
+          }
+        },
+        {
+          "id": "A2",
+          "nextSceneId": "A2",
+          "effect": {
+            "encounterId": "A2"
+          }
+        },
+        {
+          "id": "A3",
+          "nextSceneId": "A3",
+          "effect": {
+            "encounterId": "A3"
+          }
+        }
+      ]
+    },
+    "S02": {
+      "type": "choice",
+      "art": "cake_grow",
+      "choices": [
+        {
+          "id": "B1",
+          "nextSceneId": "B1",
+          "effect": {
+            "encounterId": "B1"
+          }
+        },
+        {
+          "id": "B2",
+          "nextSceneId": "B2",
+          "effect": {
+            "encounterId": "B2"
+          }
+        },
+        {
+          "id": "B3",
+          "nextSceneId": "B3",
+          "effect": {
+            "encounterId": "B3"
+          }
+        }
+      ]
+    },
+    "A1": {
+      "type": "chip",
+      "art": "door_cat_meet",
+      "chips": [
+        {
+          "id": "chip-1",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-2",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-3",
+          "nextSceneId": "C1"
+        }
+      ]
+    },
+    "A2": {
+      "type": "chip",
+      "art": "door_caterpillar_meet",
+      "chips": [
+        {
+          "id": "chip-1",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-2",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-3",
+          "nextSceneId": "C1"
+        }
+      ]
+    },
+    "A3": {
+      "type": "chip",
+      "art": "door_hatter_meet",
+      "chips": [
+        {
+          "id": "chip-1",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-2",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-3",
+          "nextSceneId": "C1"
+        }
+      ]
+    },
+    "B1": {
+      "type": "chip",
+      "art": "cake_cat_meet",
+      "chips": [
+        {
+          "id": "chip-1",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-2",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-3",
+          "nextSceneId": "C1"
+        }
+      ]
+    },
+    "B2": {
+      "type": "chip",
+      "art": "cake_caterpillar_meet",
+      "chips": [
+        {
+          "id": "chip-1",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-2",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-3",
+          "nextSceneId": "C1"
+        }
+      ]
+    },
+    "B3": {
+      "type": "chip",
+      "art": "cake_hatter_meet",
+      "chips": [
+        {
+          "id": "chip-1",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-2",
+          "nextSceneId": "C1"
+        },
+        {
+          "id": "chip-3",
+          "nextSceneId": "C1"
+        }
+      ]
+    },
+    "C1": {
+      "type": "choice",
+      "art": "mist_hill_grin",
+      "choices": [
+        {
+          "id": "secret",
+          "nextSceneId": "C2",
+          "effect": {
+            "gardenEntry": "SECRET"
+          }
+        },
+        {
+          "id": "guest",
+          "nextSceneId": "C2",
+          "effect": {
+            "gardenEntry": "GUEST"
+          }
+        }
+      ]
+    },
+    "C2": {
+      "type": "choice",
+      "art": "queen_garden_trial_small",
+      "choices": [
+        {
+          "id": "truth",
+          "dynamicNext": "endingByEncounter",
+          "effect": {
+            "endingVariation": "TRUTH"
+          }
+        },
+        {
+          "id": "shield",
+          "dynamicNext": "endingByEncounter",
+          "effect": {
+            "endingVariation": "SHIELD"
+          }
+        },
+        {
+          "id": "turn",
+          "dynamicNext": "endingByEncounter",
+          "effect": {
+            "endingVariation": "TURN"
+          }
+        }
+      ]
+    },
+    "E1": {
+      "type": "ending",
+      "art": "end_curiosity",
+      "sourceSceneId": "A1"
+    },
+    "E2": {
+      "type": "ending",
+      "art": "end_prudence",
+      "sourceSceneId": "A2"
+    },
+    "E3": {
+      "type": "ending",
+      "art": "end_cheer",
+      "sourceSceneId": "A3"
+    },
+    "E4": {
+      "type": "ending",
+      "art": "end_composure",
+      "sourceSceneId": "B1"
+    },
+    "E5": {
+      "type": "ending",
+      "art": "end_selftrust",
+      "sourceSceneId": "B2"
+    },
+    "E6": {
+      "type": "ending",
+      "art": "end_warmth",
+      "sourceSceneId": "B3"
+    }
+  }
+}

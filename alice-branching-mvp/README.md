@@ -8,6 +8,32 @@
 
 `npm test`로 자동 테스트를 실행하고 `npm run serve`로 로컬 서버를 시작합니다.
 
+## 스토리 원고 수정
+
+현재 기본 난이도는 `hard`이며 쉬운 원고는 아직 없습니다. 일반적인 제목, 본문, 선택지, 대사, 조건부 문장, 낱말과 뜻풀이는 다음 파일에서 수정합니다.
+
+- `story/content/hard.json`: 화면에 표시되는 전체 원고와 낱말
+- `story/graph.json`: 장면 연결, 선택 효과, 조건부 원고 선택 규칙과 삽화 키
+
+문장만 바꿀 때는 `hard.json`만 수정합니다. 장면을 추가하거나 분기 결과를 바꿀 때만 `graph.json`도 수정합니다. `src/generated/story-bundle.js`는 생성 파일이므로 직접 수정하지 않습니다.
+
+원고를 수정한 뒤 다음 명령을 실행합니다.
+
+```bash
+npm run story:build
+npm test
+```
+
+`story:build`는 JSON Schema와 장면 연결, 조건부 블록, 개인화 토큰, 낱말, 삽화 키를 검증한 뒤 정적 앱에서 사용하는 동기식 번들을 생성합니다. `npm test`에 포함된 `story:check`는 JSON과 생성 번들이 다르면 실패합니다.
+
+### 조건부 원고
+
+C1의 고양이 첫 만남과 재회처럼 경로에 따라 달라지는 문장은 `hard.json`의 장면 `blocks`에 있습니다. 본문 배열은 `{ "block": "catMeeting" }`처럼 블록을 참조하고, `graph.json`의 `contentSelectors`가 현재 이야기 상태에 맞는 변형을 고릅니다. 실제 문장은 JavaScript가 아니라 `hard.json`에서 수정합니다.
+
+### 쉬운 난이도 추가
+
+나중에 `story/content/easy.json`을 추가할 때는 `hard.json`과 동일한 장면 ID, 선택 ID, 칩 ID와 조건부 블록 키를 사용합니다. 제목, 본문, 선택지 문구, 낱말과 뜻풀이는 난이도에 맞게 다르게 작성할 수 있습니다. 난이도 선택 UI와 실행 레벨 전환은 별도 작업 범위입니다.
+
 ## 접속 주소
 
 - 테스트 시작: `http://127.0.0.1:8082/`
