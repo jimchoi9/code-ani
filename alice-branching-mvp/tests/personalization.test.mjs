@@ -13,7 +13,7 @@ test("한글 2~6자 이름과 허용된 슬롯을 유지한다", () => {
     TREAT: "젤리",
     PET: "토끼",
     COLOR: "분홍",
-  }), { HERO: "지민", TREAT: "젤리", PET: "토끼", COLOR: "분홍" });
+  }), { HERO: "지민", TREAT: "젤리", PET: "토끼" });
 });
 
 test("유효하지 않은 값은 기본값으로 바꾼다", () => {
@@ -39,6 +39,11 @@ test("슬롯과 조사 토큰을 함께 치환한다", () => {
     renderTemplate("{HERO}{은/는} {TREAT}{을/를} 골랐어요.", slots),
     "지민은 붕어빵을 골랐어요.",
   );
+});
+
+test("폐기된 색상 슬롯은 기본값과 템플릿에 남지 않는다", () => {
+  assert.deepEqual(Object.keys(DEFAULT_SLOTS), ["HERO", "TREAT", "PET"]);
+  assert.equal(renderTemplate("{COLOR} 조끼", { COLOR: "분홍" }), "{COLOR} 조끼");
 });
 
 test("슬롯 바로 뒤의 고정 조사는 저작 오류로 거부한다", () => {

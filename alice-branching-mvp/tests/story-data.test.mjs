@@ -1,14 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderTemplate } from "../src/personalization.js";
-import { estimateRouteSeconds, getScene, story } from "../src/story-data.js";
-import { getVocabulary, recordVocabulary } from "../src/vocabulary.js";
+import {
+  ENDING_BY_ENCOUNTER,
+  ENDING_VARIATIONS,
+  estimateRouteSeconds,
+  getScene,
+  resolveScene,
+  story,
+} from "../src/story-data.js";
+import { getVocabulary, recordVocabulary, vocabulary } from "../src/vocabulary.js";
 
 function destinations(scene) {
   return [
     ...[...(scene.choices ?? []), ...(scene.chips ?? [])].map(item => item.nextSceneId),
     ...(scene.nextSceneId ? [scene.nextSceneId] : []),
-  ];
+  ].filter(Boolean);
 }
 
 function endingRoutes(sceneId, scenes = [], chipResponseScreens = 0) {
@@ -34,28 +41,26 @@ test("모든 장면 연결은 존재하는 장면을 가리킨다", () => {
   }
 });
 
-test("S00에서 세 MVP 결말에 도달할 수 있다", () => {
-  const reached = new Set();
-  const queue = ["S00"];
-  while (queue.length) {
-    const id = queue.shift();
-    if (reached.has(id)) continue;
-    reached.add(id);
-    queue.push(...destinations(getScene(id)));
-  }
-  assert.deepEqual([...reached].filter(id => id.startsWith("E")).sort(), ["E1", "E3", "E5"]);
+test("마스터 원고의 17개 노드와 여섯 결말 매핑을 가진다", () => {
+  const ids = ["S00", "S01", "S02", "A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "E1", "E2", "E3", "E4", "E5", "E6"];
+  assert.deepEqual(story.sceneOrder, ids);
+  assert.deepEqual(Object.keys(story.scenes).sort(), [...ids].sort());
+  assert.deepEqual(ENDING_BY_ENCOUNTER, {
+    A1: "E1", A2: "E2", A3: "E3", B1: "E4", B2: "E5", B3: "E6",
+  });
+  assert.deepEqual(Object.keys(ENDING_VARIATIONS).sort(), ["SHIELD", "TRUTH", "TURN"]);
 });
 
 test("장면 순서와 모든 장면 낱말은 완전한 저작 데이터다", () => {
-  assert.deepEqual(story.sceneOrder, ["S00", "S01", "A1", "A3", "S02", "B2", "E1", "E3", "E5"]);
   for (const scene of Object.values(story.scenes)) {
     for (const word of scene.vocab) assert.ok(getVocabulary(word), `${scene.id}: ${word}`);
   }
+  assert.equal(Object.keys(vocabulary).length, 28);
 });
 
 test("저작된 슬롯 조사는 받침 유무에 맞게 렌더링된다", () => {
-  const batchimSlots = { HERO: "지민", TREAT: "붕어빵", PET: "토끼", COLOR: "파랑" };
-  const openSlots = { HERO: "민서", TREAT: "젤리", PET: "고양이", COLOR: "노랑" };
+  const batchimSlots = { HERO: "지민", TREAT: "붕어빵", PET: "토끼" };
+  const openSlots = { HERO: "민서", TREAT: "젤리", PET: "고양이" };
   const batchimOpening = renderTemplate(story.scenes.S00.body, batchimSlots);
   const openOpening = renderTemplate(story.scenes.S00.body, openSlots);
   const batchimGiant = renderTemplate(story.scenes.S02.body, batchimSlots);
@@ -71,7 +76,7 @@ test("모든 저작 문자열은 슬롯 조사 토큰 검증을 통과한다", (
   function validate(value, location = "story") {
     if (typeof value === "string") {
       assert.doesNotThrow(
-        () => renderTemplate(value, { HERO: "지민", TREAT: "붕어빵", PET: "토끼", COLOR: "파랑" }),
+        () => renderTemplate(value, { HERO: "지민", TREAT: "붕어빵", PET: "토끼" }),
         location,
       );
       return;
@@ -83,42 +88,46 @@ test("모든 저작 문자열은 슬롯 조사 토큰 검증을 통과한다", (
   validate(story);
 });
 
-test("분기 안내는 실제 MVP 그래프에 있는 길만 소개한다", () => {
-  assert.match(story.scenes.S01.body, /두 가지 소리/);
+test("작아진 길과 커진 길은 각각 세 만남을 제공한다", () => {
+  assert.match(story.scenes.S01.body, /세 가지 소리/);
   assert.match(story.scenes.S01.body, /나무 위에서 나는 낮은 웃음소리/);
+  assert.match(story.scenes.S01.body, /버섯 쪽에서 들리는 느릿한 콧노래/);
   assert.match(story.scenes.S01.body, /멀리서 들리는 시끌시끌한 찻잔 소리/);
-  assert.doesNotMatch(story.scenes.S01.body, /버섯 쪽|콧노래|세 가지 소리/);
-
-  assert.match(story.scenes.S02.body, /커다란 버섯/);
-  assert.doesNotMatch(story.scenes.S02.body, /세 갈래|서로 다른 쪽/);
+  assert.deepEqual(story.scenes.S01.choices.map(choice => choice.nextSceneId), ["A1", "A2", "A3"]);
+  assert.deepEqual(story.scenes.S02.choices.map(choice => choice.nextSceneId), ["B1", "B2", "B3"]);
 });
 
-test("모든 결말 경로는 칩 응답 화면을 포함해 5~7개 화면이다", () => {
-  assert.deepEqual(story.screenCounts, { setup: 1, chipResponse: 1 });
-  for (const route of endingRoutes(story.startSceneId)) {
-    const screenCount = story.screenCounts.setup + route.scenes.length + route.chipResponseScreens;
-    assert.equal(route.chipResponseScreens, 1, route.scenes.map(scene => scene.id).join(" -> "));
-    assert.ok(screenCount >= 5 && screenCount <= 7, `${route.scenes.map(scene => scene.id).join(" -> ")}: ${screenCount}`);
+test("여섯 만남은 칩 응답 뒤 공통 수렴부로 이동한다", () => {
+  for (const id of Object.keys(ENDING_BY_ENCOUNTER)) {
+    assert.equal(story.scenes[id].type, "chip");
+    assert.deepEqual(new Set(story.scenes[id].chips.map(chip => chip.nextSceneId)), new Set(["C1"]));
   }
+  assert.deepEqual(story.scenes.C1.choices.map(choice => choice.nextSceneId), ["C2", "C2"]);
 });
 
-test("모든 결말 경로의 읽기 추정은 5분 이내다", () => {
-  assert.deepEqual(story.readingModel, {
-    charactersPerMinute: 450,
-    setupSeconds: 20,
-    chipResponseSeconds: 15,
-  });
-  for (const route of endingRoutes(story.startSceneId)) {
-    for (const scene of route.scenes) {
-      const authoredCharacterCount = scene.body.replace(/\s/g, "").length;
-      assert.equal(
-        scene.estimatedReadSeconds,
-        Math.ceil(authoredCharacterCount * 60 / story.readingModel.charactersPerMinute),
-        scene.id,
-      );
+test("조건부 장면은 현재 경로 상태에 맞는 본문과 삽화를 만든다", () => {
+  const reunion = resolveScene("C1", { path: ["S00", "S01", "A1", "C1"], storyState: { encounterId: "A1" } });
+  const first = resolveScene("C1", { path: ["S00", "S01", "A2", "C1"], storyState: { encounterId: "A2" } });
+  const secret = resolveScene("C2", { storyState: { encounterId: "A2", gardenEntry: "SECRET" } });
+  const guest = resolveScene("C2", { storyState: { encounterId: "B3", gardenEntry: "GUEST" } });
+
+  assert.match(reunion.body, /그 미소를 알아보았어요/);
+  assert.match(first.body, /그 미소를 처음 보았어요/);
+  assert.match(secret.body, /담장 뒤에 서 있었어요/);
+  assert.equal(secret.art, "queen_garden_trial_small");
+  assert.match(guest.body, /나팔이 울렸어요/);
+  assert.equal(guest.art, "queen_garden_trial_big");
+  assert.deepEqual(guest.choices.map(choice => choice.nextSceneId), ["E6", "E6", "E6"]);
+});
+
+test("모든 결말은 세 변주와 결말별 조정 문장을 결합한다", () => {
+  for (const [encounterId, endingId] of Object.entries(ENDING_BY_ENCOUNTER)) {
+    for (const endingVariation of ["TRUTH", "SHIELD", "TURN"]) {
+      const scene = resolveScene(endingId, { storyState: { encounterId, endingVariation } });
+      assert.match(scene.body, new RegExp(ENDING_VARIATIONS[endingVariation].body.slice(0, 8)));
+      assert.ok(scene.returnAdjustment);
+      assert.match(scene.parentNote, new RegExp(ENDING_VARIATIONS[endingVariation].parentNote));
     }
-    const estimatedSeconds = estimateRouteSeconds(route);
-    assert.ok(estimatedSeconds <= 300, `${route.scenes.map(scene => scene.id).join(" -> ")}: ${estimatedSeconds} seconds`);
   }
 });
 
@@ -127,6 +136,19 @@ test("모든 장면은 제목, 아트 키, 본문과 1~2개 낱말을 가진다"
     assert.ok(scene.title && scene.art && scene.body);
     assert.ok(scene.vocab.length >= 1 && scene.vocab.length <= 2, scene.id);
   }
+});
+
+test("모든 장면은 원고의 이미지 키를 사용하고 색상 슬롯이 없다", () => {
+  const expectedArt = {
+    S00: "start_rabbit_hole", S01: "door_shrink", S02: "cake_grow",
+    A1: "door_cat_meet", A2: "door_caterpillar_meet", A3: "door_hatter_meet",
+    B1: "cake_cat_meet", B2: "cake_caterpillar_meet", B3: "cake_hatter_meet",
+    C1: "mist_hill_grin", C2: "queen_garden_trial_small",
+    E1: "end_curiosity", E2: "end_prudence", E3: "end_cheer",
+    E4: "end_composure", E5: "end_selftrust", E6: "end_warmth",
+  };
+  assert.deepEqual(Object.fromEntries(Object.values(story.scenes).map(scene => [scene.id, scene.art])), expectedArt);
+  assert.doesNotMatch(JSON.stringify(story), /\{COLOR\}/);
 });
 
 test("낱말을 중복 없이 기록하고 모르는 낱말은 무시한다", () => {

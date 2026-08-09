@@ -2,13 +2,11 @@ export const DEFAULT_SLOTS = Object.freeze({
   HERO: "앨리스",
   TREAT: "케이크",
   PET: "강아지",
-  COLOR: "파랑",
 });
 
 const ALLOWED = {
   TREAT: ["케이크", "쿠키", "젤리", "붕어빵"],
   PET: ["강아지", "고양이", "토끼", "거북이"],
-  COLOR: ["파랑", "노랑", "초록", "분홍"],
 };
 
 const PARTICLES = {
@@ -18,7 +16,7 @@ const PARTICLES = {
   "와/과": ["과", "와"],
 };
 
-const BARE_PARTICLE_AFTER_SLOT = /\{(HERO|TREAT|PET|COLOR)\}(은|는|이|가|을|를|와|과)/;
+const BARE_PARTICLE_AFTER_SLOT = /\{(HERO|TREAT|PET)\}(은|는|이|가|을|를|와|과)/;
 
 function hasFinalConsonant(word) {
   const code = word.codePointAt(word.length - 1);
@@ -46,6 +44,6 @@ export function renderTemplate(template, input) {
     throw new Error(`${invalidParticle[0]} 대신 지원되는 조사 토큰을 사용하세요.`);
   }
   const slots = normalizeSlots(input);
-  return String(template).replace(/\{(HERO|TREAT|PET|COLOR)\}(?:\{(이\/가|은\/는|을\/를|와\/과)\})?/g,
+  return String(template).replace(/\{(HERO|TREAT|PET)\}(?:\{(이\/가|은\/는|을\/를|와\/과)\})?/g,
     (_, key, pair) => slots[key] + (pair ? selectParticle(slots[key], pair) : ""));
 }
