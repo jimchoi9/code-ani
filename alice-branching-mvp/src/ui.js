@@ -96,7 +96,7 @@ export function renderSetup(slots) {
       ${options.map(option => `<label><input type="radio" name="${slot}" value="${escapeHtml(option)}" data-action="set-slot" data-slot="${slot}"${personalize(`{${slot}}`, slots) === option ? " checked" : ""}>${escapeHtml(option)}</label>`).join("")}
     </fieldset>`).join("");
 
-  return `<main class="story-screen setup-screen scene-rabbit-hole">
+  return `<main class="story-screen setup-screen scene-start_rabbit_hole">
     <div class="storybook-shell">
       ${renderStorybookMasthead(hero, "준비")}
       <div class="storybook-scene-frame">${renderArtPlaceholder("start_rabbit_hole")}</div>
