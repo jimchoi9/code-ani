@@ -589,6 +589,14 @@ export function mountBrowserApp({
       minimalStore.clear();
       minimalState = null;
     },
+    onReturnToStart() {
+      store.clear();
+      minimalStore.clear();
+      testStore.clear();
+      onboarding = null;
+      onboardingTyping = false;
+      return createAppState();
+    },
     getSelectionText: () => windowRef.getSelection?.()?.toString() ?? "",
     onStart(values) {
       if (!testMode) return startStory(state, values);

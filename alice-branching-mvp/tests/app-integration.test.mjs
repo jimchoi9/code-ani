@@ -8,6 +8,7 @@ import {
   selectChip,
   startStory,
 } from "../src/app.js";
+import { createUiPreferenceStore } from "../src/ui-preference.js";
 
 const slots = { HERO: "지민", TREAT: "케이크", PET: "강아지" };
 
@@ -133,6 +134,7 @@ function createAppElement() {
     },
     querySelectorAll() { return []; },
     click(target) { listeners.click({ target }); },
+    submit(target) { listeners.submit({ target, preventDefault() {} }); },
   };
 }
 
@@ -157,6 +159,15 @@ function actionControl(action, dataset = {}, textContent = "") {
     closest(selector) { return selector === "[data-action]" ? control : null; },
   };
   return control;
+}
+
+function formControl(action, values) {
+  const form = {
+    dataset: { action },
+    values,
+    closest(selector) { return selector.includes("form") ? form : null; },
+  };
+  return form;
 }
 
 function readerSurface() {
@@ -202,6 +213,97 @@ test("위임된 처음으로 클릭은 전용 초기화 상태를 commit한다",
 
   assert.equal(resetCalls, 1);
   assert.equal(commits.at(-1).screen, "setup");
+});
+
+test("처음으로는 테스트 진행을 모두 지우고 선택 UI를 유지한다", async () => {
+  const { mountBrowserApp } = await import("../src/app.js");
+  const storyStore = createStoryStore(beginStory().session);
+  const beatStorage = createStorage(JSON.stringify({ sceneId: "S00", beatIndex: 1 }));
+  const testStore = createTestStore({
+    participantId: "C09",
+    events: [],
+    onboarding: { step: "complete", answers: slots },
+  });
+  const preferenceStorage = createStorage();
+  const preferenceStore = createUiPreferenceStore(preferenceStorage);
+  preferenceStore.save("minimal");
+  const renderers = {
+    minimal: createRenderer("minimal"),
+    "visual-novel": createRenderer("visual-novel"),
+  };
+  renderers["visual-novel"].renderTestTools = () => "";
+  const environment = createEnvironment("");
+
+  mountBrowserApp({
+    ...environment,
+    sessionStore: storyStore,
+    minimalStore: createMinimalStateStore(beatStorage),
+    testStore,
+    preferenceStore,
+    getRenderer: id => renderers[id],
+  });
+
+  const writesBeforeReturn = preferenceStorage.writes.length;
+  environment.app.click(actionControl("return-to-start"));
+
+  assert.equal(environment.windowRef.__aliceStoryDebug.screen(), "setup");
+  assert.equal(environment.windowRef.__aliceStoryDebug.session(), null);
+  assert.equal(storyStore.load(), null);
+  assert.equal(testStore.load(), null);
+  assert.ok(beatStorage.removes >= 1);
+  assert.equal(preferenceStore.load(), "minimal");
+  assert.equal(preferenceStorage.writes.length, writesBeforeReturn);
+  assert.equal(environment.app.dataset.ui, "minimal");
+  assert.equal(renderers["visual-novel"].calls.at(-1).name, "renderSetup");
+});
+
+test("처음으로는 진행 중 온보딩의 메모리 상태도 비운다", async () => {
+  const { mountBrowserApp } = await import("../src/app.js");
+  const renderers = {
+    minimal: createRenderer("minimal"),
+    "visual-novel": createRenderer("visual-novel"),
+  };
+  renderers["visual-novel"].renderTestTools = () => "";
+  const environment = createEnvironment("");
+  const testStore = createTestStore({
+    participantId: "C10",
+    events: [],
+    onboarding: { step: "name", answers: {} },
+  });
+  const originalFormData = globalThis.FormData;
+  environment.windowRef.setTimeout = () => {};
+  globalThis.FormData = class FormDataDouble {
+    constructor(form) { this.entries = Object.entries(form.values); }
+    [Symbol.iterator]() { return this.entries[Symbol.iterator](); }
+  };
+
+  try {
+    mountBrowserApp({
+      ...environment,
+      sessionStore: createStoryStore(null),
+      minimalStore: createMinimalStateStore(createStorage()),
+      testStore,
+      preferenceStore: { load: () => "minimal" },
+      getRenderer: id => renderers[id],
+    });
+    environment.app.submit(formControl("onboarding-answer", { ANSWER: "지민" }));
+    assert.equal(renderers["visual-novel"].calls.at(-1).args.at(-1).onboardingTyping, true);
+
+    environment.app.click(actionControl("return-to-start"));
+
+    const resetContext = renderers["visual-novel"].calls.at(-1).args.at(-1);
+    assert.equal(environment.windowRef.__aliceStoryDebug.screen(), "setup");
+    assert.equal(resetContext.onboarding, null);
+    assert.equal(resetContext.onboardingTyping, false);
+
+    environment.app.submit(formControl("start-onboarding", { PARTICIPANT_ID: "C11" }));
+    const eventsBeforeAnswer = testStore.events.length;
+    environment.app.submit(formControl("onboarding-answer", { ANSWER: "민지" }));
+    assert.equal(testStore.events.length, eventsBeforeAnswer + 1);
+    assert.equal(testStore.events.at(-1).type, "onboarding_answered");
+  } finally {
+    globalThis.FormData = originalFormData;
+  }
 });
 
 test("mounted app은 선택 renderer로 모든 화면과 낱말 panel을 dispatch한다", async () => {
