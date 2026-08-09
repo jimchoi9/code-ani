@@ -73,6 +73,14 @@ test("비교 서버는 8082를 사용한다", () => {
   assert.match(pkg.scripts.serve, /8082/);
 });
 
+test("README는 메인과 설정 주소만 공개한다", () => {
+  const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
+
+  assert.match(readme, /http:\/\/127\.0\.0\.1:8082\//);
+  assert.match(readme, /http:\/\/127\.0\.0\.1:8082\/settings\.html/);
+  assert.doesNotMatch(readme, /\?ui=|compare=1|test=1/);
+});
+
 test("화면 전환은 맨 위로 이동한 뒤 스크롤을 유지하며 제목에 초점을 둔다", async () => {
   const { resetTransitionView } = await import("../src/app.js");
   const calls = [];
