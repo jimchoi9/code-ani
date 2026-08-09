@@ -162,13 +162,27 @@ test("교차 파일 검증은 잘못된 결말 매핑과 조건부 삽화를 거
   );
 });
 
-test("저장소의 hard 원고는 공통 그래프를 완전히 채운다", async () => {
+test("저장소의 easy와 hard 원고는 같은 공통 그래프를 완전히 채운다", async () => {
   const sources = await loadStorySources(projectRoot);
 
   assert.equal(Object.keys(sources.graph.scenes).length, 18);
-  assert.deepEqual(Object.keys(sources.levels), ["hard"]);
+  assert.deepEqual(Object.keys(sources.levels), ["easy", "hard"]);
+  assert.equal(Object.keys(sources.levels.easy.scenes).length, 18);
+  assert.equal(Object.keys(sources.levels.easy.vocabulary).length, 18);
   assert.equal(Object.keys(sources.levels.hard.vocabulary).length, 28);
   assert.doesNotThrow(() => validateStorySources(sources));
+});
+
+test("easy 원고는 같은 분기를 유지하면서 더 짧은 문장으로 렌더링된다", () => {
+  const easy = createStoryRuntime(storyGraph, storyLevels.easy);
+  const hard = createStoryRuntime(storyGraph, storyLevels.hard);
+
+  assert.deepEqual(easy.story.sceneOrder, hard.story.sceneOrder);
+  assert.match(easy.getScene("S00").body, /그림도 없고 말도 없는 책/);
+  assert.ok(easy.getScene("S00").body.length < hard.getScene("S00").body.length);
+  assert.match(easy.resolveScene("FRAGMENT", {
+    storyState: { encounterId: "A2" },
+  }).body, /신중함의 조각/);
 });
 
 test("생성 번들은 결정적이고 저장소 JSON과 동기화된다", async () => {
