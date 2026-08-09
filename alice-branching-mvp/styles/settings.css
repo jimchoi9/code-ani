@@ -1,0 +1,138 @@
+:root {
+  color: #25201c;
+  background: #f2ede4;
+  font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100svh;
+  margin: 0;
+  padding: clamp(24px, 6vw, 64px) 20px;
+  background:
+    radial-gradient(circle at top left, rgb(140 94 180 / 16%), transparent 34rem),
+    #f2ede4;
+}
+
+.settings-shell {
+  width: min(100%, 680px);
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 44px);
+  background: #fffdf8;
+  border: 1px solid #d9cdbd;
+  border-radius: 24px;
+  box-shadow: 0 18px 54px rgb(74 49 29 / 12%);
+}
+
+.settings-heading {
+  margin-bottom: 32px;
+}
+
+.settings-kicker {
+  margin: 0 0 8px;
+  color: #72518f;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.settings-heading h1 {
+  margin: 0;
+  font-family: Georgia, "AppleMyungjo", serif;
+  font-size: clamp(2rem, 7vw, 3rem);
+  line-height: 1.15;
+}
+
+.settings-heading p:last-child {
+  margin: 12px 0 0;
+  color: #625a53;
+  line-height: 1.6;
+}
+
+.settings-form fieldset {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.settings-form legend {
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+
+.ui-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+  min-height: 76px;
+  padding: 16px;
+  background: #f8f4ed;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.ui-option:has(input:checked) {
+  background: #f2e9fa;
+  border-color: #72518f;
+}
+
+.ui-option input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: #72518f;
+}
+
+.ui-option span {
+  display: grid;
+  gap: 5px;
+}
+
+.ui-option strong {
+  font-size: 1.05rem;
+}
+
+.ui-option small {
+  color: #625a53;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.settings-form button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 24px;
+  padding: 12px 20px;
+  color: #fff;
+  background: #563b70;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ui-option:focus-within,
+.settings-form button:focus-visible {
+  outline: 3px solid #f0b429;
+  outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .ui-option:hover {
+    border-color: #a88dbd;
+  }
+
+  .settings-form button:hover {
+    background: #402958;
+  }
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>앨리스 MVP UI 설정</title>
+    <link rel="stylesheet" href="./styles/settings.css">
+  </head>
+  <body>
+    <main class="settings-shell">
+      <header class="settings-heading">
+        <p class="settings-kicker">ALICE MVP</p>
+        <h1>테스트 UI 선택</h1>
+        <p>아이와 테스트할 이야기 화면을 선택해 주세요.</p>
+      </header>
+
+      <form class="settings-form" data-action="save-ui">
+        <fieldset>
+          <legend>화면 방식</legend>
+
+          <label class="ui-option">
+            <input type="radio" name="ui" value="current">
+            <span>
+              <strong>현재형</strong>
+              <small>이야기책처럼 한 장면을 한눈에 읽는 화면</small>
+            </span>
+          </label>
+
+          <label class="ui-option">
+            <input type="radio" name="ui" value="visual-novel">
+            <span>
+              <strong>비주얼노벨</strong>
+              <small>게임 프레임과 대화 중심으로 진행하는 화면</small>
+            </span>
+          </label>
+
+          <label class="ui-option">
+            <input type="radio" name="ui" value="minimal">
+            <span>
+              <strong>미니멀 텍스트</strong>
+              <small>문장을 한 단계씩 집중해서 읽는 화면</small>
+            </span>
+          </label>
+        </fieldset>
+
+        <button type="submit">선택한 UI로 테스트 시작</button>
+      </form>
+    </main>
+    <script type="module" src="./src/settings.js"></script>
+  </body>
+</html>
