@@ -152,6 +152,44 @@ moving-story-starter/src/
 └── docs/superpowers/        기능별 설계 문서와 구현 계획
 ```
 
+## 루트 파일 안내
+
+### 문서와 공용 파일
+
+| 파일 | 설명 |
+| --- | --- |
+| [`README.md`](README.md) | 프로젝트 소개, 실행 방법, 데모와 폴더 구성을 정리한 현재 문서입니다. |
+| [`ART-SPEC.md`](ART-SPEC.md) | SVG 캐릭터의 좌표 원점, 필수 파츠 이름, 관절과 표정 구성 등 아트 납품 규칙입니다. |
+| [`index.html`](index.html) | 전체 이야기와 기술 실험 페이지로 이동하는 데모 인덱스입니다. |
+| [`characters.js`](characters.js) | 나비, 몽이, 부엉 할아버지와 장면 배경을 담은 공용 SVG `<defs>` 원본입니다. |
+| [`prototype-runtime.js`](prototype-runtime.js) | 모션 감소 설정, 페이지 표시 상태, boil 타이머와 반복 tween의 실행 여부를 관리합니다. |
+| [`parallax.js`](parallax.js) | 스크롤·포인터 입력을 깊이별 SVG transform으로 변환하는 패럴랙스 런타임입니다. |
+| [`png-rig.js`](png-rig.js) | PNG 파츠 캐릭터의 관절, 표정, 방향, 동작과 립싱크를 제어합니다. |
+
+### 데모 페이지
+
+| 파일 | 설명 |
+| --- | --- |
+| [`webtoon.html`](webtoon.html) | ScrollTrigger로 다섯 장면을 스크롤 진행률에 맞춰 재생하는 세로 웹툰입니다. |
+| [`player.html`](player.html) | 같은 이야기와 SVG 리그를 자동 재생·클릭·키보드 방식으로 감상하는 플레이어입니다. |
+| [`parallax.html`](parallax.html) | 일곱 개 깊이 레이어의 스크롤·포인터 패럴랙스를 시험하는 페이지입니다. |
+| [`png-rig.html`](png-rig.html) | 투명 PNG 파츠 조립, 관절 회전, 표정과 립싱크를 시험하는 페이지입니다. |
+| [`interaction.html`](interaction.html) | 캐릭터와 사물의 클릭·터치·키보드 반응을 시험하는 인터랙션 놀이터입니다. |
+| [`lottie.html`](lottie.html) | Lottie JSON을 SVG로 렌더링하고 스크롤 위치를 프레임에 연결하는 기준선입니다. |
+| [`kid-style.html`](kid-style.html) | SVG 필터와 낮은 프레임의 boil 효과를 적용한 어린이 손그림풍 비교안입니다. |
+| [`svg-gsap.html`](svg-gsap.html) | 단일 장면에서 SVG 파츠와 GSAP ScrollTrigger 조합을 확인하는 최소 기준선입니다. |
+| [`swap-test.html`](swap-test.html) | 공용 파츠 계약을 유지하면서 캐릭터 SVG를 교체할 수 있는지 검증하는 페이지입니다. |
+
+### 데이터와 이미지 에셋
+
+| 파일 | 설명 |
+| --- | --- |
+| [`nabi_scene1.json`](nabi_scene1.json) | `lottie.html`이 불러오는 단일 장면 Lottie 애니메이션 데이터입니다. |
+| [`character-sheet.png`](character-sheet.png) | OpenCV 파츠 분리기의 예제 입력으로 사용하는 투명 배경 캐릭터 시트입니다. |
+| [`new_char.svg`](new_char.svg) | `swap-test.html`에서 불러오는 자동 트레이싱 캐릭터 교체 실험용 SVG입니다. |
+| [`Create_spritesheet_collage_elements_202608022347.png`](Create_spritesheet_collage_elements_202608022347.png) | 스프라이트 시트 제작 과정에서 보관한 1200×896 PNG 참조 이미지입니다. |
+| [`Create_spritesheet_collage_elements_202608022347.jpeg`](Create_spritesheet_collage_elements_202608022347.jpeg) | 위 참조 이미지의 JPEG 버전이며 런타임에서는 직접 사용하지 않습니다. |
+
 ## 테스트
 
 독립형 스타터의 데이터·컴포넌트·패럴랙스·런타임 계약은 다음 명령으로 검증합니다.
